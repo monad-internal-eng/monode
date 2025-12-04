@@ -82,3 +82,6 @@ node_modules/
 
 .claude
 dist/
+
+target/
+.env

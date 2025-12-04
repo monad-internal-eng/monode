@@ -1,0 +1,25 @@
+[package]
+name = "execution-events-example"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+chrono = "0.4.34"
+clap = { version = "4.2", features = ["derive"] }
+lazy_static = "1.5.0"
+tokio = { version = "1.41", features = ["full"] }
+tokio-tungstenite = "0.24"
+futures-util = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+alloy-primitives = { version = "0.8", features = ["serde"] }
+
+[dependencies.monad-exec-events]
+git = "https://github.com/category-labs/monad-bft"
+tag = "release/exec-events-sdk-v1.0"
+
+[dependencies.monad-event-ring]
+git = "https://github.com/category-labs/monad-bft"
+tag = "release/exec-events-sdk-v1.0"
