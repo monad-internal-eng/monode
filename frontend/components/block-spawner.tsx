@@ -25,7 +25,7 @@ export default function BlockSpawner() {
   const spawnBlock = useCallback(async () => {
     const id = blockNumRef.current++
 
-    setBlocks((prev) => [...prev, { id, state: 'proposed' }])
+    setBlocks((prev) => [{ id, state: 'proposed' }, ...prev])
 
     await sleep(100 * speed)
     updateBlockState(id, 'voted')
@@ -46,9 +46,9 @@ export default function BlockSpawner() {
     'px-4 py-3 rounded-md font-semibold text-sm text-center animate-slideIn transition-all duration-300 bg-linear-to-br'
 
   return (
-    <div className="w-full p-6">
+    <div className="w-full p-6 max-md:p-0 max-sm:flex-1 max-sm:flex max-sm:flex-col max-sm:min-h-0">
       {/* Controls */}
-      <div className="flex items-center gap-4 mb-8 p-4 bg-[#1a1a2e] rounded-lg flex-wrap">
+      <div className="flex items-center gap-4 mb-8 p-4 bg-[#1a1a2e] rounded-lg flex-wrap max-md:p-3 max-md:gap-3 max-md:mb-2 max-sm:shrink-0">
         <label htmlFor="speed" className="text-[#a0a0b0] font-medium">
           Speed:
         </label>
@@ -66,20 +66,20 @@ export default function BlockSpawner() {
         <button
           type="button"
           onClick={spawnBlock}
-          className="ml-auto px-6 py-3 bg-linear-to-br from-indigo-500 to-violet-500 text-white border-none rounded-md font-semibold cursor-pointer transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/40 active:translate-y-0 max-sm:w-full max-sm:ml-0 max-sm:mt-2"
+          className="ml-auto px-6 py-3 bg-linear-to-br from-indigo-500 to-violet-500 text-white border-none rounded-md font-semibold cursor-pointer transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/40 active:translate-y-0 max-sm:w-full max-sm:ml-0 max-sm:mt-2 max-sm:px-4 max-sm:py-2"
         >
           Spawn Block
         </button>
       </div>
 
       {/* Lanes */}
-      <div className="grid grid-cols-4 gap-4 max-md:grid-cols-2 max-sm:grid-cols-1">
+      <div className="grid grid-cols-4 gap-4 max-sm:grid-cols-2 max-sm:grid-rows-[1fr_1fr] max-sm:flex-1 max-sm:min-h-0 max-md:gap-2">
         {/* Proposed Lane */}
-        <div className="bg-[#16162a] rounded-lg p-4 min-h-75">
-          <h3 className="m-0 mb-4 pb-3 border-b-2 border-[#2a2a4a] text-sm uppercase tracking-wide text-[#8888a0]">
+        <div className="bg-[#16162a] rounded-lg p-4 min-h-75 max-md:min-h-0 max-md:flex max-md:flex-col max-md:overflow-hidden max-md:p-3">
+          <h3 className="m-0 mb-4 pb-3 border-b-2 border-[#2a2a4a] text-sm font-medium uppercase tracking-wide text-[#8888a0] max-md:pb-2 max-sm:shrink-0">
             Proposed
           </h3>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 max-md:overflow-auto max-md:flex-1 max-md:min-h-0">
             {proposedBlocks.map((block) => (
               <div
                 key={block.id}
@@ -92,11 +92,11 @@ export default function BlockSpawner() {
         </div>
 
         {/* Voted Lane */}
-        <div className="bg-[#16162a] rounded-lg p-4 min-h-75">
-          <h3 className="m-0 mb-4 pb-3 border-b-2 border-[#2a2a4a] text-sm uppercase tracking-wide text-[#8888a0]">
+        <div className="bg-[#16162a] rounded-lg p-4 min-h-75 max-md:min-h-0 max-md:flex max-md:flex-col max-md:overflow-hidden max-md:p-3">
+          <h3 className="m-0 mb-4 pb-3 border-b-2 border-[#2a2a4a] text-sm font-medium uppercase tracking-wide text-[#8888a0] max-md:pb-2 max-sm:shrink-0">
             Voted
           </h3>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 max-md:overflow-auto max-md:flex-1 max-md:min-h-0">
             {votedBlocks.map((block) => (
               <div
                 key={block.id}
@@ -109,11 +109,11 @@ export default function BlockSpawner() {
         </div>
 
         {/* Finalized Lane */}
-        <div className="bg-[#16162a] rounded-lg p-4 min-h-75">
-          <h3 className="m-0 mb-4 pb-3 border-b-2 border-[#2a2a4a] text-sm uppercase tracking-wide text-[#8888a0]">
+        <div className="bg-[#16162a] rounded-lg p-4 min-h-75 max-md:min-h-0 max-md:flex max-md:flex-col max-md:overflow-hidden max-md:p-3">
+          <h3 className="m-0 mb-4 pb-3 border-b-2 border-[#2a2a4a] text-sm font-medium uppercase tracking-wide text-[#8888a0] max-md:pb-2 max-sm:shrink-0">
             Finalized
           </h3>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 max-md:overflow-auto max-md:flex-1 max-md:min-h-0">
             {finalizedBlocks.map((block) => (
               <div
                 key={block.id}
@@ -126,11 +126,11 @@ export default function BlockSpawner() {
         </div>
 
         {/* Verified Lane */}
-        <div className="bg-[#16162a] rounded-lg p-4 min-h-75">
-          <h3 className="m-0 mb-4 pb-3 border-b-2 border-[#2a2a4a] text-sm uppercase tracking-wide text-[#8888a0]">
+        <div className="bg-[#16162a] rounded-lg p-4 min-h-75 max-md:min-h-0 max-md:flex max-md:flex-col max-md:overflow-hidden max-md:p-3">
+          <h3 className="m-0 mb-4 pb-3 border-b-2 border-[#2a2a4a] text-sm font-medium uppercase tracking-wide text-[#8888a0] max-md:pb-2 max-sm:shrink-0">
             Verified
           </h3>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 max-md:overflow-auto max-md:flex-1 max-md:min-h-0">
             {verifiedBlocks.map((block) => (
               <div
                 key={block.id}

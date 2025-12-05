@@ -20,7 +20,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${brittiSans.variable} antialiased`}>{children}</body>
+      <body className={`${brittiSans.variable} antialiased bg-[#0f0f1a]`}>
+        {children}
+      </body>
     </html>
   )
 }
