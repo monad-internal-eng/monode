@@ -1,7 +1,6 @@
 use clap::Parser;
-use execution_events_example::event_filter::ClientMessage;
 use execution_events_example::event_listener::EventName;
-use execution_events_example::serializable_event::SerializableEventData;
+use execution_events_example::{event_filter::ClientMessage, server::ServerMessage};
 use futures_util::{SinkExt, StreamExt};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 
@@ -85,13 +84,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let msg = msg.unwrap();
                 match msg {
                     Ok(Message::Text(text)) => {
-                        match serde_json::from_str::<Vec<SerializableEventData>>(&text) {
-                            Ok(events) => {
+                        match serde_json::from_str::<ServerMessage>(&text) {
+                            Ok(ServerMessage::Events(events)) => {
                                 info!("Received {} events", events.len());
                                 if cli.dump_events {
                                     info!("Events: {:?}", events);
                                 }
                                 events_witnessed += events.len();
+                            }
+                            Ok(ServerMessage::TopAccesses(top_accesses)) => {
+                                info!("Received top accesses: {:#?}", top_accesses);
                             }
                             Err(_) => {
                                 error!("Failed to parse events: {}", text);
