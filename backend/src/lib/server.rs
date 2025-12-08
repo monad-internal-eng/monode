@@ -1,5 +1,6 @@
 use std::net::SocketAddr;
 
+use futures_util::stream::SplitSink;
 use futures_util::{stream::SplitStream, SinkExt, StreamExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::broadcast;
@@ -56,10 +57,84 @@ async fn wait_for_subscription(
     }
 }
 
+async fn client_write_task(
+    mut event_broadcast_receiver: broadcast::Receiver<EventData>,
+    filter: EventFilter,
+    addr: SocketAddr,
+    mut ws_sender: SplitSink<WebSocketStream<TcpStream>, Message>,
+) {
+    let mut buf: Vec<SerializableEventData> = Vec::new();
+
+    loop {
+        let result = event_broadcast_receiver.recv().await;
+        match result {
+            Ok(event_data) => {
+                if filter.matches(&event_data.event_name) {
+                    buf.push(SerializableEventData::from(&event_data));
+                }
+            }
+            Err(e) => {
+                error!("Broadcast channel error for {}: {}", addr, e);
+                break;
+            }
+        }
+        while let Ok(event_data) = event_broadcast_receiver.try_recv() {
+            if filter.matches(&event_data.event_name) {
+                buf.push(SerializableEventData::from(&event_data));
+            }
+        }
+
+        if !buf.is_empty() {
+            // Serialize batch to JSON
+            let json_message = match serde_json::to_string(&std::mem::take(&mut buf)) {
+                Ok(json) => json,
+                Err(e) => {
+                    error!("Failed to serialize batch for {}: {}", addr, e);
+                    buf.clear();
+                    continue;
+                }
+            };
+
+            // Send batch
+            if let Err(e) = ws_sender.send(Message::Text(json_message)).await {
+                error!("Failed to send batch to {}: {}", addr, e);
+                break;
+            }
+        }
+    }
+}
+
+async fn client_read_task(
+    addr: SocketAddr,
+    mut ws_receiver: SplitStream<WebSocketStream<TcpStream>>,
+) {
+    while let Some(msg) = ws_receiver.next().await {
+        match msg {
+            Ok(Message::Close(_)) => {
+                info!("Received close message from client {}, disconnecting", addr);
+                break;
+            }
+            Ok(Message::Text(_) | Message::Binary(_)) => {
+                // Don't allow any inbound messages after subscribing - disconnect when any received
+                warn!(
+                    "Client {} sent unsolicited message after subscribing - disconnecting",
+                    addr
+                );
+                break;
+            }
+            Err(e) => {
+                warn!("WebSocket error from {}: {}", addr, e);
+                break;
+            }
+            _ => (),
+        }
+    }
+}
+
 async fn handle_connection(
     stream: TcpStream,
     addr: SocketAddr,
-    mut event_rx: broadcast::Receiver<EventData>,
+    event_broadcast_receiver: broadcast::Receiver<EventData>,
 ) {
     info!("New WebSocket connection from: {}", addr);
 
@@ -71,7 +146,7 @@ async fn handle_connection(
         }
     };
 
-    let (mut ws_sender, mut ws_receiver) = ws_stream.split();
+    let (ws_sender, mut ws_receiver) = ws_stream.split();
 
     // Wait for subscription message before streaming events
     let filter = match wait_for_subscription(&mut ws_receiver, addr).await {
@@ -80,69 +155,15 @@ async fn handle_connection(
     };
 
     // Spawn a task to receive events from the broadcast channel and send batches to this client
-    let send_addr = addr;
-    let mut send_task = tokio::spawn(async move {
-        let mut buffer: Vec<SerializableEventData> = Vec::new();
-
-        loop {
-            let result = event_rx.recv().await;
-            match result {
-                Ok(event_data) => {
-                    if filter.matches(&event_data.event_name) {
-                        buffer.push(SerializableEventData::from(&event_data));
-                    }
-                }
-                Err(e) => {
-                    error!("Broadcast channel error for {}: {}", send_addr, e);
-                    break;
-                }
-            }
-            while let Ok(event_data) = event_rx.try_recv() {
-                if filter.matches(&event_data.event_name) {
-                    buffer.push(SerializableEventData::from(&event_data));
-                }
-            }
-
-            if !buffer.is_empty() {
-                // Serialize batch to JSON
-                let json_message = match serde_json::to_string(&std::mem::take(&mut buffer)) {
-                    Ok(json) => json,
-                    Err(e) => {
-                        error!("Failed to serialize batch for {}: {}", send_addr, e);
-                        buffer.clear();
-                        continue;
-                    }
-                };
-
-                // Send batch
-                if let Err(e) = ws_sender.send(Message::Text(json_message)).await {
-                    error!("Failed to send batch to {}: {}", send_addr, e);
-                    break;
-                }
-            }
-        }
-    });
+    let mut send_task = tokio::spawn(client_write_task(
+        event_broadcast_receiver,
+        filter,
+        addr,
+        ws_sender,
+    ));
 
     // Spawn a task to handle incoming messages from the client (mostly for ping/pong)
-    let mut recv_task = tokio::spawn(async move {
-        while let Some(msg) = ws_receiver.next().await {
-            match msg {
-                Ok(Message::Close(_)) => break,
-                Ok(Message::Ping(_data)) => {
-                    // Echo back pong
-                    // Note: Most WebSocket libraries handle this automatically
-                }
-                Ok(Message::Pong(_)) => {}
-                Ok(_) => {
-                    // Ignore other message types from clients
-                }
-                Err(e) => {
-                    warn!("WebSocket error from {}: {}", addr, e);
-                    break;
-                }
-            }
-        }
-    });
+    let mut recv_task = tokio::spawn(client_read_task(addr.clone(), ws_receiver));
 
     // Wait for either task to finish
     tokio::select! {
@@ -165,23 +186,21 @@ async fn handle_connection(
 
 pub async fn run_websocket_server(
     addr: SocketAddr,
-    mut rx: tokio::sync::mpsc::Receiver<EventData>,
+    mut event_receiver: tokio::sync::mpsc::Receiver<EventData>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Create a broadcast channel for distributing events to all clients
-    // Use very large capacity to effectively make it unbounded
-    let (broadcast_tx, _) = broadcast::channel::<EventData>(1_000_000);
+    let (event_broadcast_sender, _) = broadcast::channel::<EventData>(1_000_000);
 
     // Spawn a task to forward events from the mpsc channel to the broadcast channel
-    let broadcast_tx_clone = broadcast_tx.clone();
+    let event_broadcast_sender_clone = event_broadcast_sender.clone();
     let broadcast_task = tokio::spawn(async move {
         loop {
-            let event_data = rx.recv().await;
+            let event_data = event_receiver.recv().await;
             if event_data.is_none() {
                 warn!("Event receiver closed");
                 return;
             }
-            let event_data = event_data.unwrap();
-            let _ = broadcast_tx_clone.send(event_data);
+            let _ = event_broadcast_sender_clone.send(event_data.unwrap());
         }
     });
 
@@ -191,8 +210,8 @@ pub async fn run_websocket_server(
 
     // Accept incoming connections
     while let Ok((stream, addr)) = listener.accept().await {
-        let event_rx = broadcast_tx.subscribe();
-        tokio::spawn(handle_connection(stream, addr, event_rx));
+        let event_broadcast_receiver = event_broadcast_sender.subscribe();
+        tokio::spawn(handle_connection(stream, addr, event_broadcast_receiver));
     }
 
     broadcast_task.abort();

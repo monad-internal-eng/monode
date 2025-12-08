@@ -1,5 +1,3 @@
-use std::{ffi::CStr, time::Duration};
-
 use chrono::{DateTime, Local};
 use lazy_static::lazy_static;
 use monad_event_ring::{
@@ -12,6 +10,7 @@ use monad_exec_events::{
     ExecEventDecoder, ExecEventDescriptorExt, ExecEventRing, ExecSnapshotEventRing,
 };
 use serde::{Deserialize, Serialize};
+use std::{ffi::CStr, time::Duration};
 use tracing::{debug, error, info, warn};
 
 use super::timestamp::get_unix_time_ns;
@@ -113,7 +112,10 @@ impl EventName {
             "ACCOUNT_ACCESS" => Some(EventName::AccountAccess),
             "STORAGE_ACCESS" => Some(EventName::StorageAccess),
             "EVM_ERROR" => Some(EventName::EvmError),
-            _ => None,
+            _ => {
+                warn!("Unknown event name: {}", s);
+                None
+            }
         }
     }
 }
@@ -188,9 +190,9 @@ fn event_to_data(event: &EventDescriptor<ExecEventDecoder>) -> Option<EventData>
     })
 }
 
-pub fn start_event_listener(
+pub fn run_event_listener(
     event_ring_path: EventRingPath,
-    tx: tokio::sync::mpsc::Sender<EventData>,
+    event_sender: tokio::sync::mpsc::Sender<EventData>,
 ) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
         info!("Starting event listener thread");
@@ -288,7 +290,7 @@ pub fn start_event_listener(
                     if let Some(event_data) = event_to_data(&event) {
                         // Send to channel; if receiver is dropped, exit thread
                         // Use blocking_send since we're in a blocking thread
-                        if tx.blocking_send(event_data).is_err() {
+                        if event_sender.blocking_send(event_data).is_err() {
                             warn!("Channel receiver dropped, exiting listener thread");
                             return;
                         }
