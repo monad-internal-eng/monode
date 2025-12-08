@@ -1,4 +1,7 @@
 // Re-export modules from lib/ subdirectory
+pub mod timestamp {
+    pub use super::lib::timestamp::*;
+}
 pub mod event_filter {
     pub use super::lib::event_filter::*;
 }
@@ -18,4 +21,5 @@ mod lib {
     pub mod event_listener;
     pub mod serializable_event;
     pub mod server;
+    pub mod timestamp;
 }

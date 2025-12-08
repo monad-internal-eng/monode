@@ -1,8 +1,9 @@
-use super::event_listener::EventData;
-use alloy_primitives::{Address, B256, Bytes, U128, U256};
+use super::event_listener::{EventData, EventName};
+use alloy_primitives::{Address, Bytes, B256, U256};
 use monad_exec_events::{ffi::*, ExecEvent};
 use serde::{Deserialize, Serialize};
-use std::time::SystemTime;
+
+use super::timestamp::NanoTimestamp;
 
 /// Serializable version of ExecEvent using alloy-primitives for type safety
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -21,38 +22,29 @@ pub enum SerializableExecEvent {
         beneficiary: Address,
         gas_limit: u64,
         base_fee_per_gas: U256,
-        timestamp_ns: U128,
     },
     BlockReject {
         reason: u32,
     },
-    BlockPerfEvmEnter {
-        timestamp_ns: U128,
-    },
-    BlockPerfEvmExit {
-        timestamp_ns: U128,
-    },
+    BlockPerfEvmEnter,
+    BlockPerfEvmExit,
     BlockEnd {
         eth_block_hash: B256,
         state_root: B256,
         receipts_root: B256,
         logs_bloom: Bytes,
         gas_used: u64,
-        timestamp_ns: U128,
     },
     BlockQC {
         block_id: B256,
         block_number: u64,
         round: u64,
-        timestamp_ns: U128,
     },
     BlockFinalized {
         block_number: u64,
-        timestamp_ns: U128,
     },
     BlockVerified {
         block_number: u64,
-        timestamp_ns: U128,
     },
     TxnHeaderStart {
         txn_index: usize,
@@ -65,7 +57,6 @@ pub enum SerializableExecEvent {
         value: U256,
         data: Bytes,
         blob_data: Bytes,
-        timestamp_ns: U128,
     },
     TxnAccessListEntry {
         txn_index: usize,
@@ -81,12 +72,8 @@ pub enum SerializableExecEvent {
         txn_index: usize,
         reason: u32,
     },
-    TxnPerfEvmEnter {
-        timestamp_ns: U128,
-    },
-    TxnPerfEvmExit {
-        timestamp_ns: U128,
-    },
+    TxnPerfEvmEnter,
+    TxnPerfEvmExit,
     TxnEvmOutput {
         txn_index: usize,
         status: bool,
@@ -107,9 +94,7 @@ pub enum SerializableExecEvent {
         input: Bytes,
         output: Bytes,
     },
-    TxnEnd {
-        timestamp_ns: U128,
-    },
+    TxnEnd,
     AccountAccessListHeader {
         txn_index: Option<usize>,
         entry_count: u32,
@@ -142,13 +127,6 @@ fn uint256_from_c(val: &monad_c_uint256_ne) -> U256 {
     U256::from_le_bytes(bytes)
 }
 
-fn get_unix_time_ns() -> u128 {
-    let duration_since_epoch = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap();
-    duration_since_epoch.as_nanos()
-}
-
 /// Exhaustive conversion from ExecEvent to SerializableExecEvent
 /// If upstream adds a variant, this match will fail to compile (no wildcard pattern)
 impl From<&ExecEvent> for SerializableExecEvent {
@@ -167,36 +145,27 @@ impl From<&ExecEvent> for SerializableExecEvent {
                 beneficiary: Address::from_slice(&block.eth_block_input.beneficiary.bytes),
                 gas_limit: block.eth_block_input.gas_limit,
                 base_fee_per_gas: uint256_from_c(&block.eth_block_input.base_fee_per_gas),
-                timestamp_ns: U128::from(get_unix_time_ns()),
             },
             ExecEvent::BlockReject(reject) => Self::BlockReject { reason: *reject },
-            ExecEvent::BlockPerfEvmEnter => Self::BlockPerfEvmEnter {
-                timestamp_ns: U128::from(get_unix_time_ns()),
-            },
-            ExecEvent::BlockPerfEvmExit => Self::BlockPerfEvmExit {
-                timestamp_ns: U128::from(get_unix_time_ns()),
-            },
+            ExecEvent::BlockPerfEvmEnter => Self::BlockPerfEvmEnter,
+            ExecEvent::BlockPerfEvmExit => Self::BlockPerfEvmExit,
             ExecEvent::BlockEnd(end) => Self::BlockEnd {
                 eth_block_hash: B256::from_slice(&end.eth_block_hash.bytes),
                 state_root: B256::from_slice(&end.exec_output.state_root.bytes),
                 receipts_root: B256::from_slice(&end.exec_output.receipts_root.bytes),
                 logs_bloom: Bytes::copy_from_slice(&end.exec_output.logs_bloom.bytes),
                 gas_used: end.exec_output.gas_used,
-                timestamp_ns: U128::from(get_unix_time_ns()),
             },
             ExecEvent::BlockQC(qc) => Self::BlockQC {
                 block_id: B256::from_slice(&qc.block_tag.id.bytes),
                 block_number: qc.block_tag.block_number,
                 round: qc.round,
-                timestamp_ns: U128::from(get_unix_time_ns()),
             },
             ExecEvent::BlockFinalized(finalized) => Self::BlockFinalized {
                 block_number: finalized.block_number,
-                timestamp_ns: U128::from(get_unix_time_ns()),
             },
             ExecEvent::BlockVerified(verified) => Self::BlockVerified {
                 block_number: verified.block_number,
-                timestamp_ns: U128::from(get_unix_time_ns()),
             },
             ExecEvent::TxnHeaderStart {
                 txn_index,
@@ -216,7 +185,6 @@ impl From<&ExecEvent> for SerializableExecEvent {
                 value: uint256_from_c(&txn_header_start.txn_header.value),
                 data: Bytes::copy_from_slice(data_bytes),
                 blob_data: Bytes::copy_from_slice(blob_bytes),
-                timestamp_ns: U128::from(get_unix_time_ns()),
             },
             ExecEvent::TxnAccessListEntry {
                 txn_index,
@@ -239,12 +207,8 @@ impl From<&ExecEvent> for SerializableExecEvent {
                 txn_index: *txn_index,
                 reason: *reject,
             },
-            ExecEvent::TxnPerfEvmEnter => Self::TxnPerfEvmEnter {
-                timestamp_ns: U128::from(get_unix_time_ns()),
-            },
-            ExecEvent::TxnPerfEvmExit => Self::TxnPerfEvmExit {
-                timestamp_ns: U128::from(get_unix_time_ns()),
-            },
+            ExecEvent::TxnPerfEvmEnter => Self::TxnPerfEvmEnter,
+            ExecEvent::TxnPerfEvmExit => Self::TxnPerfEvmExit,
             ExecEvent::TxnEvmOutput { txn_index, output } => Self::TxnEvmOutput {
                 txn_index: *txn_index,
                 status: output.receipt.status,
@@ -275,9 +239,7 @@ impl From<&ExecEvent> for SerializableExecEvent {
                 input: Bytes::copy_from_slice(input_bytes),
                 output: Bytes::copy_from_slice(return_bytes),
             },
-            ExecEvent::TxnEnd => Self::TxnEnd {
-                timestamp_ns: U128::from(get_unix_time_ns()),
-            },
+            ExecEvent::TxnEnd => Self::TxnEnd,
             ExecEvent::AccountAccessListHeader {
                 txn_index,
                 account_access_list_header,
@@ -317,27 +279,25 @@ impl From<&ExecEvent> for SerializableExecEvent {
 /// Serializable version of EventData with converted payload
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SerializableEventData {
-    timestamp: String,
-    event_name: String,
-    event_type: u16,
-    seqno: u64,
+    event_name: EventName,
     #[serde(skip_serializing_if = "Option::is_none")]
     block_number: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     txn_idx: Option<usize>,
     payload: SerializableExecEvent,
+    seqno: u64,
+    timestamp_ns: NanoTimestamp,
 }
 
 impl From<&EventData> for SerializableEventData {
     fn from(data: &EventData) -> Self {
         Self {
-            timestamp: data.timestamp.clone(),
-            event_name: data.event_name.clone(),
-            event_type: data.event_type,
-            seqno: data.seqno,
+            event_name: data.event_name,
             block_number: data.block_number,
             txn_idx: data.txn_idx,
             payload: SerializableExecEvent::from(&data.payload),
+            seqno: data.seqno,
+            timestamp_ns: data.timestamp_ns.clone(),
         }
     }
 }

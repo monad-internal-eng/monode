@@ -1,6 +1,6 @@
 use std::{ffi::CStr, time::Duration};
 
-use chrono::{DateTime, Local, TimeZone};
+use chrono::{DateTime, Local};
 use lazy_static::lazy_static;
 use monad_event_ring::{
     DecodedEventRing, EventDescriptor, EventDescriptorInfo, EventNextResult, EventPayloadResult,
@@ -11,7 +11,11 @@ use monad_exec_events::{
     ffi::{g_monad_exec_event_metadata, MONAD_EXEC_EVENT_COUNT},
     ExecEventDecoder, ExecEventDescriptorExt, ExecEventRing, ExecSnapshotEventRing,
 };
+use serde::{Deserialize, Serialize};
 use tracing::{debug, error, info, warn};
+
+use super::timestamp::get_unix_time_ns;
+use super::timestamp::NanoTimestamp;
 
 lazy_static! {
     static ref EXEC_EVENT_NAMES: [&'static str; MONAD_EXEC_EVENT_COUNT] =
@@ -22,11 +26,102 @@ lazy_static! {
         });
 }
 
+/// Type-safe enum for event names based on ExecEvent variants
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
+pub enum EventName {
+    RecordError,
+    BlockStart,
+    BlockReject,
+    BlockPerfEvmEnter,
+    BlockPerfEvmExit,
+    BlockEnd,
+    BlockQC,
+    BlockFinalized,
+    BlockVerified,
+    TxnHeaderStart,
+    TxnAccessListEntry,
+    TxnAuthListEntry,
+    TxnHeaderEnd,
+    TxnReject,
+    TxnPerfEvmEnter,
+    TxnPerfEvmExit,
+    TxnEvmOutput,
+    TxnLog,
+    TxnCallFrame,
+    TxnEnd,
+    AccountAccessListHeader,
+    AccountAccess,
+    StorageAccess,
+    EvmError,
+}
+
+impl EventName {
+    /// Convert EventName to string representation
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            EventName::RecordError => "RecordError",
+            EventName::BlockStart => "BlockStart",
+            EventName::BlockReject => "BlockReject",
+            EventName::BlockPerfEvmEnter => "BlockPerfEvmEnter",
+            EventName::BlockPerfEvmExit => "BlockPerfEvmExit",
+            EventName::BlockEnd => "BlockEnd",
+            EventName::BlockQC => "BlockQC",
+            EventName::BlockFinalized => "BlockFinalized",
+            EventName::BlockVerified => "BlockVerified",
+            EventName::TxnHeaderStart => "TxnHeaderStart",
+            EventName::TxnAccessListEntry => "TxnAccessListEntry",
+            EventName::TxnAuthListEntry => "TxnAuthListEntry",
+            EventName::TxnHeaderEnd => "TxnHeaderEnd",
+            EventName::TxnReject => "TxnReject",
+            EventName::TxnPerfEvmEnter => "TxnPerfEvmEnter",
+            EventName::TxnPerfEvmExit => "TxnPerfEvmExit",
+            EventName::TxnEvmOutput => "TxnEvmOutput",
+            EventName::TxnLog => "TxnLog",
+            EventName::TxnCallFrame => "TxnCallFrame",
+            EventName::TxnEnd => "TxnEnd",
+            EventName::AccountAccessListHeader => "AccountAccessListHeader",
+            EventName::AccountAccess => "AccountAccess",
+            EventName::StorageAccess => "StorageAccess",
+            EventName::EvmError => "EvmError",
+        }
+    }
+
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "RECORD_ERROR" => Some(EventName::RecordError),
+            "BLOCK_START" => Some(EventName::BlockStart),
+            "BLOCK_REJECT" => Some(EventName::BlockReject),
+            "BLOCK_PERF_EVM_ENTER" => Some(EventName::BlockPerfEvmEnter),
+            "BLOCK_PERF_EVM_EXIT" => Some(EventName::BlockPerfEvmExit),
+            "BLOCK_END" => Some(EventName::BlockEnd),
+            "BLOCK_QC" => Some(EventName::BlockQC),
+            "BLOCK_FINALIZED" => Some(EventName::BlockFinalized),
+            "BLOCK_VERIFIED" => Some(EventName::BlockVerified),
+            "TXN_HEADER_START" => Some(EventName::TxnHeaderStart),
+            "TXN_ACCESS_LIST_ENTRY" => Some(EventName::TxnAccessListEntry),
+            "TXN_AUTH_LIST_ENTRY" => Some(EventName::TxnAuthListEntry),
+            "TXN_HEADER_END" => Some(EventName::TxnHeaderEnd),
+            "TXN_REJECT" => Some(EventName::TxnReject),
+            "TXN_PERF_EVM_ENTER" => Some(EventName::TxnPerfEvmEnter),
+            "TXN_PERF_EVM_EXIT" => Some(EventName::TxnPerfEvmExit),
+            "TXN_EVM_OUTPUT" => Some(EventName::TxnEvmOutput),
+            "TXN_LOG" => Some(EventName::TxnLog),
+            "TXN_CALL_FRAME" => Some(EventName::TxnCallFrame),
+            "TXN_END" => Some(EventName::TxnEnd),
+            "ACCOUNT_ACCESS_LIST_HEADER" => Some(EventName::AccountAccessListHeader),
+            "ACCOUNT_ACCESS" => Some(EventName::AccountAccess),
+            "STORAGE_ACCESS" => Some(EventName::StorageAccess),
+            "EVM_ERROR" => Some(EventName::EvmError),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct EventData {
-    pub timestamp: String,
-    pub event_name: String,
-    pub event_type: u16,
+    pub timestamp_ns: NanoTimestamp,
+    pub event_name: EventName,
     pub seqno: u64,
     pub block_number: Option<u64>,
     pub txn_idx: Option<usize>,
@@ -55,16 +150,14 @@ fn event_to_data(event: &EventDescriptor<ExecEventDecoder>) -> Option<EventData>
     let EventDescriptorInfo {
         seqno,
         event_type,
-        record_epoch_nanos,
+        record_epoch_nanos: _,
         flow_info,
     } = event.info();
 
-    let timestamp = Local
-        .timestamp_nanos(record_epoch_nanos as i64)
-        .format("%H:%M:%S.%9f")
-        .to_string();
+    let timestamp_ns = get_unix_time_ns();
 
-    let event_name = EXEC_EVENT_NAMES[event_type as usize].to_string();
+    // Convert event_type to EventName enum for type safety
+    let event_name = EventName::from_str(EXEC_EVENT_NAMES[event_type as usize])?;
 
     // Get block number if present
     let block_number = if flow_info.block_seqno != 0 {
@@ -86,9 +179,8 @@ fn event_to_data(event: &EventDescriptor<ExecEventDecoder>) -> Option<EventData>
     };
 
     Some(EventData {
-        timestamp,
+        timestamp_ns,
         event_name,
-        event_type,
         seqno,
         block_number,
         txn_idx,

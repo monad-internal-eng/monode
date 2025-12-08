@@ -1,5 +1,6 @@
 use clap::Parser;
 use execution_events_example::event_filter::ClientMessage;
+use execution_events_example::event_listener::EventName;
 use execution_events_example::serializable_event::SerializableEventData;
 use futures_util::{SinkExt, StreamExt};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
@@ -44,8 +45,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let (mut write, mut read) = ws_stream.split();
 
-    // Send subscription message if event filter is specified
-    let events = cli.events.clone().unwrap_or_default();
+    // Parse event names from strings to EventName enum
+    let event_strings = cli.events.clone().unwrap_or_default();
+    let events: Vec<EventName> = if event_strings.is_empty() {
+        Vec::new()
+    } else {
+        event_strings
+            .iter()
+            .map(|s| {
+                serde_json::from_value(serde_json::Value::String(s.clone()))
+                    .map_err(|_| format!("Invalid event name: {}", s))
+            })
+            .collect::<Result<Vec<_>, _>>()?
+    };
+
+    // Send subscription message
     let subscribe_msg = ClientMessage::Subscribe {
         events: events.clone(),
     };

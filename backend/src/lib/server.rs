@@ -83,9 +83,6 @@ async fn handle_connection(
     let send_addr = addr;
     let mut send_task = tokio::spawn(async move {
         let mut buffer: Vec<SerializableEventData> = Vec::new();
-        let batch_interval = tokio::time::Duration::from_millis(1);
-        let mut interval = tokio::time::interval(batch_interval);
-        interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
 
         loop {
             let result = event_rx.recv().await;
