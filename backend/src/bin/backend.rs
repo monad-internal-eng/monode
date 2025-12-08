@@ -8,6 +8,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use execution_events_example::event_listener;
 use execution_events_example::event_listener::EventData;
 use execution_events_example::server;
+use tracing::warn;
 
 #[derive(Debug, Parser)]
 #[command(name = "eventwatch", about, long_about = None)]
@@ -41,16 +42,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create a channel for communication between event listener thread and server
     // Use large buffer to handle bursts
-    let (tx, rx) = mpsc::channel::<EventData>(100_000);
+    let (event_sender, event_receiver) = mpsc::channel::<EventData>(100_000);
 
     // Spawn the event listener thread
-    let _listener_handle = event_listener::start_event_listener(event_ring_path, tx);
+    let listener_handle = event_listener::run_event_listener(event_ring_path, event_sender);
 
     // Parse server address
     let addr: SocketAddr = server_addr.parse()?;
 
-    // Run the WebSocket server
-    server::run_websocket_server(addr, rx).await?;
+    // Run both tasks and exit when either completes
+    tokio::select! {
+        result = server::run_websocket_server(addr, event_receiver) => {
+            warn!("WebSocket server stopped: {:?}", result);
+        }
+        _ = tokio::task::spawn_blocking(move || listener_handle.join()) => {
+            warn!("Event listener thread stopped");
+        }
+    }
 
     Ok(())
 }
