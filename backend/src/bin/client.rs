@@ -20,8 +20,11 @@ struct Cli {
     #[arg(short, long, value_delimiter = ',')]
     events: Option<Vec<String>>,
 
-    #[arg(short, long, default_value = "false")]
-    dump_events: bool,
+    #[arg(long, default_value = "false")]
+    verbose_events: bool,
+
+    #[arg(long, default_value = "false")]
+    verbose_accesses: bool,
 }
 
 #[tokio::main]
@@ -87,13 +90,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         match serde_json::from_str::<ServerMessage>(&text) {
                             Ok(ServerMessage::Events(events)) => {
                                 info!("Received {} events", events.len());
-                                if cli.dump_events {
+                                if cli.verbose_events {
                                     info!("Events: {:?}", events);
                                 }
                                 events_witnessed += events.len();
                             }
                             Ok(ServerMessage::TopAccesses(top_accesses)) => {
-                                info!("Received top accesses: {:#?}", top_accesses);
+                                info!("Received top accesses");
+                                if cli.verbose_accesses {
+                                    for entry in &top_accesses.storage {
+                                        info!("Storage access: address={}, key={}, count={}", entry.key.0, entry.key.1, entry.count);
+                                    }
+                                    for entry in &top_accesses.account {
+                                        info!("Account access: address={}, count={}", entry.key, entry.count);
+                                    }
+                                }
                             }
                             Err(_) => {
                                 error!("Failed to parse events: {}", text);

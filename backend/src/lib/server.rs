@@ -19,8 +19,8 @@ use super::serializable_event::SerializableEventData;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TopAccessesData {
-    account: Vec<AccessEntry<Address>>,
-    storage: Vec<AccessEntry<(Address, B256)>>,
+    pub account: Vec<AccessEntry<Address>>,
+    pub storage: Vec<AccessEntry<(Address, B256)>>,
 }
 
 #[derive(Debug, Clone)]
@@ -132,8 +132,8 @@ async fn client_write_task(
             }
         }
         if !accesses_buf.is_empty() {
-            for acesses in std::mem::take(&mut accesses_buf) {
-                let server_msg = ServerMessage::TopAccesses(acesses);
+            for accesses in std::mem::take(&mut accesses_buf) {
+                let server_msg = ServerMessage::TopAccesses(accesses);
                 let json_message = serde_json::to_string(&server_msg).unwrap();
                 if let Err(e) = ws_sender.send(Message::Text(json_message)).await {
                     error!("Failed to send batch to {}: {}", addr, e);
