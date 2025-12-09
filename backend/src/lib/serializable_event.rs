@@ -279,14 +279,14 @@ impl From<&ExecEvent> for SerializableExecEvent {
 /// Serializable version of EventData with converted payload
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SerializableEventData {
-    event_name: EventName,
+    pub event_name: EventName,
     #[serde(skip_serializing_if = "Option::is_none")]
-    block_number: Option<u64>,
+    pub block_number: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    txn_idx: Option<usize>,
-    payload: SerializableExecEvent,
-    seqno: u64,
-    timestamp_ns: NanoTimestamp,
+    pub txn_idx: Option<usize>,
+    pub payload: SerializableExecEvent,
+    pub seqno: u64,
+    pub timestamp_ns: NanoTimestamp,
 }
 
 impl From<&EventData> for SerializableEventData {

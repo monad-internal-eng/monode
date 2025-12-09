@@ -2,6 +2,7 @@ use clap::Parser;
 use execution_events_example::event_listener::EventName;
 use execution_events_example::{event_filter::ClientMessage, server::ServerMessage};
 use futures_util::{SinkExt, StreamExt};
+use std::collections::HashSet;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -77,6 +78,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Read messages from the server
     let mut events_per_sec_interval = tokio::time::interval(tokio::time::Duration::from_secs(1));
     let mut events_witnessed = 0;
+    let mut seen_block_starts: HashSet<u64> = HashSet::new();
+    let mut seen_blocK_qcs: HashSet<u64> = HashSet::new();
     loop {
         tokio::select! {
             msg = read.next() => {
@@ -89,6 +92,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Ok(Message::Text(text)) => {
                         match serde_json::from_str::<ServerMessage>(&text) {
                             Ok(ServerMessage::Events(events)) => {
+                                // Check for duplicate BlockStart events
+                                for event in &events {
+                                    if event.event_name == EventName::BlockStart {
+                                        if let Some(block_number) = event.block_number {
+                                            if !seen_block_starts.insert(block_number) {
+                                                warn!("Duplicate BlockStart event for block {}", block_number);
+                                            }
+                                        }
+                                    }
+                                    if event.event_name == EventName::BlockQC {
+                                        if let Some(block_number) = event.block_number {
+                                            if !seen_blocK_qcs.insert(block_number) {
+                                                warn!("Duplicate BlockQC event for block {}", block_number);
+                                            }
+                                        }
+                                    }
+                                }
+
                                 info!("Received {} events", events.len());
                                 if cli.verbose_events {
                                     info!("Events: {:?}", events);
