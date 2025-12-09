@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccessEntry<T> {
-    key: T,
-    count: u64,
+    pub key: T,
+    pub count: u64,
 }
 
 /// Probabilistic top-K tracker using the Space-Saving algorithm
