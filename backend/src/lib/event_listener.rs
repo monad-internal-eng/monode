@@ -13,9 +13,6 @@ use serde::{Deserialize, Serialize};
 use std::{ffi::CStr, time::Duration};
 use tracing::{debug, error, info, warn};
 
-use super::timestamp::get_unix_time_ns;
-use super::timestamp::NanoTimestamp;
-
 lazy_static! {
     static ref EXEC_EVENT_NAMES: [&'static str; MONAD_EXEC_EVENT_COUNT] =
         std::array::from_fn(|event_type| unsafe {
@@ -122,7 +119,7 @@ impl EventName {
 
 #[derive(Debug, Clone)]
 pub struct EventData {
-    pub timestamp_ns: NanoTimestamp,
+    pub timestamp_ns: u64,
     pub event_name: EventName,
     pub seqno: u64,
     pub block_number: Option<u64>,
@@ -152,12 +149,10 @@ fn event_to_data(event: &EventDescriptor<ExecEventDecoder>) -> Option<EventData>
     let EventDescriptorInfo {
         seqno,
         event_type,
-        record_epoch_nanos: _,
+        record_epoch_nanos,
         flow_info,
     } = event.info();
-
-    let timestamp_ns = get_unix_time_ns();
-
+    
     // Convert event_type to EventName enum for type safety
     let event_name = EventName::from_str(EXEC_EVENT_NAMES[event_type as usize])?;
 
@@ -181,7 +176,7 @@ fn event_to_data(event: &EventDescriptor<ExecEventDecoder>) -> Option<EventData>
     };
 
     Some(EventData {
-        timestamp_ns,
+        timestamp_ns: record_epoch_nanos,
         event_name,
         seqno,
         block_number,

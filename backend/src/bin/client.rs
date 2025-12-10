@@ -1,8 +1,10 @@
+use alloy_primitives::B256;
 use clap::Parser;
 use execution_events_example::event_listener::EventName;
+use execution_events_example::serializable_event::SerializableExecEvent;
 use execution_events_example::{event_filter::ClientMessage, server::ServerMessage};
 use futures_util::{SinkExt, StreamExt};
-use std::collections::HashSet;
+use std::collections::HashMap;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -26,6 +28,38 @@ struct Cli {
 
     #[arg(long, default_value = "false")]
     verbose_accesses: bool,
+}
+
+macro_rules! log_event {
+    // Entry: just message
+    ($msg:expr) => {
+        tracing::info!("------> {}", $msg)
+    };
+    // Entry: message with args - start recursion
+    ($msg:expr, $($rest:tt)+) => {
+        log_event!(@build [$msg] $($rest)+)
+    };
+    // Internal: final key=value pair
+    (@build [$msg:expr] $key:ident = $value:expr) => {
+        tracing::info!("------> {} {}={:?}", $msg, stringify!($key), $value)
+    };
+    // Internal: two pairs
+    (@build [$msg:expr] $k1:ident = $v1:expr, $k2:ident = $v2:expr) => {
+        tracing::info!("------> {} {}={:?} {}={:?}", $msg, stringify!($k1), $v1, stringify!($k2), $v2)
+    };
+    // Internal: three pairs
+    (@build [$msg:expr] $k1:ident = $v1:expr, $k2:ident = $v2:expr, $k3:ident = $v3:expr) => {
+        tracing::info!("------> {} {}={:?} {}={:?} {}={:?}", $msg, stringify!($k1), $v1, stringify!($k2), $v2, stringify!($k3), $v3)
+    };
+}
+
+#[derive(Default)]
+struct ClientState {
+    events_witnessed: usize,
+    block_start_ns: Option<u64>,
+    txs_start_ns: HashMap<usize, (B256, u64)>,
+    txs_execution_duration: std::time::Duration,
+    current_block_number: Option<u64>,
 }
 
 #[tokio::main]
@@ -77,9 +111,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Read messages from the server
     let mut events_per_sec_interval = tokio::time::interval(tokio::time::Duration::from_secs(1));
-    let mut events_witnessed = 0;
-    let mut seen_block_starts: HashSet<u64> = HashSet::new();
-    let mut seen_block_qcs: HashSet<u64> = HashSet::new();
+    let mut client_state = ClientState::default();
+
     loop {
         tokio::select! {
             msg = read.next() => {
@@ -94,19 +127,53 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             Ok(ServerMessage::Events(events)) => {
                                 // Check for duplicate BlockStart events
                                 for event in &events {
-                                    if event.event_name == EventName::BlockStart {
-                                        if let Some(block_number) = event.block_number {
-                                            if !seen_block_starts.insert(block_number) {
-                                                warn!("Duplicate BlockStart event for block {}", block_number);
-                                            }
+                                    match event.payload {
+                                        SerializableExecEvent::BlockStart { block_number, base_fee_per_gas, .. } => {
+                                            log_event!("BlockStart", height = block_number, base_fee = base_fee_per_gas);
+                                            client_state.current_block_number = Some(u64::max(client_state.current_block_number.unwrap_or(0), block_number));
                                         }
-                                    }
-                                    if event.event_name == EventName::BlockQC {
-                                        if let Some(block_number) = event.block_number {
-                                            if !seen_block_qcs.insert(block_number) {
-                                                warn!("Duplicate BlockQC event for block {}", block_number);
-                                            }
+                                        SerializableExecEvent::BlockPerfEvmEnter => {
+                                            log_event!("BlockPerfEvmEnter", timestamp = event.timestamp_ns, block_number = client_state.current_block_number);
+                                            client_state.block_start_ns = Some(event.timestamp_ns);
                                         }
+                                        SerializableExecEvent::BlockPerfEvmExit => {
+                                            if let Some(block_start_ns) = client_state.block_start_ns {
+                                                let block_duration = std::time::Duration::from_nanos((event.timestamp_ns - block_start_ns) as u64);
+                                                let parallel_execution_savings = client_state.txs_execution_duration.checked_sub(block_duration);
+                                                if parallel_execution_savings.is_none() { // This only happens with really small/empty blocks
+                                                    error!("Parallel execution savings is negative: txs={:?} block={:?}", client_state.txs_execution_duration, block_duration);
+                                                }
+                                                client_state.txs_execution_duration = std::time::Duration::from_nanos(0);
+                                                log_event!("BlockPerfEvmExit", block_number = client_state.current_block_number, duration = block_duration, parallel_execution_savings = parallel_execution_savings);
+                                            } else {
+                                                warn!("BlockPerfEvmExit event received without BlockStart event");
+                                            }
+                                            client_state.block_start_ns = None;
+                                        }
+                                        SerializableExecEvent::BlockEnd { gas_used, .. } => {
+                                            log_event!("BlockEnd", block_number = client_state.current_block_number, gas_used = gas_used);
+                                            client_state.current_block_number = None;
+                                        }
+                                        SerializableExecEvent::BlockQC { block_number, .. } => {
+                                            log_event!("BlockQC", block_number = block_number);
+                                        },
+                                        SerializableExecEvent::BlockFinalized { block_number, .. } => {
+                                            log_event!("BlockFinalized", block_number = block_number);
+                                        },
+                                        SerializableExecEvent::TxnHeaderStart { txn_hash, txn_index, .. } => {
+                                            log_event!("TxnHeaderStart", txn_index = txn_index, txn_hash = txn_hash);
+                                            client_state.txs_start_ns.insert(txn_index, (txn_hash, event.timestamp_ns));
+                                        },
+                                        SerializableExecEvent::TxnEvmOutput { txn_index, .. } => {
+                                            if let Some((txn_hash, txn_start_ns)) = client_state.txs_start_ns.remove(&txn_index) {
+                                                let txn_evm_duration = std::time::Duration::from_nanos((event.timestamp_ns - txn_start_ns) as u64);
+                                                client_state.txs_execution_duration += txn_evm_duration;
+                                                log_event!("TxnEvmOutput", txn_index = txn_index, txn_hash = txn_hash, duration = txn_evm_duration);
+                                            } else {
+                                                warn!("TxnPerfEvmExit event received without TxnPerfEvmEnter event: {:?}", txn_index);
+                                            }
+                                        },
+                                        _ => ()
                                     }
                                 }
 
@@ -114,7 +181,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 if cli.verbose_events {
                                     info!("Events: {:?}", events);
                                 }
-                                events_witnessed += events.len();
+                                client_state.events_witnessed += events.len();
                             }
                             Ok(ServerMessage::TopAccesses(top_accesses)) => {
                                 info!("Received top accesses");
@@ -147,8 +214,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
             _ = events_per_sec_interval.tick() => {
-                info!("Events per second: {}", events_witnessed);
-                events_witnessed = 0;
+                info!("Events per second: {}", client_state.events_witnessed);
+                client_state.events_witnessed = 0;
             }
         }
     }
