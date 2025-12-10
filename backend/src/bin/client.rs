@@ -79,7 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut events_per_sec_interval = tokio::time::interval(tokio::time::Duration::from_secs(1));
     let mut events_witnessed = 0;
     let mut seen_block_starts: HashSet<u64> = HashSet::new();
-    let mut seen_blocK_qcs: HashSet<u64> = HashSet::new();
+    let mut seen_block_qcs: HashSet<u64> = HashSet::new();
     loop {
         tokio::select! {
             msg = read.next() => {
@@ -103,7 +103,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     }
                                     if event.event_name == EventName::BlockQC {
                                         if let Some(block_number) = event.block_number {
-                                            if !seen_blocK_qcs.insert(block_number) {
+                                            if !seen_block_qcs.insert(block_number) {
                                                 warn!("Duplicate BlockQC event for block {}", block_number);
                                             }
                                         }
