@@ -35,31 +35,23 @@ macro_rules! log_event {
     ($msg:expr) => {
         tracing::info!("------> {}", $msg)
     };
-    // Entry: message with args - start recursion
-    ($msg:expr, $($rest:tt)+) => {
-        log_event!(@build [$msg] $($rest)+)
-    };
-    // Internal: final key=value pair
-    (@build [$msg:expr] $key:ident = $value:expr) => {
-        tracing::info!("------> {} {}={:?}", $msg, stringify!($key), $value)
-    };
-    // Internal: two pairs
-    (@build [$msg:expr] $k1:ident = $v1:expr, $k2:ident = $v2:expr) => {
-        tracing::info!("------> {} {}={:?} {}={:?}", $msg, stringify!($k1), $v1, stringify!($k2), $v2)
-    };
-    // Internal: three pairs
-    (@build [$msg:expr] $k1:ident = $v1:expr, $k2:ident = $v2:expr, $k3:ident = $v3:expr) => {
-        tracing::info!("------> {} {}={:?} {}={:?} {}={:?}", $msg, stringify!($k1), $v1, stringify!($k2), $v2, stringify!($k3), $v3)
-    };
+    // Entry: message with arbitrary number of key=value pairs
+    ($msg:expr, $($key:ident = $value:expr),+ $(,)?) => {{
+        let mut s = format!("------> {}", $msg);
+        $(
+            s.push_str(&format!(" {}={:?}", stringify!($key), $value));
+        )*
+        tracing::info!("{}", s);
+    }};
 }
 
 #[derive(Default)]
 struct ClientState {
     events_witnessed: usize,
-    block_start_ns: Option<u64>,
+    block_start_ns: u64,
     txs_start_ns: HashMap<usize, (B256, u64)>,
-    txs_execution_duration: std::time::Duration,
-    current_block_number: Option<u64>,
+    block_txns_total_duration: std::time::Duration,
+    current_block_number: u64,
 }
 
 #[tokio::main]
@@ -125,58 +117,62 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Ok(Message::Text(text)) => {
                         match serde_json::from_str::<ServerMessage>(&text) {
                             Ok(ServerMessage::Events(events)) => {
-                                // Check for duplicate BlockStart events
                                 for event in &events {
+                                    match event.event_name {
+                                        EventName::TxnPerfEvmEnter => {
+                                            println!("tx enter");
+                                        }
+                                        EventName::TxnPerfEvmExit => {
+                                            println!("tx exit");
+                                        }
+                                        _ => ()
+                                    }
                                     match event.payload {
                                         SerializableExecEvent::BlockStart { block_number, base_fee_per_gas, .. } => {
-                                            log_event!("BlockStart", height = block_number, base_fee = base_fee_per_gas);
-                                            client_state.current_block_number = Some(u64::max(client_state.current_block_number.unwrap_or(0), block_number));
+                                            log_event!("BlockStart", block_number = block_number, base_fee = base_fee_per_gas);
+                                            client_state.current_block_number = u64::max(client_state.current_block_number, block_number);
                                         }
                                         SerializableExecEvent::BlockPerfEvmEnter => {
-                                            log_event!("BlockPerfEvmEnter", timestamp = event.timestamp_ns, block_number = client_state.current_block_number);
-                                            client_state.block_start_ns = Some(event.timestamp_ns);
+                                            log_event!("BlockPerfEvmEnter");
+                                            client_state.block_start_ns = event.timestamp_ns;
                                         }
-                                        SerializableExecEvent::BlockPerfEvmExit => {
-                                            if let Some(block_start_ns) = client_state.block_start_ns {
-                                                let block_duration = std::time::Duration::from_nanos((event.timestamp_ns - block_start_ns) as u64);
-                                                let parallel_execution_savings = client_state.txs_execution_duration.checked_sub(block_duration);
-                                                let savings_pct = if parallel_execution_savings.is_none() { // This only happens with really small/empty blocks
-                                                    error!("Parallel execution savings is negative: txs={:?} block={:?}", client_state.txs_execution_duration, block_duration);
-                                                    None
-                                                } else {
-                                                    Some(100.0 * (1.0 - (block_duration.as_nanos() as f64 / client_state.txs_execution_duration.as_nanos() as f64)))
-                                                };
-
-                                                log_event!("BlockPerfEvmExit", duration = block_duration, tx_sum = client_state.txs_execution_duration, savings_pct = savings_pct);
-
-                                                client_state.txs_execution_duration = std::time::Duration::from_nanos(0);
-                                            } else {
-                                                warn!("BlockPerfEvmExit event received without BlockStart event");
-                                            }
-                                            client_state.block_start_ns = None;
-                                        }
-                                        SerializableExecEvent::BlockEnd { gas_used, .. } => {
-                                            log_event!("BlockEnd", block_number = client_state.current_block_number, gas_used = gas_used);
-                                            client_state.current_block_number = None;
-                                        }
-                                        SerializableExecEvent::BlockQC { block_number, .. } => {
-                                            log_event!("BlockQC", block_number = block_number);
-                                        },
-                                        SerializableExecEvent::BlockFinalized { block_number, .. } => {
-                                            log_event!("BlockFinalized", block_number = block_number);
-                                        },
                                         SerializableExecEvent::TxnHeaderStart { txn_hash, txn_index, .. } => {
                                             log_event!("TxnHeaderStart", txn_index = txn_index, txn_hash = txn_hash);
                                             client_state.txs_start_ns.insert(txn_index, (txn_hash, event.timestamp_ns));
                                         },
                                         SerializableExecEvent::TxnEvmOutput { txn_index, .. } => {
                                             if let Some((txn_hash, txn_start_ns)) = client_state.txs_start_ns.remove(&txn_index) {
-                                                let txn_evm_duration = std::time::Duration::from_nanos((event.timestamp_ns - txn_start_ns) as u64);
-                                                client_state.txs_execution_duration += txn_evm_duration;
-                                                log_event!("TxnEvmOutput", txn_index = txn_index, txn_hash = txn_hash, duration = txn_evm_duration);
+                                                let txn_duration = std::time::Duration::from_nanos((event.timestamp_ns - txn_start_ns) as u64);
+                                                client_state.block_txns_total_duration += txn_duration;
+
+                                                log_event!("TxnEvmOutput", txn_index = txn_index, txn_hash = txn_hash, duration = txn_duration);
                                             } else {
                                                 warn!("TxnPerfEvmExit event received without TxnPerfEvmEnter event: {:?}", txn_index);
                                             }
+                                        },
+                                        SerializableExecEvent::BlockPerfEvmExit => {
+                                            log_event!("BlockPerfEvmExit");
+                                            let block_duration = std::time::Duration::from_nanos((event.timestamp_ns - client_state.block_start_ns) as u64);
+                                            let parallel_execution_savings = client_state.block_txns_total_duration.checked_sub(block_duration);
+                                            let savings_pct = if parallel_execution_savings.is_none() { // This only happens with really small/empty blocks
+                                                error!("Parallel execution savings is negative: txs={:?} block={:?} height={}", client_state.block_txns_total_duration, block_duration, client_state.current_block_number);
+                                                None
+                                            } else {
+                                                Some(100.0 * (1.0 - (block_duration.as_nanos() as f64 / client_state.block_txns_total_duration.as_nanos() as f64)))
+                                            };
+
+                                            log_event!("BlockPerfEvmExit", height = client_state.current_block_number, block_duration = block_duration, tx_total_duration = client_state.block_txns_total_duration, savings_pct = savings_pct);
+
+                                            client_state.block_txns_total_duration = std::time::Duration::from_nanos(0);
+                                        },
+                                        SerializableExecEvent::BlockEnd { gas_used, .. } => {
+                                            log_event!("BlockEnd", gas_used = gas_used, block_number = client_state.current_block_number);
+                                        },
+                                        SerializableExecEvent::BlockQC { block_number, .. } => {
+                                            log_event!("BlockQC", block_number = block_number);
+                                        },
+                                        SerializableExecEvent::BlockFinalized { block_number, .. } => {
+                                            log_event!("BlockFinalized", block_number = block_number);
                                         },
                                         _ => ()
                                     }
