@@ -140,11 +140,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                             if let Some(block_start_ns) = client_state.block_start_ns {
                                                 let block_duration = std::time::Duration::from_nanos((event.timestamp_ns - block_start_ns) as u64);
                                                 let parallel_execution_savings = client_state.txs_execution_duration.checked_sub(block_duration);
-                                                if parallel_execution_savings.is_none() { // This only happens with really small/empty blocks
+                                                let savings_pct = if parallel_execution_savings.is_none() { // This only happens with really small/empty blocks
                                                     error!("Parallel execution savings is negative: txs={:?} block={:?}", client_state.txs_execution_duration, block_duration);
-                                                }
+                                                    None
+                                                } else {
+                                                    Some(100.0 * (1.0 - (block_duration.as_nanos() as f64 / client_state.txs_execution_duration.as_nanos() as f64)))
+                                                };
+
                                                 client_state.txs_execution_duration = std::time::Duration::from_nanos(0);
-                                                log_event!("BlockPerfEvmExit", block_number = client_state.current_block_number, duration = block_duration, parallel_execution_savings = parallel_execution_savings);
+
+                                                log_event!("BlockPerfEvmExit", duration = block_duration, parallel_exec_savings = parallel_execution_savings, savings_pct = savings_pct);
                                             } else {
                                                 warn!("BlockPerfEvmExit event received without BlockStart event");
                                             }
