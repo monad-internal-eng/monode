@@ -1,8 +1,8 @@
 use clap::Parser;
-use execution_events_example::event_filter::ClientMessage;
 use execution_events_example::event_listener::EventName;
-use execution_events_example::serializable_event::SerializableEventData;
+use execution_events_example::{event_filter::ClientMessage, server::ServerMessage};
 use futures_util::{SinkExt, StreamExt};
+use std::collections::HashSet;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -21,8 +21,11 @@ struct Cli {
     #[arg(short, long, value_delimiter = ',')]
     events: Option<Vec<String>>,
 
-    #[arg(short, long, default_value = "false")]
-    dump_events: bool,
+    #[arg(long, default_value = "false")]
+    verbose_events: bool,
+
+    #[arg(long, default_value = "false")]
+    verbose_accesses: bool,
 }
 
 #[tokio::main]
@@ -75,6 +78,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Read messages from the server
     let mut events_per_sec_interval = tokio::time::interval(tokio::time::Duration::from_secs(1));
     let mut events_witnessed = 0;
+    let mut seen_block_starts: HashSet<u64> = HashSet::new();
+    let mut seen_block_qcs: HashSet<u64> = HashSet::new();
     loop {
         tokio::select! {
             msg = read.next() => {
@@ -85,13 +90,42 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let msg = msg.unwrap();
                 match msg {
                     Ok(Message::Text(text)) => {
-                        match serde_json::from_str::<Vec<SerializableEventData>>(&text) {
-                            Ok(events) => {
+                        match serde_json::from_str::<ServerMessage>(&text) {
+                            Ok(ServerMessage::Events(events)) => {
+                                // Check for duplicate BlockStart events
+                                for event in &events {
+                                    if event.event_name == EventName::BlockStart {
+                                        if let Some(block_number) = event.block_number {
+                                            if !seen_block_starts.insert(block_number) {
+                                                warn!("Duplicate BlockStart event for block {}", block_number);
+                                            }
+                                        }
+                                    }
+                                    if event.event_name == EventName::BlockQC {
+                                        if let Some(block_number) = event.block_number {
+                                            if !seen_block_qcs.insert(block_number) {
+                                                warn!("Duplicate BlockQC event for block {}", block_number);
+                                            }
+                                        }
+                                    }
+                                }
+
                                 info!("Received {} events", events.len());
-                                if cli.dump_events {
+                                if cli.verbose_events {
                                     info!("Events: {:?}", events);
                                 }
                                 events_witnessed += events.len();
+                            }
+                            Ok(ServerMessage::TopAccesses(top_accesses)) => {
+                                info!("Received top accesses");
+                                if cli.verbose_accesses {
+                                    for entry in &top_accesses.storage {
+                                        info!("Storage access: address={}, key={}, count={}", entry.key.0, entry.key.1, entry.count);
+                                    }
+                                    for entry in &top_accesses.account {
+                                        info!("Account access: address={}, count={}", entry.key, entry.count);
+                                    }
+                                }
                             }
                             Err(_) => {
                                 error!("Failed to parse events: {}", text);

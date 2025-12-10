@@ -1,25 +1,18 @@
-// Re-export modules from lib/ subdirectory
 pub mod timestamp {
-    pub use super::lib::timestamp::*;
+    include!("lib/timestamp.rs");
 }
 pub mod event_filter {
-    pub use super::lib::event_filter::*;
+    include!("lib/event_filter.rs");
 }
 pub mod event_listener {
-    pub use super::lib::event_listener::*;
+    include!("lib/event_listener.rs");
 }
 pub mod serializable_event {
-    pub use super::lib::serializable_event::*;
+    include!("lib/serializable_event.rs");
 }
 pub mod server {
-    pub use super::lib::server::*;
+    include!("lib/server.rs");
 }
-
-// Internal module containing implementations
-mod lib {
-    pub mod event_filter;
-    pub mod event_listener;
-    pub mod serializable_event;
-    pub mod server;
-    pub mod timestamp;
+pub mod top_k_tracker {
+    include!("lib/top_k_tracker.rs");
 }
