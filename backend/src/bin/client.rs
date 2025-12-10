@@ -147,9 +147,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                                     Some(100.0 * (1.0 - (block_duration.as_nanos() as f64 / client_state.txs_execution_duration.as_nanos() as f64)))
                                                 };
 
-                                                client_state.txs_execution_duration = std::time::Duration::from_nanos(0);
+                                                log_event!("BlockPerfEvmExit", duration = block_duration, tx_sum = client_state.txs_execution_duration, savings_pct = savings_pct);
 
-                                                log_event!("BlockPerfEvmExit", duration = block_duration, parallel_exec_savings = parallel_execution_savings, savings_pct = savings_pct);
+                                                client_state.txs_execution_duration = std::time::Duration::from_nanos(0);
                                             } else {
                                                 warn!("BlockPerfEvmExit event received without BlockStart event");
                                             }
