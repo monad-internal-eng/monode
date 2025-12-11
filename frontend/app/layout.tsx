@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 import './globals.css'
+import { Providers } from './providers'
 
 const brittiSans = localFont({
   src: './britti-sans-variable.woff2',
@@ -21,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${brittiSans.variable} antialiased bg-[#0f0f1a]`}>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   )

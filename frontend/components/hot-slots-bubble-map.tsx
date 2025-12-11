@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import { BubbleMap } from '@/components/bubble-map'
+import { useEvents } from '@/hooks/use-events'
 import { shortenHex } from '@/lib/utils'
 import { ExplorerLink } from './bubble-map/explorer-link'
 
@@ -13,78 +14,21 @@ interface HotSlot {
 }
 
 /**
- * TEMPORARY: Generate mock data for the hot slots bubble map.
- * TODO: Replace with actual data from the execution events backend.
- */
-const generateMockData = (): HotSlot[] => {
-  const slots = [
-    {
-      address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
-      slot: '0x0000000000000000000000000000000000000000000000000000000000000001',
-      baseHits: 85,
-    },
-    {
-      address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-      slot: '0x0000000000000000000000000000000000000000000000000000000000000003',
-      baseHits: 72,
-    },
-    {
-      address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-      slot: '0x0000000000000000000000000000000000000000000000000000000000000009',
-      baseHits: 68,
-    },
-    {
-      address: '0x8315177aB297bA92A06054cE80a67Ed4DBd7ed3a',
-      slot: '0x0000000000000000000000000000000000000000000000000000000000000012',
-      baseHits: 65,
-    },
-    {
-      address: '0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85',
-      slot: '0x0000000000000000000000000000000000000000000000000000000000000021',
-      baseHits: 55,
-    },
-    {
-      address: '0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d',
-      slot: '0x0000000000000000000000000000000000000000000000000000000000000045',
-      baseHits: 48,
-    },
-    {
-      address: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
-      slot: '0x0000000000000000000000000000000000000000000000000000000000000078',
-      baseHits: 42,
-    },
-    {
-      address: '0x7Be8076f4EA4A4AD08075C2508e481d6C946D12b',
-      slot: '0x0000000000000000000000000000000000000000000000000000000000000099',
-      baseHits: 38,
-    },
-  ]
-
-  return slots
-    .map((s) => ({
-      id: `${s.address}-${s.slot}`,
-      address: s.address,
-      slot: s.slot,
-      hits: Math.max(10, Math.floor(s.baseHits + (Math.random() * 40 - 20))),
-    }))
-    .sort((a, b) => b.hits - a.hits)
-}
-
-/**
  * A bubble map component that displays the most accessed storage slots.
  */
 export default function HotSlotsBubbleMap() {
-  const [slots, setSlots] = useState<HotSlot[]>([])
+  const { storageAccesses } = useEvents()
 
-  useEffect(() => {
-    setSlots(generateMockData())
-
-    const interval = setInterval(() => {
-      setSlots(generateMockData())
-    }, 3000)
-
-    return () => clearInterval(interval)
-  }, [])
+  const slots: HotSlot[] = useMemo(() => {
+    return storageAccesses
+      .map((entry) => ({
+        id: `${entry.key[0]}-${entry.key[1]}`,
+        address: entry.key[0],
+        slot: entry.key[1],
+        hits: entry.count,
+      }))
+      .sort((a, b) => b.hits - a.hits)
+  }, [storageAccesses])
 
   return (
     <BubbleMap
