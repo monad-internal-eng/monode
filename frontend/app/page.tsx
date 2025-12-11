@@ -1,4 +1,6 @@
 import BlockStateTracker from '@/components/block-state-tracker'
+import HotAccountsBubbleMap from '@/components/hot-accounts-bubble-map'
+import HotSlotsBubbleMap from '@/components/hot-slots-bubble-map'
 
 export default function Home() {
   return (
@@ -8,6 +10,14 @@ export default function Home() {
           Execution Events SDK Showcase
         </h1>
         <BlockStateTracker />
+
+        <div className="w-full h-px my-8 bg-gradient-to-r from-transparent via-[#2a2a4a] to-transparent" />
+
+        <HotAccountsBubbleMap />
+
+        <div className="w-full h-px my-8 bg-gradient-to-r from-transparent via-[#2a2a4a] to-transparent" />
+
+        <HotSlotsBubbleMap />
       </main>
     </div>
   )
