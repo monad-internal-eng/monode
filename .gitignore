@@ -69,6 +69,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.pnpm-store/
 
 # Sentry Config File
 .env.sentry-build-plugin

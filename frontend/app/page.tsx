@@ -1,13 +1,13 @@
-import BlockSpawner from '../components/block-spawner'
+import BlockStateTracker from '@/components/block-state-tracker'
 
 export default function Home() {
   return (
-    <div className="h-screen overflow-hidden text-white font-sans sm:min-h-screen sm:h-auto sm:overflow-visible">
-      <main className="h-full flex flex-col py-4 px-4 max-w-6xl mx-auto sm:block sm:h-auto sm:py-8 sm:px-6 md:py-12">
-        <h1 className="text-2xl font-bold mb-4 text-center shrink-0 md:mb-8">
+    <div className="min-h-screen text-white font-sans">
+      <main className="py-6 px-4 max-w-5xl mx-auto sm:py-8 sm:px-6 md:py-12">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center md:mb-8 bg-linear-to-r from-indigo-400 via-violet-400 to-purple-400 bg-clip-text text-transparent">
           Execution Events SDK Showcase
         </h1>
-        <BlockSpawner />
+        <BlockStateTracker />
       </main>
     </div>
   )
