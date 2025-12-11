@@ -36,7 +36,7 @@ export function BlockCard({ block, className }: BlockCardProps) {
         'flex flex-col items-center justify-center rounded-xl font-semibold',
         'select-none cursor-default text-white',
         'transition-[background,box-shadow] duration-500 ease-in-out',
-        'w-20 h-20 text-base sm:w-24 sm:h-24 sm:text-lg',
+        'w-24 h-24 text-base sm:w-30 sm:h-30 sm:text-lg',
         className,
       )}
     >
