@@ -19,7 +19,7 @@ Replace `<SERVER_PORT>` with your desired port number (e.g., 8080).
 Edit the `.env` file in the frontend directory to set the WebSocket URL:
 
 ```
-NEXT_PUBLIC_WS_URL="ws://<SERVER_ADDR>:<SERVER_PORT>"
+NEXT_PUBLIC_EVENTS_WS_URL="ws://<SERVER_ADDR>:<SERVER_PORT>"
 ```
 
 Replace `<SERVER_ADDR>` with your server address and `<SERVER_PORT>` with the port you used in step 1.

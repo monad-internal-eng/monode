@@ -74,10 +74,10 @@ export function EventsProvider({ children }: EventsProviderProps) {
 
     const connect = () => {
       try {
-        const url = process.env.NEXT_PUBLIC_WS_URL
+        const url = process.env.NEXT_PUBLIC_EVENTS_WS_URL
 
         if (!url) {
-          throw new Error('NEXT_PUBLIC_WS_URL is not set')
+          throw new Error('NEXT_PUBLIC_EVENTS_WS_URL is not set')
         }
 
         ws = new WebSocket(url)
