@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
+import { Spinner } from '@/components/spinner'
 import { cn } from '@/lib/utils'
 
 export interface BubbleItem {
@@ -70,47 +71,51 @@ export function BubbleMap<T extends BubbleItem>({
       </div>
 
       <div className="relative min-h-[400px] w-full bg-[#16162a]/80 rounded-xl border border-[#2a2a4a]/50 p-8 flex items-center justify-center">
-        <div className="relative flex flex-wrap items-center justify-center gap-6 z-10 w-full">
-          {items.map((item) => {
-            const size = getSize(item.hits)
+        {items.length === 0 ? (
+          <Spinner text="Waiting for data..." />
+        ) : (
+          <div className="relative flex flex-wrap items-center justify-center gap-6 z-10 w-full">
+            {items.map((item) => {
+              const size = getSize(item.hits)
 
-            return (
-              <motion.div
-                key={item.id}
-                layout
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                style={{
-                  width: size,
-                  height: size,
-                }}
-                className="group relative cursor-pointer"
-              >
-                {/* Bubble */}
-                <div
-                  className={cn(
-                    'absolute inset-0 rounded-full bg-linear-to-br backdrop-blur-sm border transition-all duration-300',
-                    'flex items-center justify-center flex-col text-center p-2',
-                    'group-hover:scale-110 group-hover:z-20 group-hover:shadow-lg',
-                    getColor(item.hits),
-                  )}
+              return (
+                <motion.div
+                  key={item.id}
+                  layout
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  style={{
+                    width: size,
+                    height: size,
+                  }}
+                  className="group relative cursor-pointer"
                 >
-                  {renderBubbleContent(item)}
-                </div>
-
-                {/* Tooltip */}
-                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto z-50 w-max max-w-[250px]">
-                  <div className="bg-[#0e0e1a] border border-[#2a2a4a] rounded-lg p-3 shadow-xl">
-                    {renderTooltip(item)}
+                  {/* Bubble */}
+                  <div
+                    className={cn(
+                      'absolute inset-0 rounded-full bg-linear-to-br backdrop-blur-sm border transition-all duration-300',
+                      'flex items-center justify-center flex-col text-center p-2',
+                      'group-hover:scale-110 group-hover:z-20 group-hover:shadow-lg',
+                      getColor(item.hits),
+                    )}
+                  >
+                    {renderBubbleContent(item)}
                   </div>
-                  {/* Arrow */}
-                  <div className="absolute left-1/2 -translate-x-1/2 top-full w-2 h-2 bg-[#0e0e1a] border-b border-r border-[#2a2a4a] rotate-45 -mt-1" />
-                </div>
-              </motion.div>
-            )
-          })}
-        </div>
+
+                  {/* Tooltip */}
+                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto z-50 w-max max-w-[250px]">
+                    <div className="bg-[#0e0e1a] border border-[#2a2a4a] rounded-lg p-3 shadow-xl">
+                      {renderTooltip(item)}
+                    </div>
+                    {/* Arrow */}
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-2 h-2 bg-[#0e0e1a] border-b border-r border-[#2a2a4a] rotate-45 -mt-1" />
+                  </div>
+                </motion.div>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )

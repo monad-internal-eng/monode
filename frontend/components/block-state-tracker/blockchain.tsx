@@ -1,8 +1,8 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Loader2 } from 'lucide-react'
 import { useLayoutEffect, useRef } from 'react'
+import { Spinner } from '@/components/spinner'
 import type { Block } from '@/types/block'
 import { BlockCard } from './block-card'
 
@@ -55,9 +55,8 @@ export function Blockchain({ blocks }: BlockchainProps) {
         className="flex-1 p-4 overflow-x-auto overflow-y-hidden scrollbar-none"
       >
         {sortedBlocks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 w-full py-8">
-            <Loader2 className="text-[#6a6a7a] animate-spin size-12" />
-            <p className="text-[#6a6a7a] text-sm">Waiting for blocks...</p>
+          <div className="flex items-center justify-center w-full py-8">
+            <Spinner text="Waiting for blocks..." />
           </div>
         ) : (
           <motion.div
