@@ -1,6 +1,3 @@
-pub mod timestamp {
-    include!("lib/timestamp.rs");
-}
 pub mod event_filter {
     include!("lib/event_filter.rs");
 }
