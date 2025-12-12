@@ -30,7 +30,15 @@ export default function BlockStateTracker() {
         setBlocks((prev) => {
           const exists = prev.some((b) => b.id === payload.block_number)
           if (exists) return prev
-          return [...prev, { id: payload.block_number, state: 'proposed' }]
+          return [
+            ...prev,
+            {
+              id: payload.block_number,
+              state: 'proposed',
+              startTimestamp: event.timestamp_ns,
+              transactions: [],
+            },
+          ]
         })
         break
       }
