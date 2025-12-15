@@ -2,7 +2,10 @@ use alloy_primitives::B256;
 use clap::Parser;
 use execution_events_example::event_listener::EventName;
 use execution_events_example::serializable_event::SerializableExecEvent;
-use execution_events_example::{event_filter::ClientMessage, server::ServerMessage};
+use execution_events_example::{
+    event_filter::{ClientMessage, EventFilterSpec},
+    server::ServerMessage,
+};
 use futures_util::{SinkExt, StreamExt};
 use std::collections::HashMap;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
@@ -90,7 +93,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Send subscription message
     let subscribe_msg = ClientMessage::Subscribe {
-        events: events.clone(),
+        event_filters: if events.is_empty() {
+            Vec::new()
+        } else {
+            events
+                .iter()
+                .map(|event_name| EventFilterSpec {
+                    event_name: *event_name,
+                    field_filters: Vec::new(),
+                })
+                .collect()
+        },
     };
     let subscribe_json = serde_json::to_string(&subscribe_msg)?;
     write.send(Message::Text(subscribe_json)).await?;
