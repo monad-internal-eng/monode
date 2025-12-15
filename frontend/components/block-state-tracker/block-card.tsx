@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { BLOCK_STATE_CONFIG } from '@/constants/block-state'
+import { formatDateDisplay, formatTimeDisplay } from '@/lib/timestamp'
 import { cn } from '@/lib/utils'
 import type { Block } from '@/types/block'
 
@@ -14,7 +15,7 @@ interface BlockCardProps {
  * Individual block card in the blockchain visualization.
  * Color and label transition smoothly as the block progresses through states.
  */
-export function BlockCard({ block, className }: BlockCardProps) {
+export const BlockCard = ({ block, className }: BlockCardProps) => {
   const config = BLOCK_STATE_CONFIG[block.state]
 
   return (
@@ -36,13 +37,19 @@ export function BlockCard({ block, className }: BlockCardProps) {
         'flex flex-col items-center justify-center rounded-xl font-semibold',
         'select-none cursor-default text-white',
         'transition-[background,box-shadow] duration-500 ease-in-out',
-        'w-24 h-24 text-base sm:w-30 sm:h-30 sm:text-lg',
+        'w-34 h-34 text-lg p-3',
         className,
       )}
     >
-      <span className="font-bold drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
+      <a
+        href={`https://monadvision.com/block/${block.id}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-bold drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] hover:underline underline-offset-2"
+        title={`View block #${block.id} on MonadVision`}
+      >
         #{block.id}
-      </span>
+      </a>
       <AnimatePresence mode="wait">
         <motion.span
           key={config.label}
@@ -50,11 +57,25 @@ export function BlockCard({ block, className }: BlockCardProps) {
           animate={{ opacity: 0.9, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.15, ease: 'easeOut' }}
-          className="text-xs mt-1 sm:text-sm drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]"
+          className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)] text-base mt-2"
         >
           {config.label}
         </motion.span>
       </AnimatePresence>
+      {block.timestamp && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex flex-col items-center gap-0.5 mt-3"
+        >
+          <span className="text-sm text-white/80 text-center leading-none">
+            {formatTimeDisplay(block.timestamp)}
+          </span>
+          <span className="text-xs text-white/60 text-center leading-none">
+            {formatDateDisplay(block.timestamp)}
+          </span>
+        </motion.div>
+      )}
     </motion.div>
   )
 }

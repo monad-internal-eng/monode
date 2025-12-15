@@ -38,8 +38,5 @@ export interface SerializableEventData {
   txn_idx?: number
   payload: SerializableExecEvent
   seqno: number
-  timestamp_ns: {
-    seconds: number
-    nanos: number
-  }
+  timestamp_ns: string
 }

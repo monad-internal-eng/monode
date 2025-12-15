@@ -74,7 +74,7 @@ export function BubbleMap<T extends BubbleItem>({
         {items.length === 0 ? (
           <Spinner text="Waiting for data..." />
         ) : (
-          <div className="relative flex flex-wrap items-center justify-center gap-6 z-10 w-full">
+          <div className="max-w-5xl relative flex flex-wrap items-center justify-center gap-6 z-10 w-full">
             {items.map((item) => {
               const size = getSize(item.hits)
 
