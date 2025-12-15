@@ -3,14 +3,15 @@ use alloy_primitives::{Address, Bytes, B256, U256};
 use monad_exec_events::{ffi::*, ExecEvent};
 use serde::{Deserialize, Serialize};
 
-use super::timestamp::NanoTimestamp;
-
 /// Serializable version of ExecEvent using alloy-primitives for type safety
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum SerializableExecEvent {
     RecordError {
         error_type: u16,
+        dropped_event_type: u16,
+        truncated_payload_size: u32,
+        requested_payload_size: u64,
     },
     BlockStart {
         block_number: u64,
@@ -41,6 +42,7 @@ pub enum SerializableExecEvent {
         round: u64,
     },
     BlockFinalized {
+        block_id: B256,
         block_number: u64,
     },
     BlockVerified {
@@ -50,13 +52,21 @@ pub enum SerializableExecEvent {
         txn_index: usize,
         txn_hash: B256,
         sender: Address,
-        to: Address,
+        txn_type: u8,
+        chain_id: U256,
+        nonce: u64,
         gas_limit: u64,
         max_fee_per_gas: U256,
         max_priority_fee_per_gas: U256,
         value: U256,
         data: Bytes,
-        blob_data: Bytes,
+        to: Address,
+        is_contract_creation: bool,
+        r: U256,
+        s: U256,
+        y_parity: bool,
+        access_list_count: u32,
+        auth_list_count: u32,
     },
     TxnAccessListEntry {
         txn_index: usize,
@@ -76,11 +86,13 @@ pub enum SerializableExecEvent {
     TxnPerfEvmExit,
     TxnEvmOutput {
         txn_index: usize,
+        log_count: u32,
         status: bool,
         gas_used: u64,
     },
     TxnLog {
         txn_index: usize,
+        log_index: u32,
         address: Address,
         topics: Bytes,
         data: Bytes,
@@ -134,6 +146,9 @@ impl From<&ExecEvent> for SerializableExecEvent {
         match event {
             ExecEvent::RecordError(err) => Self::RecordError {
                 error_type: err.error_type,
+                dropped_event_type: err.dropped_event_type,
+                truncated_payload_size: err.truncated_payload_size,
+                requested_payload_size: err.requested_payload_size,
             },
             ExecEvent::BlockStart(block) => Self::BlockStart {
                 block_number: block.block_tag.block_number,
@@ -162,6 +177,7 @@ impl From<&ExecEvent> for SerializableExecEvent {
                 round: qc.round,
             },
             ExecEvent::BlockFinalized(finalized) => Self::BlockFinalized {
+                block_id: B256::from_slice(&finalized.id.bytes),
                 block_number: finalized.block_number,
             },
             ExecEvent::BlockVerified(verified) => Self::BlockVerified {
@@ -171,20 +187,28 @@ impl From<&ExecEvent> for SerializableExecEvent {
                 txn_index,
                 txn_header_start,
                 data_bytes,
-                blob_bytes,
+                ..
             } => Self::TxnHeaderStart {
                 txn_index: *txn_index,
                 txn_hash: B256::from_slice(&txn_header_start.txn_hash.bytes),
                 sender: Address::from_slice(&txn_header_start.sender.bytes),
-                to: Address::from_slice(&txn_header_start.txn_header.to.bytes),
+                txn_type: txn_header_start.txn_header.txn_type,
+                chain_id: uint256_from_c(&txn_header_start.txn_header.chain_id),
+                nonce: txn_header_start.txn_header.nonce,
                 gas_limit: txn_header_start.txn_header.gas_limit,
                 max_fee_per_gas: uint256_from_c(&txn_header_start.txn_header.max_fee_per_gas),
                 max_priority_fee_per_gas: uint256_from_c(
                     &txn_header_start.txn_header.max_priority_fee_per_gas,
                 ),
                 value: uint256_from_c(&txn_header_start.txn_header.value),
+                to: Address::from_slice(&txn_header_start.txn_header.to.bytes),
+                is_contract_creation: txn_header_start.txn_header.is_contract_creation,
+                r: uint256_from_c(&txn_header_start.txn_header.r),
+                s: uint256_from_c(&txn_header_start.txn_header.s),
+                y_parity: txn_header_start.txn_header.y_parity,
+                access_list_count: txn_header_start.txn_header.access_list_count,
+                auth_list_count: txn_header_start.txn_header.auth_list_count,
                 data: Bytes::copy_from_slice(data_bytes),
-                blob_data: Bytes::copy_from_slice(blob_bytes),
             },
             ExecEvent::TxnAccessListEntry {
                 txn_index,
@@ -212,6 +236,7 @@ impl From<&ExecEvent> for SerializableExecEvent {
             ExecEvent::TxnEvmOutput { txn_index, output } => Self::TxnEvmOutput {
                 txn_index: *txn_index,
                 status: output.receipt.status,
+                log_count: output.receipt.log_count,
                 gas_used: output.receipt.gas_used,
             },
             ExecEvent::TxnLog {
@@ -221,6 +246,7 @@ impl From<&ExecEvent> for SerializableExecEvent {
                 data_bytes,
             } => Self::TxnLog {
                 txn_index: *txn_index,
+                log_index: txn_log.index,
                 address: Address::from_slice(&txn_log.address.bytes),
                 topics: Bytes::copy_from_slice(topic_bytes),
                 data: Bytes::copy_from_slice(data_bytes),
@@ -286,7 +312,7 @@ pub struct SerializableEventData {
     pub txn_idx: Option<usize>,
     pub payload: SerializableExecEvent,
     pub seqno: u64,
-    pub timestamp_ns: NanoTimestamp,
+    pub timestamp_ns: u64,
 }
 
 impl From<&EventData> for SerializableEventData {
