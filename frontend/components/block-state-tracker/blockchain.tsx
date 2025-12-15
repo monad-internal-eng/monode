@@ -21,15 +21,15 @@ export function Blockchain({ blocks }: BlockchainProps) {
   return (
     <div
       ref={scrollContainerRef}
-      className="flex-1 p-4 overflow-x-auto overflow-y-hidden scrollbar-none"
+      className="flex-1 p-4 overflow-x-auto overflow-y-hidden scrollbar-none min-h-[152px] sm:min-h-[172px]"
     >
       {sortedBlocks.length === 0 ? (
-        <div className="flex items-center justify-center w-full py-8">
+        <div className="flex items-center justify-center w-full h-[120px] sm:h-[140px]">
           <Spinner text="Waiting for blocks..." />
         </div>
       ) : (
         <motion.div
-          className="flex items-center gap-2 min-h-[120px] sm:min-h-[140px] w-fit"
+          className="flex items-center gap-2 h-[120px] sm:h-[140px] w-fit"
           layout
           transition={{ layout: { duration: 0.3, ease: 'easeInOut' } }}
         >
