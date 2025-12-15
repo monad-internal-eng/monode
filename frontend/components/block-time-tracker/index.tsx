@@ -97,6 +97,7 @@ function calculateBarMetrics(block: Block, maxBlockExecutionTime: string) {
  */
 export default function BlockTimeExecutionTracker() {
   const [blocks, setBlocks] = useState<Block[]>([])
+  const maxBlock = 20
 
   // Handle real-time events from the backend
   const handleEvent = useCallback((event: SerializableEventData) => {
@@ -172,6 +173,11 @@ export default function BlockTimeExecutionTracker() {
                 transactions: [],
               },
             ] //.sort((a, b) => a.id - b.id) // Should not be necessary as we always add the newest block
+          }
+
+          // Keep only the latest maxBlock blocks
+          if (newBlocks.length > maxBlock) {
+            newBlocks = newBlocks.slice(-maxBlock)
           }
 
           return newBlocks
