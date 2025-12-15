@@ -42,6 +42,7 @@ function calculateNsDifference(
  */
 function calculateBarMetrics(block: Block, maxBlockExecutionTime: string) {
   const blockExecutionTime = block.executionTime ?? 0
+  const maxExecTime = Math.max(Number(maxBlockExecutionTime), 1) // Ensure minimum to avoid division by zero
 
   // Calculate total transaction execution time
   const totalTransactionTime = block.transactions.reduce(
@@ -51,15 +52,23 @@ function calculateBarMetrics(block: Block, maxBlockExecutionTime: string) {
 
   // Normalize bar height based on block time (container represents block execution time)
   // If no execution time, show minimal height for blocks that exist
-  const barHeightPercentage =
+  let barHeightPercentage =
     blockExecutionTime > 0
-      ? (fromNsToMs(blockExecutionTime) / Number(maxBlockExecutionTime)) * 100
+      ? (fromNsToMs(blockExecutionTime) / maxExecTime) * 100
       : 20 // Show something for blocks without execution time yet
+
+  // Guard against NaN
+  if (
+    Number.isNaN(barHeightPercentage) ||
+    !Number.isFinite(barHeightPercentage)
+  ) {
+    barHeightPercentage = 20
+  }
 
   // Calculate fill percentage (transaction time relative to block time)
   // If transactions run in parallel, total transaction time can be > block time
   // But the fill can't exceed 100% of the container
-  const fillPercentage =
+  let fillPercentage =
     blockExecutionTime > 0
       ? Math.min(
           (totalTransactionTime / fromNsToMs(blockExecutionTime)) * 100,
@@ -69,12 +78,18 @@ function calculateBarMetrics(block: Block, maxBlockExecutionTime: string) {
         ? 50
         : 0 // Show some fill if we have transactions
 
+  // Guard against NaN
+  if (Number.isNaN(fillPercentage) || !Number.isFinite(fillPercentage)) {
+    fillPercentage = 0
+  }
+
   // Calculate efficiency metrics
   const parallelizationRatio =
     blockExecutionTime > 0
       ? totalTransactionTime / fromNsToMs(blockExecutionTime)
       : 0
-  const isHighlyParallel = parallelizationRatio > 1
+  const isHighlyParallel =
+    parallelizationRatio > 1 && Number.isFinite(parallelizationRatio)
 
   return {
     barHeightPercentage: Math.max(barHeightPercentage * 0.8, 15), // Ensure minimum height
@@ -395,9 +410,13 @@ export default function BlockTimeExecutionTracker() {
     onEvent: handleEvent,
   })
 
-  const maxBlockExecutionTime = fromNsToMs(
-    Math.max(...blocks.map((block) => block.executionTime ?? 0), 1),
-  ).toFixed(0)
+  const finalizedBlocks = blocks.filter(
+    (b) => b.state === 'finalized' || b.state === 'verified',
+  )
+  const maxBlockExecutionTimeMs = fromNsToMs(
+    Math.max(...finalizedBlocks.map((block) => block.executionTime ?? 0), 1),
+  )
+  const maxBlockExecutionTime = Math.max(maxBlockExecutionTimeMs, 1).toFixed(0)
 
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
@@ -408,7 +427,9 @@ export default function BlockTimeExecutionTracker() {
           </h2>
           <div className="flex items-center gap-2 text-sm">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            <span className="text-[#8888a0]">Live Events</span>
+            <span className="text-[#8888a0]">
+              Live Events (only last {maxBlock} blocks are shown)
+            </span>
           </div>
         </div>
       </div>
@@ -416,22 +437,16 @@ export default function BlockTimeExecutionTracker() {
       {/* Block Statistics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
         <div className="bg-[#16162a]/80 p-3 rounded-lg text-center border border-[#2a2a4a]/50">
-          <div className="font-semibold text-[#8888a0]">Total Blocks</div>
-          <div className="text-xl font-bold text-[#8888a0]">
-            {blocks.length}
-          </div>
-        </div>
-        <div className="bg-[#16162a]/80 p-3 rounded-lg text-center border border-[#2a2a4a]/50">
           <div className="font-semibold text-[#8888a0]">
             Avg Execution Block Time
           </div>
           <div className="text-xl font-bold text-[#8888a0]">
-            {blocks.length > 0
+            {finalizedBlocks.length > 0
               ? Math.round(
-                  blocks.reduce(
+                  finalizedBlocks.reduce(
                     (sum, b) => sum + fromNsToMs(b?.executionTime ?? 0),
                     0,
-                  ) / blocks.length,
+                  ) / finalizedBlocks.length,
                 )
               : 0}
             ms
@@ -445,12 +460,6 @@ export default function BlockTimeExecutionTracker() {
             {maxBlockExecutionTime}ms
           </div>
         </div>
-        <div className="bg-[#16162a]/80 p-3 rounded-lg text-center border border-[#2a2a4a]/50">
-          <div className="font-semibold text-[#8888a0]">Total Transactions</div>
-          <div className="text-xl font-bold text-[#8888a0]">
-            {blocks.reduce((sum, b) => sum + b.transactions.length, 0)}
-          </div>
-        </div>
       </div>
 
       {/* Horizontal Scroll Container with Block Bars */}
@@ -462,9 +471,20 @@ export default function BlockTimeExecutionTracker() {
           </div>
         </div>
 
-        <div className="relative overflow-x-auto pb-4">
-          <div className="flex gap-2 min-w-max p-8 bg-[#16162a]/80 rounded-lg border border-[#2a2a4a]/50">
-            {blocks.map((block) => {
+        <div className="relative pb-4 flex">
+          {/* Fixed Legend - aligned with block stats */}
+          <div className="flex flex-col justify-end bg-[#16162a]/80 rounded-l-lg border border-r-0 border-[#2a2a4a]/50 min-w-40">
+            {/* Legend aligned with block stats */}
+            <div className="flex flex-col gap-1 text-xs text-[#8888a0] p-4 pb-8">
+              <span>Block execution time</span>
+              <span>Total transactions execution time</span>
+              <span>Amount of transactions</span>
+            </div>
+          </div>
+
+          {/* Scrollable Blocks Container */}
+          <div className="flex gap-2 p-8 bg-[#16162a]/80 rounded-r-lg border border-l-0 border-[#2a2a4a]/50 overflow-x-auto max-w-full scrollbar-none flex-1">
+            {finalizedBlocks.map((block) => {
               const {
                 barHeightPercentage,
                 fillPercentage,
@@ -534,13 +554,10 @@ export default function BlockTimeExecutionTracker() {
                     <div className="font-medium">
                       {fromNsToMs(block.executionTime ?? 0).toFixed(1)}ms
                     </div>
-                    <div className="text-2xs text-gray-400">
-                      {totalTransactionTime.toFixed(1)}ms tx
+                    <div className="text-xs text-gray-400">
+                      {totalTransactionTime.toFixed(1)}ms
                     </div>
                     <div>{block.transactions.length} tx</div>
-                    <div className="capitalize text-2xs">
-                      {block.state || 'processing'}
-                    </div>
                   </div>
                 </motion.div>
               )

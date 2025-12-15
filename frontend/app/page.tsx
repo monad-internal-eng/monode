@@ -12,14 +12,14 @@ export default function Home() {
         </h1>
         <BlockStateTracker />
 
-        <div className="w-full h-px my-8 bg-gradient-to-r from-transparent via-[#2a2a4a] to-transparent" />
+        <div className="w-full h-px my-8 bg-linear-to-r from-transparent via-[#2a2a4a] to-transparent" />
 
         <HotAccountsBubbleMap />
 
-        <div className="w-full h-px my-8 bg-gradient-to-r from-transparent via-[#2a2a4a] to-transparent" />
+        <div className="w-full h-px my-8 bg-linear-to-r from-transparent via-[#2a2a4a] to-transparent" />
 
         <HotSlotsBubbleMap />
-        <div className="w-full h-px my-8 bg-gradient-to-r from-transparent via-[#2a2a4a] to-transparent" />
+        <div className="w-full h-px my-8 bg-linear-to-r from-transparent via-[#2a2a4a] to-transparent" />
 
         <BlockTimeExecutionTracker />
       </main>
