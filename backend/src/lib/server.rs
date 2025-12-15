@@ -45,12 +45,12 @@ async fn wait_for_subscription(
 
     match tokio::time::timeout(timeout, ws_receiver.next()).await {
         Ok(Some(Ok(Message::Text(text)))) => match serde_json::from_str::<ClientMessage>(&text) {
-            Ok(ClientMessage::Subscribe { events }) => {
-                let filter = EventFilter::from_event_names(events.clone());
+            Ok(ClientMessage::Subscribe { event_filters }) => {
+                let filter = EventFilter::new(event_filters.clone());
                 if filter.accepts_all() {
                     info!("Client {} subscribed to all events", addr);
                 } else {
-                    info!("Client {} subscribed to events: {:?}", addr, events);
+                    info!("Client {} subscribed with {} event filters", addr, event_filters.len());
                 }
                 Some(filter)
             }
@@ -99,8 +99,9 @@ async fn client_write_task(
         let event = result.unwrap();
         match event {
             EventDataOrAccesses::Event(event_data) => {
-                if filter.matches(&event_data.event_name) {
-                    events_buf.push(SerializableEventData::from(&event_data));
+                let serializable = SerializableEventData::from(&event_data);
+                if filter.matches_event(&serializable) {
+                    events_buf.push(serializable);
                 }
             }
             EventDataOrAccesses::TopAccesses(top_accesses_data) => {
@@ -110,8 +111,9 @@ async fn client_write_task(
         while let Ok(event) = event_broadcast_receiver.try_recv() {
             match event {
                 EventDataOrAccesses::Event(event_data) => {
-                    if filter.matches(&event_data.event_name) {
-                        events_buf.push(SerializableEventData::from(&event_data));
+                    let serializable = SerializableEventData::from(&event_data);
+                    if filter.matches_event(&serializable) {
+                        events_buf.push(serializable);
                     }
                 }
                 EventDataOrAccesses::TopAccesses(top_accesses_data) => {
