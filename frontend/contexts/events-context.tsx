@@ -9,7 +9,11 @@ import {
   useRef,
   useState,
 } from 'react'
-import type { EventName, SerializableEventData } from '@/types/events'
+import type {
+  EventName,
+  FieldFilter,
+  SerializableEventData,
+} from '@/types/events'
 
 interface AccessEntry<T> {
   key: T
@@ -26,9 +30,14 @@ interface ServerMessage {
   TopAccesses?: TopAccessesData
 }
 
+interface EventFilter {
+  event_name: EventName
+  field_filters?: FieldFilter[]
+}
+
 interface ClientMessage {
   type: 'subscribe'
-  events: EventName[]
+  event_filters: EventFilter[]
 }
 
 interface EventsContextValue {
@@ -90,7 +99,11 @@ export function EventsProvider({ children }: EventsProviderProps) {
           // Subscribe to all events that components have requested
           const subscribeMsg: ClientMessage = {
             type: 'subscribe',
-            events: Array.from(subscribedEventsRef.current),
+            event_filters: Array.from(subscribedEventsRef.current).map(
+              (eventName) => ({
+                event_name: eventName,
+              }),
+            ),
           }
           ws?.send(JSON.stringify(subscribeMsg))
         }
@@ -171,7 +184,11 @@ export function EventsProvider({ children }: EventsProviderProps) {
         if (wsRef.current?.readyState === WebSocket.OPEN) {
           const subscribeMsg: ClientMessage = {
             type: 'subscribe',
-            events: Array.from(subscribedEventsRef.current),
+            event_filters: Array.from(subscribedEventsRef.current).map(
+              (eventName) => ({
+                event_name: eventName,
+              }),
+            ),
           }
           wsRef.current.send(JSON.stringify(subscribeMsg))
         }

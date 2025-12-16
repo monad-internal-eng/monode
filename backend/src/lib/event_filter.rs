@@ -74,7 +74,7 @@ impl<T: PartialEq> ArrayPrefixFilter<T> {
 
 /// Field-specific filters for event data
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(tag = "field", content = "filter")]
+#[serde(tag = "field", content = "filter", rename_all = "snake_case")]
 pub enum FieldFilter {
     // ========== Top-level SerializableEventData fields ==========
     BlockNumber(RangeFilter<u64>),
@@ -136,12 +136,12 @@ pub enum FieldFilter {
 
     // ========== TxnAccessListEntry fields ==========
     // TxnIndex (already defined above)
-    AccessListAddress(ExactMatchFilter<Address>),
+    Address(ExactMatchFilter<Address>),
     // storage_keys omitted
 
     // ========== TxnAuthListEntry fields ==========
     // TxnIndex (already defined above)
-    Address(ExactMatchFilter<Address>),
+    // Address (already defined above)
 
     // ========== TxnReject fields ==========
     // TxnIndex (already defined above)
@@ -332,7 +332,7 @@ impl FieldFilter {
             (FieldFilter::TxnIndex(range), EventName::TxnAccessListEntry, SerializableExecEvent::TxnAccessListEntry { txn_index, .. }) => {
                 range.matches(txn_index)
             }
-            (FieldFilter::AccessListAddress(filter), EventName::TxnAccessListEntry, SerializableExecEvent::TxnAccessListEntry { address, .. }) => {
+            (FieldFilter::Address(filter), EventName::TxnAccessListEntry, SerializableExecEvent::TxnAccessListEntry { address, .. }) => {
                 filter.matches(address)
             }
 
