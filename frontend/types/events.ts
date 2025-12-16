@@ -170,10 +170,17 @@ export interface SerializableEventData {
   timestamp_ns: string
 }
 
-interface RangeFilter<T> {
-  min?: T
-  max?: T
-}
+type RangeFilter<T> =
+  | {
+      min: T
+    }
+  | {
+      max: T
+    }
+  | {
+      min: T
+      max: T
+    }
 
 interface ExactMatchFilter<T> {
   values: T[]
