@@ -40,13 +40,18 @@ interface ClientMessage {
   event_filters: EventFilter[]
 }
 
+export interface SubscribeOptions {
+  eventName: EventName
+  fieldFilters?: FieldFilter[]
+}
+
 interface EventsContextValue {
   accountAccesses: AccessEntry<string>[]
   storageAccesses: AccessEntry<[string, string]>[]
   events: SerializableEventData[]
   isConnected: boolean
   subscribe: (
-    events: EventName[],
+    filters: SubscribeOptions[],
     callback: (event: SerializableEventData) => void,
   ) => () => void
 }
@@ -76,7 +81,7 @@ export function EventsProvider({ children }: EventsProviderProps) {
   const subscribersRef = useRef<
     Map<string, (event: SerializableEventData) => void>
   >(new Map())
-  const subscribedEventsRef = useRef<Set<EventName>>(new Set())
+  const subscribedFiltersRef = useRef<EventFilter[]>([])
 
   useEffect(() => {
     let ws: WebSocket | null = null
@@ -99,11 +104,7 @@ export function EventsProvider({ children }: EventsProviderProps) {
           // Subscribe to all events that components have requested
           const subscribeMsg: ClientMessage = {
             type: 'subscribe',
-            event_filters: Array.from(subscribedEventsRef.current).map(
-              (eventName) => ({
-                event_name: eventName,
-              }),
-            ),
+            event_filters: subscribedFiltersRef.current,
           }
           ws?.send(JSON.stringify(subscribeMsg))
         }
@@ -165,30 +166,83 @@ export function EventsProvider({ children }: EventsProviderProps) {
     }
   }, [])
 
+  const filtersEqual = (a: EventFilter, b: EventFilter): boolean => {
+    if (a.event_name !== b.event_name) {
+      return false
+    }
+
+    const aFilters = a.field_filters ?? []
+    const bFilters = b.field_filters ?? []
+
+    if (aFilters.length !== bFilters.length) {
+      return false
+    }
+
+    return aFilters.every((aFilter) => {
+      return bFilters.some((bFilter) => {
+        if (aFilter.field !== bFilter.field) {
+          return false
+        }
+
+        const aFilterKeys = Object.keys(aFilter.filter).sort()
+        const bFilterKeys = Object.keys(bFilter.filter).sort()
+
+        if (aFilterKeys.join(',') !== bFilterKeys.join(',')) {
+          return false
+        }
+
+        return aFilterKeys.every((key) => {
+          const aFilterObj = aFilter.filter as Record<string, unknown>
+          const bFilterObj = bFilter.filter as Record<string, unknown>
+          const aVal = aFilterObj[key]
+          const bVal = bFilterObj[key]
+
+          if (Array.isArray(aVal) && Array.isArray(bVal)) {
+            return (
+              aVal.length === bVal.length && aVal.every((v, i) => v === bVal[i])
+            )
+          }
+
+          return aVal === bVal
+        })
+      })
+    })
+  }
+
   const subscribe = useCallback(
     (
-      eventNames: EventName[],
+      filters: SubscribeOptions[],
       callback: (event: SerializableEventData) => void,
     ): (() => void) => {
       const subscriberId = Math.random().toString(36).slice(2)
       subscribersRef.current.set(subscriberId, callback)
 
-      // Track requested event types
-      const newEvents = eventNames.filter(
-        (e) => !subscribedEventsRef.current.has(e),
-      )
-      if (newEvents.length > 0) {
-        newEvents.forEach((e) => subscribedEventsRef.current.add(e))
+      const newFilters: EventFilter[] = filters.map((f) => ({
+        event_name: f.eventName,
+        field_filters: f.fieldFilters,
+      }))
+
+      const hasNewFilters = newFilters.some((newFilter) => {
+        return !subscribedFiltersRef.current.some((existingFilter) =>
+          filtersEqual(existingFilter, newFilter),
+        )
+      })
+
+      if (hasNewFilters) {
+        subscribedFiltersRef.current = [
+          ...subscribedFiltersRef.current,
+          ...newFilters.filter((newFilter) => {
+            return !subscribedFiltersRef.current.some((existingFilter) =>
+              filtersEqual(existingFilter, newFilter),
+            )
+          }),
+        ]
 
         // If connected, update subscription
         if (wsRef.current?.readyState === WebSocket.OPEN) {
           const subscribeMsg: ClientMessage = {
             type: 'subscribe',
-            event_filters: Array.from(subscribedEventsRef.current).map(
-              (eventName) => ({
-                event_name: eventName,
-              }),
-            ),
+            event_filters: subscribedFiltersRef.current,
           }
           wsRef.current.send(JSON.stringify(subscribeMsg))
         }

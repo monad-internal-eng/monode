@@ -104,7 +104,7 @@ export function useExecutionEventBlocks(): UseExecutionEventBlocksReturn {
   })
 
   useEvents({
-    subscribeToEvents: BLOCK_EVENTS,
+    filters: BLOCK_EVENTS.map((event) => ({ eventName: event })),
     onEvent: queueEvent,
   })
 
