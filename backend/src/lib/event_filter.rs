@@ -52,6 +52,26 @@ impl<T: PartialEq> ExactMatchFilter<T> {
     }
 }
 
+/// Prefix filter for arrays
+/// Matches if the input array starts with the filter values.
+/// If the input array is shorter than the filter values, it returns false.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ArrayPrefixFilter<T: PartialEq> {
+    pub values: Vec<T>,
+}
+
+impl<T: PartialEq> ArrayPrefixFilter<T> {
+    /// Checks if input array starts with filter values (prefix match)
+    pub fn matches(&self, value: &Vec<T>) -> bool {
+        self.values.is_empty() || value.starts_with(&self.values)
+    }
+
+    /// Checks if this is an empty filter (no constraints)
+    pub fn is_empty(&self) -> bool {
+        self.values.is_empty()
+    }
+}
+
 /// Field-specific filters for event data
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "field", content = "filter")]
@@ -86,7 +106,7 @@ pub enum FieldFilter {
     StateRoot(ExactMatchFilter<B256>),
     ReceiptsRoot(ExactMatchFilter<B256>),
     GasUsed(RangeFilter<u64>),
-    // LogsBloom omitted (Bytes - too large for filtering)
+    // LogsBloom omitted
 
     // ========== BlockQC fields ==========
     // BlockId (already defined above)
@@ -137,7 +157,8 @@ pub enum FieldFilter {
     // TxnIndex (already defined above)
     LogIndex(RangeFilter<u32>),
     // Address (already defined above)
-    // topics, data omitted
+    Topics(ArrayPrefixFilter<B256>),
+    // data omitted
 
     // ========== TxnCallFrame fields ==========
     // TxnIndex (already defined above)
@@ -354,6 +375,10 @@ impl FieldFilter {
             }
             (FieldFilter::Address(filter), EventName::TxnLog, SerializableExecEvent::TxnLog { address, .. }) => {
                 filter.matches(address)
+            }
+            (FieldFilter::Topics(filter), EventName::TxnLog, SerializableExecEvent::TxnLog { topics, .. }) => {
+                let chunked_topics: Vec<B256> = topics.chunks(32).map(|chunk| B256::from_slice(chunk)).collect();
+                filter.matches(&chunked_topics)
             }
 
             // ========== TxnCallFrame ==========
