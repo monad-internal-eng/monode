@@ -1,5 +1,12 @@
 import type { BlockState } from '@/types/block'
 
+// Slow motion configuration
+export const SLOW_MOTION_SPEED = 0.5
+export const SLOW_MOTION_DURATION_SECONDS = 30
+export const NORMAL_BLOCK_INTERVAL_MS = 400
+export const SLOW_MOTION_BLOCK_INTERVAL_MS =
+  NORMAL_BLOCK_INTERVAL_MS / SLOW_MOTION_SPEED
+
 /**
  * Configuration for each block state including display label and gradient colors.
  *
