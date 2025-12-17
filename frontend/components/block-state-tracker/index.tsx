@@ -31,8 +31,8 @@ export default function BlockStateTracker() {
             Blocks progress through states:{' '}
             <span className="text-amber-400">Proposed</span> →{' '}
             <span className="text-indigo-400">Voted</span> →{' '}
-            <span className="text-cyan-400">Finalized</span> →{' '}
-            <span className="text-green-400">Verified</span>.{' '}
+            <span className="text-green-400">Finalized</span> →{' '}
+            <span className="text-green-600">Verified</span>.{' '}
             <a
               href="https://docs.monad.xyz/monad-arch/consensus/block-states"
               target="_blank"

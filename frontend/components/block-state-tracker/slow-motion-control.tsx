@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Gauge, X } from 'lucide-react'
 import { SLOW_MOTION_DURATION_SECONDS } from '@/constants/block-state'
 import { cn } from '@/lib/utils'
+import { CircularTimer } from './circular-timer'
 
 interface SlowMotionControlProps {
   isActive: boolean
@@ -64,46 +65,10 @@ export function SlowMotionControl({
             className="flex items-center gap-2.5 overflow-hidden"
           >
             <div className="flex items-center gap-1.5 text-[11px] text-indigo-300/70 whitespace-nowrap">
-              <div className="relative w-7 h-7 shrink-0">
-                <svg
-                  className="w-7 h-7 -rotate-90"
-                  viewBox="0 0 36 36"
-                  aria-hidden="true"
-                >
-                  <title>Time remaining: {remainingSeconds}s</title>
-                  <circle
-                    cx="18"
-                    cy="18"
-                    r="16"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    className="text-indigo-950/60"
-                  />
-                  <motion.circle
-                    cx="18"
-                    cy="18"
-                    r="16"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    className="text-indigo-400"
-                    initial={{ pathLength: 1 }}
-                    animate={{
-                      pathLength:
-                        remainingSeconds / SLOW_MOTION_DURATION_SECONDS,
-                    }}
-                    transition={{ duration: 0.5, ease: 'linear' }}
-                    style={{
-                      strokeDasharray: '100 100',
-                    }}
-                  />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-medium text-indigo-300">
-                  {remainingSeconds}
-                </span>
-              </div>
+              <CircularTimer
+                remainingSeconds={remainingSeconds}
+                totalSeconds={SLOW_MOTION_DURATION_SECONDS}
+              />
               <span className="hidden sm:inline">
                 {remainingSeconds <= 5
                   ? 'Resuming soon…'

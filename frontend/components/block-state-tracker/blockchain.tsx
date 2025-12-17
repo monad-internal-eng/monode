@@ -15,7 +15,7 @@ interface BlockchainProps {
   isFollowingChain: boolean
 }
 
-interface BlockCellProps {
+interface BlockCellData {
   blocks: Block[]
 }
 
@@ -23,7 +23,7 @@ function BlockCell({
   columnIndex,
   style,
   blocks,
-}: CellComponentProps<BlockCellProps>) {
+}: CellComponentProps<BlockCellData>) {
   const block = blocks[columnIndex]
 
   return (
@@ -62,20 +62,15 @@ export function Blockchain({ blocks, isFollowingChain }: BlockchainProps) {
     return () => resizeObserver.disconnect()
   }, [])
 
-  const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
-      if (isFollowingChain) {
-        e.preventDefault()
-      }
-    },
-    [isFollowingChain],
-  )
+  const preventScroll = useCallback((e: React.WheelEvent) => {
+    e.preventDefault()
+  }, [])
 
   return (
     <div
       ref={containerRef}
       className="flex-1 p-4 overflow-hidden min-h-[152px] sm:min-h-[172px]"
-      onWheel={handleWheel}
+      onWheel={isFollowingChain ? preventScroll : undefined}
     >
       {sortedBlocks.length === 0 ? (
         <div className="flex items-center justify-center w-full h-[120px] sm:h-[140px]">
