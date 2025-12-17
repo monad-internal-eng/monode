@@ -7,8 +7,6 @@ import { formatTimestamp } from '@/lib/timestamp'
 import type { Block } from '@/types/block'
 import type { SerializableEventData } from '@/types/events'
 
-const MAX_BLOCKS = 50
-
 interface UseExecutionEventBlocksReturn {
   blocks: Block[]
   isSlowMotion: boolean
@@ -33,7 +31,7 @@ export function useExecutionEventBlocks(): UseExecutionEventBlocksReturn {
         setBlocks((prev) => {
           const exists = prev.some((b) => b.id === payload.block_number)
           if (exists) return prev
-          const newBlocks: Block[] = [
+          return [
             ...prev,
             {
               id: payload.block_number,
@@ -41,9 +39,6 @@ export function useExecutionEventBlocks(): UseExecutionEventBlocksReturn {
               timestamp,
             },
           ]
-          return newBlocks.length > MAX_BLOCKS
-            ? newBlocks.slice(-MAX_BLOCKS)
-            : newBlocks
         })
         break
       }
@@ -174,10 +169,7 @@ export function useExecutionEventBlocks(): UseExecutionEventBlocksReturn {
         }
       }
 
-      // Apply MAX_BLOCKS limit
-      return updatedBlocks.length > MAX_BLOCKS
-        ? updatedBlocks.slice(-MAX_BLOCKS)
-        : updatedBlocks
+      return updatedBlocks
     })
   }, [])
 
