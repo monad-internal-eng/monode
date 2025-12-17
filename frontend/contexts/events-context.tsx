@@ -3,6 +3,7 @@
 import {
   createContext,
   type ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -151,35 +152,38 @@ export function EventsProvider({ children }: EventsProviderProps) {
     }
   }, [])
 
-  const subscribe = (
-    eventNames: EventName[],
-    callback: (event: SerializableEventData) => void,
-  ): (() => void) => {
-    const subscriberId = Math.random().toString(36).slice(2)
-    subscribersRef.current.set(subscriberId, callback)
+  const subscribe = useCallback(
+    (
+      eventNames: EventName[],
+      callback: (event: SerializableEventData) => void,
+    ): (() => void) => {
+      const subscriberId = Math.random().toString(36).slice(2)
+      subscribersRef.current.set(subscriberId, callback)
 
-    // Track requested event types
-    const newEvents = eventNames.filter(
-      (e) => !subscribedEventsRef.current.has(e),
-    )
-    if (newEvents.length > 0) {
-      newEvents.forEach((e) => subscribedEventsRef.current.add(e))
+      // Track requested event types
+      const newEvents = eventNames.filter(
+        (e) => !subscribedEventsRef.current.has(e),
+      )
+      if (newEvents.length > 0) {
+        newEvents.forEach((e) => subscribedEventsRef.current.add(e))
 
-      // If connected, update subscription
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        const subscribeMsg: ClientMessage = {
-          type: 'subscribe',
-          events: Array.from(subscribedEventsRef.current),
+        // If connected, update subscription
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+          const subscribeMsg: ClientMessage = {
+            type: 'subscribe',
+            events: Array.from(subscribedEventsRef.current),
+          }
+          wsRef.current.send(JSON.stringify(subscribeMsg))
         }
-        wsRef.current.send(JSON.stringify(subscribeMsg))
       }
-    }
 
-    // Return unsubscribe function
-    return () => {
-      subscribersRef.current.delete(subscriberId)
-    }
-  }
+      // Return unsubscribe function
+      return () => {
+        subscribersRef.current.delete(subscriberId)
+      }
+    },
+    [],
+  )
 
   const value: EventsContextValue = {
     accountAccesses,

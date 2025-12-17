@@ -1,67 +1,99 @@
 'use client'
 
-import { AnimatePresence, motion } from 'framer-motion'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { type CellComponentProps, Grid } from 'react-window'
 import { Spinner } from '@/components/spinner'
 import { useBlockchainScroll } from '@/hooks/use-blockchain-scroll'
 import type { Block } from '@/types/block'
 import { BlockCard } from './block-card'
 
+const ITEM_WIDTH = 162
+const GRID_HEIGHT = 140
+
 interface BlockchainProps {
+  blocks: Block[]
+  isFollowingChain: boolean
+}
+
+interface BlockCellData {
   blocks: Block[]
 }
 
+function BlockCell({
+  columnIndex,
+  style,
+  blocks,
+}: CellComponentProps<BlockCellData>) {
+  const block = blocks[columnIndex]
+
+  return (
+    <div style={style} className="flex items-center justify-center relative">
+      {columnIndex > 0 && (
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-4.5 h-1 bg-[#3a3a5a] rounded-full" />
+      )}
+      <BlockCard block={block} />
+    </div>
+  )
+}
+
 /**
- * Horizontal blockchain visualization.
+ * Horizontal blockchain visualization using react-window for virtualization.
  * Blocks are added from the right and stay in place as their state changes.
- * Auto-scrolls to show the newest blocks.
+ * Auto-scrolls to show the newest blocks when following chain.
  */
-export function Blockchain({ blocks }: BlockchainProps) {
-  const { scrollContainerRef, sortedBlocks } = useBlockchainScroll(blocks)
+export function Blockchain({ blocks, isFollowingChain }: BlockchainProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerWidth, setContainerWidth] = useState(0)
+
+  const { gridRef, sortedBlocks } = useBlockchainScroll({
+    blocks,
+    isFollowingChain,
+  })
+
+  useEffect(() => {
+    const node = containerRef.current
+    if (!node) return
+
+    const updateWidth = () => setContainerWidth(node.clientWidth)
+    updateWidth()
+
+    const resizeObserver = new ResizeObserver(updateWidth)
+    resizeObserver.observe(node)
+    return () => resizeObserver.disconnect()
+  }, [])
+
+  const preventScroll = useCallback((e: React.WheelEvent) => {
+    e.preventDefault()
+  }, [])
 
   return (
     <div
-      ref={scrollContainerRef}
-      className="flex-1 p-4 overflow-x-auto overflow-y-hidden scrollbar-none min-h-[152px] sm:min-h-[172px]"
+      ref={containerRef}
+      className="flex-1 p-4 overflow-hidden min-h-[152px] sm:min-h-[172px]"
+      onWheel={isFollowingChain ? preventScroll : undefined}
     >
       {sortedBlocks.length === 0 ? (
         <div className="flex items-center justify-center w-full h-[120px] sm:h-[140px]">
           <Spinner text="Waiting for blocks..." />
         </div>
       ) : (
-        <motion.div
-          className="flex items-center gap-2 h-[120px] sm:h-[140px] w-fit"
-          layout
-          transition={{ layout: { duration: 0.3, ease: 'easeInOut' } }}
-        >
-          <AnimatePresence mode="sync">
-            {sortedBlocks.map((block, index) => (
-              <motion.div
-                key={block.id}
-                className="flex items-center shrink-0"
-                layout
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-              >
-                {/* Chain connector */}
-                {index > 0 && (
-                  <motion.div
-                    className="w-3 h-1 bg-[#3a3a5a] rounded-full mr-2 sm:w-4 shrink-0"
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    exit={{
-                      scaleX: 0,
-                      opacity: 0,
-                      transition: { duration: 0.2 },
-                    }}
-                    transition={{ duration: 0.2, delay: 0.1 }}
-                  />
-                )}
-                <BlockCard block={block} />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
+        <Grid
+          gridRef={gridRef}
+          columnCount={sortedBlocks.length}
+          columnWidth={ITEM_WIDTH}
+          rowCount={1}
+          rowHeight={GRID_HEIGHT}
+          defaultHeight={GRID_HEIGHT}
+          defaultWidth={containerWidth}
+          overscanCount={3}
+          cellComponent={BlockCell}
+          cellProps={{ blocks: sortedBlocks }}
+          className="scrollbar-none"
+          style={{
+            overflowX: isFollowingChain ? 'hidden' : 'auto',
+            overflowY: 'hidden',
+          }}
+        />
       )}
     </div>
   )
