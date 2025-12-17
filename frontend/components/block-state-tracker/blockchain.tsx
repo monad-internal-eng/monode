@@ -3,11 +3,13 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Spinner } from '@/components/spinner'
 import { useBlockchainScroll } from '@/hooks/use-blockchain-scroll'
+import { cn } from '@/lib/utils'
 import type { Block } from '@/types/block'
 import { BlockCard } from './block-card'
 
 interface BlockchainProps {
   blocks: Block[]
+  isFollowingChain: boolean
 }
 
 /**
@@ -15,13 +17,19 @@ interface BlockchainProps {
  * Blocks are added from the right and stay in place as their state changes.
  * Auto-scrolls to show the newest blocks.
  */
-export function Blockchain({ blocks }: BlockchainProps) {
-  const { scrollContainerRef, sortedBlocks } = useBlockchainScroll(blocks)
+export function Blockchain({ blocks, isFollowingChain }: BlockchainProps) {
+  const { scrollContainerRef, sortedBlocks } = useBlockchainScroll({
+    blocks,
+    isFollowingChain,
+  })
 
   return (
     <div
       ref={scrollContainerRef}
-      className="flex-1 p-4 overflow-x-auto overflow-y-hidden scrollbar-none min-h-[152px] sm:min-h-[172px]"
+      className={cn(
+        'flex-1 p-4 overflow-y-hidden scrollbar-none min-h-[152px] sm:min-h-[172px]',
+        isFollowingChain ? 'overflow-x-hidden' : 'overflow-x-auto',
+      )}
     >
       {sortedBlocks.length === 0 ? (
         <div className="flex items-center justify-center w-full h-[120px] sm:h-[140px]">

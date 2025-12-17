@@ -15,10 +15,13 @@ interface UseExecutionEventBlocksReturn {
   remainingSeconds: number
   startSlowMotion: () => void
   stopSlowMotion: () => void
+  isFollowingChain: boolean
+  setIsFollowingChain: (value: boolean) => void
 }
 
 export function useExecutionEventBlocks(): UseExecutionEventBlocksReturn {
   const [blocks, setBlocks] = useState<Block[]>([])
+  const [isFollowingChain, setIsFollowingChain] = useState(true)
 
   // Process a single event and update blocks state
   const processEvent = useCallback((event: SerializableEventData) => {
@@ -214,5 +217,7 @@ export function useExecutionEventBlocks(): UseExecutionEventBlocksReturn {
     remainingSeconds,
     startSlowMotion,
     stopSlowMotion,
+    isFollowingChain,
+    setIsFollowingChain,
   }
 }

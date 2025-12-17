@@ -2,7 +2,8 @@
 
 import { useExecutionEventBlocks } from '@/hooks/use-execution-event-blocks'
 import { Blockchain } from './blockchain'
-import { SlowMotionButton } from './slow-motion-button'
+import { FollowChainToggle } from './follow-chain-toggle'
+import { SlowMotionControl } from './slow-motion-control'
 
 /**
  * BlockStateTracker visualizes the blockchain with blocks progressing through states:
@@ -17,11 +18,13 @@ export default function BlockStateTracker() {
     remainingSeconds,
     startSlowMotion,
     stopSlowMotion,
+    isFollowingChain,
+    setIsFollowingChain,
   } = useExecutionEventBlocks()
 
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-white">Monad Block Tracker</h2>
           <p className="text-sm text-[#a0a0b0]">
@@ -40,17 +43,25 @@ export default function BlockStateTracker() {
             </a>
           </p>
         </div>
-        <SlowMotionButton
-          isSlowMotion={isSlowMotion}
-          remainingSeconds={remainingSeconds}
-          onActivate={startSlowMotion}
-          onCancel={stopSlowMotion}
-        />
+
+        {/* Control Panel */}
+        <div className="flex items-center gap-2">
+          <FollowChainToggle
+            isFollowing={isFollowingChain}
+            onChange={setIsFollowingChain}
+          />
+          <SlowMotionControl
+            isActive={isSlowMotion}
+            remainingSeconds={remainingSeconds}
+            onStart={startSlowMotion}
+            onStop={stopSlowMotion}
+          />
+        </div>
       </div>
 
       {/* Execution SDK Blockchain visualization */}
       <div className="flex flex-col bg-[#16162a]/80 rounded-xl border border-[#2a2a4a]/50 p-4">
-        <Blockchain blocks={blocks} />
+        <Blockchain blocks={blocks} isFollowingChain={isFollowingChain} />
       </div>
     </div>
   )
