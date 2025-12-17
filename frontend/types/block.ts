@@ -13,5 +13,5 @@ export interface Block {
   startTimestamp: string
   endTimestamp?: string
   transactions: Transaction[]
-  executionTime?: number
+  executionTime?: string // time between block start and block end - execution time of a block in ns
 }

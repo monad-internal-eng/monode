@@ -12,12 +12,15 @@ import type { SerializableEventData } from '@/types/events'
 // =============================================================================
 
 /**
- * Convert nanoseconds to milliseconds
- * @param ns - Time in nanoseconds
- * @returns Time in milliseconds
+ * Convert nanoseconds to milliseconds with high precision
+ * @param ns - Time in nanoseconds as string or number
+ * @returns Time in milliseconds with microsecond precision
  */
-function fromNsToMs(ns: string | number): number {
-  return Number(BigInt(ns) / BigInt(1_000_000))
+function fromNsToMsPrecise(ns: string | number): number {
+  const nsBigInt = BigInt(ns)
+  const msPart = Number(nsBigInt / BigInt(1_000_000))
+  const nsPart = Number(nsBigInt % BigInt(1_000_000))
+  return msPart + nsPart / 1_000_000
 }
 
 /**
@@ -25,13 +28,13 @@ function fromNsToMs(ns: string | number): number {
  * Uses BigInt to avoid precision loss with large numbers
  * @param endNs - End timestamp in nanoseconds
  * @param startNs - Start timestamp in nanoseconds
- * @returns Difference in nanoseconds as a regular number (safe for display)
+ * @returns Difference in nanoseconds as a string to maintain full precision
  */
 function calculateNsDifference(
   endNs: string | number,
   startNs: string | number,
-): number {
-  return Number(BigInt(endNs) - BigInt(startNs))
+): string {
+  return (BigInt(endNs) - BigInt(startNs)).toString()
 }
 
 /**
@@ -41,20 +44,23 @@ function calculateNsDifference(
  * @returns Object containing bar height percentage and fill percentage
  */
 function calculateBarMetrics(block: Block, maxBlockExecutionTime: string) {
-  const blockExecutionTime = block.executionTime ?? 0
+  const blockExecutionTime = block.executionTime ?? '0'
   const maxExecTime = Math.max(Number(maxBlockExecutionTime), 1) // Ensure minimum to avoid division by zero
 
-  // Calculate total transaction execution time
-  const totalTransactionTime = block.transactions.reduce(
-    (sum, tx) => sum + (tx.transactionTime ?? 0),
-    0,
+  // Calculate total transaction execution time with high precision
+  const totalTransactionTimeNs = block.transactions.reduce(
+    (sum, tx) => sum + BigInt(tx.transactionTime ?? 0),
+    BigInt(0),
+  )
+  const totalTransactionTime = fromNsToMsPrecise(
+    totalTransactionTimeNs.toString(),
   )
 
   // Normalize bar height based on block time (container represents block execution time)
   // If no execution time, show minimal height for blocks that exist
   let barHeightPercentage =
-    blockExecutionTime > 0
-      ? (fromNsToMs(blockExecutionTime) / maxExecTime) * 100
+    Number(blockExecutionTime) > 0
+      ? (fromNsToMsPrecise(blockExecutionTime) / maxExecTime) * 100
       : 20 // Show something for blocks without execution time yet
 
   // Guard against NaN
@@ -69,9 +75,9 @@ function calculateBarMetrics(block: Block, maxBlockExecutionTime: string) {
   // If transactions run in parallel, total transaction time can be > block time
   // But the fill can't exceed 100% of the container
   let fillPercentage =
-    blockExecutionTime > 0
+    Number(blockExecutionTime) > 0
       ? Math.min(
-          (totalTransactionTime / fromNsToMs(blockExecutionTime)) * 100,
+          (totalTransactionTime / fromNsToMsPrecise(blockExecutionTime)) * 100,
           100,
         )
       : totalTransactionTime > 0
@@ -85,8 +91,8 @@ function calculateBarMetrics(block: Block, maxBlockExecutionTime: string) {
 
   // Calculate efficiency metrics
   const parallelizationRatio =
-    blockExecutionTime > 0
-      ? totalTransactionTime / fromNsToMs(blockExecutionTime)
+    Number(blockExecutionTime) > 0
+      ? totalTransactionTime / fromNsToMsPrecise(blockExecutionTime)
       : 0
   const isHighlyParallel =
     parallelizationRatio > 1 && Number.isFinite(parallelizationRatio)
@@ -197,7 +203,7 @@ export default function BlockTimeExecutionTracker() {
                         txnIndex: payload.txn_index,
                         txnHash: payload.txn_hash,
                         startTimestamp: event.timestamp_ns,
-                        transactionTime: 0, // Will be calculated when TxnEnd is received
+                        transactionTime: undefined, // Will be calculated when TxnEnd is received
                         gasLimit: payload.gas_limit,
                         sender: payload.sender,
                         to: payload.to,
@@ -236,11 +242,9 @@ export default function BlockTimeExecutionTracker() {
                         ? {
                             ...tx,
                             endTimestamp: event.timestamp_ns,
-                            transactionTime: fromNsToMs(
-                              calculateNsDifference(
-                                event.timestamp_ns,
-                                tx.startTimestamp,
-                              ),
+                            transactionTime: calculateNsDifference(
+                              event.timestamp_ns,
+                              tx.startTimestamp,
                             ),
                           }
                         : tx,
@@ -385,8 +389,11 @@ export default function BlockTimeExecutionTracker() {
   const finalizedBlocks = blocks.filter(
     (b) => b.state === 'finalized' || b.state === 'verified',
   )
-  const maxBlockExecutionTimeMs = fromNsToMs(
-    Math.max(...finalizedBlocks.map((block) => block.executionTime ?? 0), 1),
+  const maxBlockExecutionTimeMs = fromNsToMsPrecise(
+    Math.max(
+      ...finalizedBlocks.map((block) => Number(block.executionTime) ?? 0),
+      1,
+    ),
   )
   const maxBlockExecutionTime = Math.max(maxBlockExecutionTimeMs, 1).toFixed(0)
 
@@ -416,7 +423,7 @@ export default function BlockTimeExecutionTracker() {
             {finalizedBlocks.length > 0
               ? Math.round(
                   finalizedBlocks.reduce(
-                    (sum, b) => sum + fromNsToMs(b?.executionTime ?? 0),
+                    (sum, b) => sum + fromNsToMsPrecise(b?.executionTime ?? 0),
                     0,
                   ) / finalizedBlocks.length,
                 )
@@ -448,8 +455,8 @@ export default function BlockTimeExecutionTracker() {
           <div className="flex flex-col justify-end bg-[#16162a]/80 rounded-l-lg border border-r-0 border-[#2a2a4a]/50 min-w-40">
             {/* Legend aligned with block stats */}
             <div className="flex flex-col gap-1 text-xs text-[#8888a0] p-4 pb-8">
-              <span>Block execution time</span>
-              <span>Total transactions execution time</span>
+              <span>Block execution time (in ms)</span>
+              <span>Total transactions execution time (in ms)</span>
               <span>Amount of transactions</span>
             </div>
           </div>
@@ -490,8 +497,14 @@ export default function BlockTimeExecutionTracker() {
                         'bg-linear-to-t from-gray-300 to-gray-200',
                         'hover:shadow-lg transition-all duration-200 cursor-pointer',
                       )}
-                      title={`Block ${block.id}: ${fromNsToMs(block.executionTime ?? 0).toFixed(2)}ms execution time, ${totalTransactionTime.toFixed(2)}ms total tx time, ${block.transactions.length} transactions`}
+                      title={`Block ${block.id}: ${fromNsToMsPrecise(block.executionTime ?? 0).toFixed(6)}ms execution time, ${totalTransactionTime.toFixed(6)}ms total tx time, ${block.transactions.length} transactions`}
                     >
+                      {/* Parallelization Badge */}
+                      {isHighlyParallel && (
+                        <div className="absolute -top-4 right-1 text-[8px] bg-purple-600 text-white px-1 rounded z-10">
+                          {parallelizationRatio.toFixed(1)}x
+                        </div>
+                      )}
                       {/* Transaction Time Fill */}
                       <motion.div
                         initial={{ height: 0 }}
@@ -509,25 +522,18 @@ export default function BlockTimeExecutionTracker() {
                             ? '0 0 15px #ffd700, 0 0 30px #ffd700, 0 0 20px #a855f7, 0 0 40px #a855f7, 0 0 60px #a855f7, inset 0 0 20px rgba(255, 215, 0, 0.2), inset 0 0 10px rgba(168, 85, 247, 0.3)'
                             : undefined,
                         }}
-                        title={`${totalTransactionTime}ms total transaction execution time`}
+                        title={`${totalTransactionTime.toFixed(6)}ms total transaction execution time`}
                       />
-
-                      {/* Parallelization Badge */}
-                      {isHighlyParallel && (
-                        <div className="absolute top-1 right-1 text-[8px] bg-purple-600 text-white px-1 rounded z-10">
-                          {parallelizationRatio.toFixed(1)}x
-                        </div>
-                      )}
                     </motion.div>
                   </div>
 
                   {/* Block Stats */}
                   <div className="text-center text-xs text-gray-500 space-y-1">
                     <div className="font-medium">
-                      {fromNsToMs(block.executionTime ?? 0).toFixed(1)}ms
+                      {fromNsToMsPrecise(block.executionTime ?? 0).toFixed(6)}
                     </div>
                     <div className="text-xs text-gray-400">
-                      {totalTransactionTime.toFixed(1)}ms
+                      {totalTransactionTime.toFixed(6)}
                     </div>
                     <div>{block.transactions.length} tx</div>
                   </div>
