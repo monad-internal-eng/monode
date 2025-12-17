@@ -118,35 +118,6 @@ export default function BlockTimeExecutionTracker() {
   const handleEvent = useCallback((event: SerializableEventData) => {
     // console.log('🔍 Received event:', event)
 
-    // Helper function to ensure a block exists, creating it if necessary
-    const ensureBlockExists = (
-      blockNumber: number,
-      currentBlocks: Block[],
-    ): Block[] => {
-      const existingBlock = currentBlocks.find((b) => b.id === blockNumber)
-      if (existingBlock) {
-        return currentBlocks
-      }
-
-      // NOTE: this can be triggered also because when we start receiving events
-      // we can receive the end of the block x before receiving the block x + 1
-      // TODO: Should we just ignore these blocks to avoid having 3 or 4 empty blocks at the beginning?
-      console.log(
-        'WARNING: Race condition detected!\n📦 Creating missing block:',
-        blockNumber,
-      )
-
-      // Create a new block with minimal default values
-      const newBlock: Block = {
-        id: blockNumber,
-        state: 'proposed',
-        startTimestamp: event.timestamp_ns, // Use current event timestamp as fallback
-        transactions: [],
-      }
-
-      return [...currentBlocks, newBlock].sort((a, b) => a.id - b.id) // Keep blocks sorted - shouldn't be too expensive as amount of blocks is small
-    }
-
     switch (event.payload.type) {
       case 'BlockStart': {
         if (event.payload.type !== 'BlockStart') {
@@ -155,10 +126,11 @@ export default function BlockTimeExecutionTracker() {
         const payload = event.payload
         const blockNumber = event.block_number || payload.block_number
         if (blockNumber === undefined) {
+          console.warn('BlockStart event missing block_number:', event)
           break
         }
         setBlocks((prev) => {
-          const existingBlock = prev.find((b) => b.id === payload.block_number)
+          const existingBlock = prev.find((b) => b.id === payload.block_id)
           let newBlocks: Block[]
 
           // Should never happen
@@ -169,7 +141,7 @@ export default function BlockTimeExecutionTracker() {
             )
             // Update existing block with new BlockStart data
             newBlocks = prev.map((block) =>
-              block.id === payload.block_number
+              block.id === payload.block_id
                 ? {
                     ...block,
                     state: 'proposed',
@@ -182,12 +154,13 @@ export default function BlockTimeExecutionTracker() {
             newBlocks = [
               ...prev,
               {
-                id: blockNumber,
+                id: payload.block_id,
+                number: blockNumber.toString(),
                 state: 'proposed',
                 startTimestamp: event.timestamp_ns,
                 transactions: [],
               },
-            ] //.sort((a, b) => a.id - b.id) // Should not be necessary as we always add the newest block
+            ]
           }
 
           // Keep only the latest maxBlock blocks
@@ -201,18 +174,20 @@ export default function BlockTimeExecutionTracker() {
       }
 
       case 'TxnHeaderStart': {
-        if (
-          event.block_number !== undefined &&
-          event.payload.type === 'TxnHeaderStart'
-        ) {
+        if (event.payload.type === 'TxnHeaderStart') {
           const payload = event.payload
-
           setBlocks((prev) => {
-            // Ensure the block exists first - TODO Remove if we are sure it exists
-            const blocksWithBlock = ensureBlockExists(event.block_number!, prev)
-
-            return blocksWithBlock.map((block) =>
-              block.id === event.block_number
+            // check if blocks is empty
+            if (prev.length === 0) {
+              console.warn(
+                'TxnHeaderStart event received but no blocks exist yet:',
+                event,
+              )
+              return prev
+            }
+            // add a transaction to the last block
+            return prev.map((block, index) =>
+              index === prev.length - 1
                 ? {
                     ...block,
                     transactions: [
@@ -236,15 +211,24 @@ export default function BlockTimeExecutionTracker() {
         break
       }
 
-      // TODO: confirm with Jake that it is the correct way to index the end of a transaction
       case 'TxnEnd': {
-        if (event.block_number !== undefined && event.txn_idx !== undefined) {
+        if (event.txn_idx === undefined) {
+          console.warn('TxnEnd event missing txn_idx:', event)
+          break
+        }
+        if (event.txn_idx !== undefined) {
           setBlocks((prev) => {
-            // Ensure the block exists first - TODO Remove if we are sure it exists
-            const blocksWithBlock = ensureBlockExists(event.block_number!, prev)
-
-            return blocksWithBlock.map((block) =>
-              block.id === event.block_number
+            // check if blocks is empty
+            if (prev.length === 0) {
+              console.warn(
+                'TxnEnd event received but no blocks exist yet:',
+                event,
+              )
+              return prev
+            }
+            // update the last block
+            return prev.map((block, index) =>
+              index === prev.length - 1
                 ? {
                     ...block,
                     transactions: block.transactions.map((tx) =>
@@ -270,18 +254,20 @@ export default function BlockTimeExecutionTracker() {
       }
 
       case 'TxnEvmOutput': {
-        if (
-          event.block_number !== undefined &&
-          event.payload.type === 'TxnEvmOutput'
-        ) {
+        if (event.payload.type === 'TxnEvmOutput') {
           const payload = event.payload
-
           setBlocks((prev) => {
-            // Ensure the block exists first - TODO Remove if we are sure it exists
-            const blocksWithBlock = ensureBlockExists(event.block_number!, prev)
-
-            return blocksWithBlock.map((block) =>
-              block.id === event.block_number
+            // check if blocks is empty
+            if (prev.length === 0) {
+              console.warn(
+                'TxnEvmOutput event received but no blocks exist yet:',
+                event,
+              )
+              return prev
+            }
+            // update the last block
+            return prev.map((block, index) =>
+              index === prev.length - 1
                 ? {
                     ...block,
                     transactions: block.transactions.map((tx) =>
@@ -311,11 +297,8 @@ export default function BlockTimeExecutionTracker() {
           break
         }
         setBlocks((prev) => {
-          // Ensure the block exists first - TODO Remove if we are sure it exists
-          const blocksWithBlock = ensureBlockExists(blockNumber, prev)
-
-          return blocksWithBlock.map((block) =>
-            block.id === blockNumber
+          return prev.map((block) =>
+            block.number === blockNumber.toString()
               ? { ...block, state: 'voted' as BlockState }
               : block,
           )
@@ -333,11 +316,8 @@ export default function BlockTimeExecutionTracker() {
           break
         }
         setBlocks((prev) => {
-          // Ensure the block exists first - TODO Remove if we are sure it exists
-          const blocksWithBlock = ensureBlockExists(blockNumber, prev)
-
-          return blocksWithBlock.map((block) =>
-            block.id === blockNumber
+          return prev.map((block) =>
+            block.number === blockNumber.toString()
               ? { ...block, state: 'finalized' as BlockState }
               : block,
           )
@@ -355,11 +335,8 @@ export default function BlockTimeExecutionTracker() {
           break
         }
         setBlocks((prev) => {
-          // Ensure the block exists first - TODO Remove if we are sure it exists
-          const blocksWithBlock = ensureBlockExists(blockNumber, prev)
-
-          return blocksWithBlock.map((block) =>
-            block.id === blockNumber
+          return prev.map((block) =>
+            block.number === blockNumber.toString()
               ? { ...block, state: 'verified' as BlockState }
               : block,
           )
@@ -368,25 +345,20 @@ export default function BlockTimeExecutionTracker() {
       }
 
       case 'BlockEnd': {
-        if (event.block_number !== undefined) {
-          setBlocks((prev) => {
-            // Ensure the block exists first - TODO Remove if we are sure it exists
-            const blocksWithBlock = ensureBlockExists(event.block_number!, prev)
-
-            return blocksWithBlock.map((block) =>
-              block.id === event.block_number
-                ? {
-                    ...block,
-                    endTimestamp: event.timestamp_ns,
-                    executionTime: calculateNsDifference(
-                      event.timestamp_ns,
-                      block.startTimestamp,
-                    ),
-                  }
-                : block,
-            )
-          })
-        }
+        setBlocks((prev) => {
+          return prev.map((block) =>
+            block.number === event?.block_number?.toString()
+              ? {
+                  ...block,
+                  endTimestamp: event.timestamp_ns,
+                  executionTime: calculateNsDifference(
+                    event.timestamp_ns,
+                    block.startTimestamp,
+                  ),
+                }
+              : block,
+          )
+        })
         break
       }
 
@@ -501,9 +473,9 @@ export default function BlockTimeExecutionTracker() {
                   transition={{ delay: 0.05 }}
                   className="flex flex-col items-center gap-2 min-w-20"
                 >
-                  {/* Block ID Label */}
+                  {/* Block number Label */}
                   <div className="text-xs font-medium text-[#8888a0]">
-                    #{block.id}
+                    #{block.number}
                   </div>
 
                   {/* Block Bar Container */}

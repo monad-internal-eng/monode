@@ -7,7 +7,8 @@ import type { Transaction } from './transaction'
 export type BlockState = 'proposed' | 'voted' | 'finalized' | 'verified'
 
 export interface Block {
-  id: number
+  id?: string // Unique identifier for the block
+  number: string // Number of the block, multiple different proposed block can have the same number
   state: BlockState
   startTimestamp: string
   endTimestamp?: string
