@@ -20,7 +20,7 @@ export function Blockchain({ blocks }: BlockchainProps) {
   const prevBlockCountRef = useRef(0)
 
   // Sort blocks by ID (oldest on left, newest on right)
-  const sortedBlocks = [...blocks].sort((a, b) => a.id - b.id)
+  const sortedBlocks = [...blocks].sort((a, b) => Number(a.id) - Number(b.id))
 
   // Auto-scroll to the right when new blocks are added
   useLayoutEffect(() => {

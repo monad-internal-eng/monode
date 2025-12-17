@@ -28,12 +28,15 @@ export default function BlockStateTracker() {
     switch (payload.type) {
       case 'BlockStart': {
         setBlocks((prev) => {
-          const exists = prev.some((b) => b.id === payload.block_number)
+          const exists = prev.some(
+            (b) => b?.id === payload.block_number.toString(),
+          )
           if (exists) return prev
           return [
             ...prev,
             {
-              id: payload.block_number,
+              id: payload.block_number.toString(),
+              number: payload.block_number.toString(),
               state: 'proposed',
               startTimestamp: event.timestamp_ns,
               transactions: [],
@@ -46,7 +49,7 @@ export default function BlockStateTracker() {
       case 'BlockQC': {
         setBlocks((prev) =>
           prev.map((block) =>
-            block.id === payload.block_number
+            block?.id === payload.block_number.toString()
               ? { ...block, state: 'voted' }
               : block,
           ),
@@ -57,7 +60,7 @@ export default function BlockStateTracker() {
       case 'BlockFinalized': {
         setBlocks((prev) =>
           prev.map((block) =>
-            block.id === payload.block_number
+            block?.id === payload.block_number.toString()
               ? { ...block, state: 'finalized' }
               : block,
           ),
@@ -68,7 +71,7 @@ export default function BlockStateTracker() {
       case 'BlockVerified': {
         setBlocks((prev) =>
           prev.map((block) =>
-            block.id === payload.block_number
+            block?.id === payload.block_number.toString()
               ? { ...block, state: 'verified' }
               : block,
           ),
