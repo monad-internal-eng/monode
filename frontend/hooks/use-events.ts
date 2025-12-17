@@ -5,7 +5,7 @@ import { useEventsContext } from '@/contexts/events-context'
 import type { EventName, SerializableEventData } from '@/types/events'
 
 interface UseEventsOptions {
-  subscribeToEvents?: EventName[]
+  subscribeToEvents?: readonly EventName[]
   onEvent?: (event: SerializableEventData) => void
 }
 
@@ -22,17 +22,20 @@ export function useEvents(options: UseEventsOptions = {}) {
     onEventRef.current = onEvent
   }, [onEvent])
 
+  // Stringify events array to create stable dependency (avoids re-subscribing on array reference changes)
+  const eventsKey = subscribeToEvents.join(',')
+
   useEffect(() => {
-    if (subscribeToEvents.length === 0 && !onEvent) {
+    if (subscribeToEvents.length === 0) {
       return
     }
 
-    const unsubscribe = subscribe(subscribeToEvents, (event) => {
+    const unsubscribe = subscribe([...subscribeToEvents], (event) => {
       onEventRef.current?.(event)
     })
 
     return unsubscribe
-  }, [subscribeToEvents, onEvent, subscribe])
+  }, [eventsKey, subscribe])
 
   return { accountAccesses, storageAccesses, events, isConnected }
 }

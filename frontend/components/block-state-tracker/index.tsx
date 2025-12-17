@@ -1,130 +1,67 @@
 'use client'
 
-import { useCallback, useState } from 'react'
-import { useEvents } from '@/hooks/use-events'
-import type { Block } from '@/types/block'
-import type { SerializableEventData } from '@/types/events'
+import { useExecutionEventBlocks } from '@/hooks/use-execution-event-blocks'
 import { Blockchain } from './blockchain'
-
-// =============================================================================
-// Main Component
-// =============================================================================
+import { FollowChainToggle } from './follow-chain-toggle'
+import { SlowMotionControl } from './slow-motion-control'
 
 /**
  * BlockStateTracker visualizes the blockchain with blocks progressing through states:
  * Proposed → Voted → Finalized → Verified
  *
- * Blocks are added to the chain from the right and their color/label updates
- * smoothly as they progress through consensus states.
- *
- * Block state updates come from the backend via the Execution Events.
+ * Shows execution events from the SDK.
  */
 export default function BlockStateTracker() {
-  const [blocks, setBlocks] = useState<Block[]>([])
-
-  const handleEvent = useCallback((event: SerializableEventData) => {
-    const { payload } = event
-
-    switch (payload.type) {
-      case 'BlockStart': {
-        setBlocks((prev) => {
-          const exists = prev.some(
-            (b) => b?.id === payload.block_number.toString(),
-          )
-          if (exists) return prev
-          return [
-            ...prev,
-            {
-              id: payload.block_number.toString(),
-              number: payload.block_number.toString(),
-              state: 'proposed',
-              startTimestamp: event.timestamp_ns,
-              transactions: [],
-            },
-          ]
-        })
-        break
-      }
-
-      case 'BlockQC': {
-        setBlocks((prev) =>
-          prev.map((block) =>
-            block?.id === payload.block_number.toString()
-              ? { ...block, state: 'voted' }
-              : block,
-          ),
-        )
-        break
-      }
-
-      case 'BlockFinalized': {
-        setBlocks((prev) =>
-          prev.map((block) =>
-            block?.id === payload.block_number.toString()
-              ? { ...block, state: 'finalized' }
-              : block,
-          ),
-        )
-        break
-      }
-
-      case 'BlockVerified': {
-        setBlocks((prev) =>
-          prev.map((block) =>
-            block?.id === payload.block_number.toString()
-              ? { ...block, state: 'verified' }
-              : block,
-          ),
-        )
-        break
-      }
-
-      case 'BlockReject': {
-        if (event.block_number !== undefined) {
-          setBlocks((prev) =>
-            prev.filter((block) => block.id !== event.block_number),
-          )
-        }
-        break
-      }
-
-      default:
-        break
-    }
-  }, [])
-
-  useEvents({
-    subscribeToEvents: [
-      'BlockStart',
-      'BlockQC',
-      'BlockFinalized',
-      'BlockVerified',
-      'BlockReject',
-    ],
-    onEvent: handleEvent,
-  })
+  const {
+    blocks,
+    isSlowMotion,
+    remainingSeconds,
+    startSlowMotion,
+    stopSlowMotion,
+    isFollowingChain,
+    setIsFollowingChain,
+  } = useExecutionEventBlocks()
 
   return (
-    <div className="w-full flex flex-col gap-2 sm:gap-4">
-      {/* Blockchain visualization */}
-      <Blockchain blocks={blocks} />
+    <div className="w-full flex flex-col gap-4 sm:gap-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-white">Monad Block Tracker</h2>
+          <p className="text-sm text-[#a0a0b0]">
+            Blocks progress through states:{' '}
+            <span className="text-amber-400">Proposed</span> →{' '}
+            <span className="text-indigo-400">Voted</span> →{' '}
+            <span className="text-green-400">Finalized</span> →{' '}
+            <span className="text-green-600">Verified</span>.{' '}
+            <a
+              href="https://docs.monad.xyz/monad-arch/consensus/block-states"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2"
+            >
+              Learn more
+            </a>
+          </p>
+        </div>
 
-      <div className="flex flex-col gap-3">
-        <p className="text-sm text-[#6a6a7a] px-1">
-          Blocks progress through states:{' '}
-          <span className="text-amber-400">Proposed</span> →{' '}
-          <span className="text-indigo-400">Voted</span> →{' '}
-          <span className="text-cyan-400">Finalized</span> →{' '}
-          <span className="text-green-400">Verified</span>.{' '}
-          <a
-            href="https://docs.monad.xyz/monad-arch/consensus/block-states"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2"
-          >
-            Learn more
-          </a>
-        </p>
+        {/* Control Panel */}
+        <div className="flex items-center gap-2">
+          <FollowChainToggle
+            isFollowing={isFollowingChain}
+            onChange={setIsFollowingChain}
+          />
+          <SlowMotionControl
+            isActive={isSlowMotion}
+            remainingSeconds={remainingSeconds}
+            onStart={startSlowMotion}
+            onStop={stopSlowMotion}
+          />
+        </div>
+      </div>
+
+      {/* Execution SDK Blockchain visualization */}
+      <div className="flex flex-col bg-[#16162a]/80 rounded-xl border border-[#2a2a4a]/50 p-4">
+        <Blockchain blocks={blocks} isFollowingChain={isFollowingChain} />
       </div>
     </div>
   )
