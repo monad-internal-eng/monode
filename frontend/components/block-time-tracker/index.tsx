@@ -108,8 +108,6 @@ export default function BlockTimeExecutionTracker() {
 
   // Handle real-time events from the backend
   const handleEvent = useCallback((event: SerializableEventData) => {
-    // console.log('🔍 Received event:', event)
-
     switch (event.payload.type) {
       case 'BlockStart': {
         if (event.payload.type !== 'BlockStart') {
