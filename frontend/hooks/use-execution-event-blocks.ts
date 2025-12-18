@@ -46,11 +46,11 @@ function applyEventToBlocks(
 
   switch (payload.type) {
     case 'BlockStart': {
-      const exists = blocks.some((b) => b.id === payload.block_number)
+      const exists = blocks.some((b) => b.number === payload.block_number)
       if (exists) return blocks
       return [
         ...blocks,
-        { id: payload.block_number, state: 'proposed', timestamp },
+        { number: payload.block_number, state: 'proposed', timestamp },
       ]
     }
 
@@ -59,7 +59,7 @@ function applyEventToBlocks(
     case 'BlockVerified': {
       const newState = EVENT_TO_STATE[payload.type]
       return blocks.map((block) =>
-        block.id === payload.block_number
+        block.number === payload.block_number
           ? { ...block, state: newState, timestamp }
           : block,
       )
@@ -68,7 +68,7 @@ function applyEventToBlocks(
     case 'BlockReject': {
       // BlockReject doesn't have block_number in payload, use event.block_number if available
       if (event.block_number !== undefined) {
-        return blocks.filter((block) => block.id !== event.block_number)
+        return blocks.filter((block) => block.number !== event.block_number)
       }
       return blocks
     }

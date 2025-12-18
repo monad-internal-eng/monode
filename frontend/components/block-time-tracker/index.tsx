@@ -48,7 +48,7 @@ function calculateBarMetrics(block: Block, maxBlockExecutionTime: string) {
   const maxExecTime = Math.max(Number(maxBlockExecutionTime), 1) // Ensure minimum to avoid division by zero
 
   // Calculate total transaction execution time with high precision
-  const totalTransactionTimeNs = block.transactions.reduce(
+  const totalTransactionTimeNs = (block.transactions ?? []).reduce(
     (sum, tx) => sum + BigInt(tx.transactionTime ?? 0),
     BigInt(0),
   )
@@ -161,7 +161,7 @@ export default function BlockTimeExecutionTracker() {
               ...prev,
               {
                 id: payload.block_id,
-                number: blockNumber.toString(),
+                number: blockNumber,
                 state: 'proposed',
                 startTimestamp: event.timestamp_ns,
                 transactions: [],
@@ -197,7 +197,7 @@ export default function BlockTimeExecutionTracker() {
                 ? {
                     ...block,
                     transactions: [
-                      ...block.transactions,
+                      ...(block.transactions ?? []),
                       {
                         id: payload.txn_index,
                         txnIndex: payload.txn_index,
@@ -237,7 +237,7 @@ export default function BlockTimeExecutionTracker() {
               index === prev.length - 1
                 ? {
                     ...block,
-                    transactions: block.transactions.map((tx) =>
+                    transactions: (block.transactions ?? []).map((tx) =>
                       tx.txnIndex === event.txn_idx && tx.startTimestamp
                         ? {
                             ...tx,
@@ -274,7 +274,7 @@ export default function BlockTimeExecutionTracker() {
               index === prev.length - 1
                 ? {
                     ...block,
-                    transactions: block.transactions.map((tx) =>
+                    transactions: (block.transactions ?? []).map((tx) =>
                       tx.txnIndex === payload.txn_index
                         ? {
                             ...tx,
@@ -302,7 +302,7 @@ export default function BlockTimeExecutionTracker() {
         }
         setBlocks((prev) => {
           return prev.map((block) =>
-            block.number === blockNumber.toString()
+            block.number === blockNumber
               ? { ...block, state: 'voted' as BlockState }
               : block,
           )
@@ -321,7 +321,7 @@ export default function BlockTimeExecutionTracker() {
         }
         setBlocks((prev) => {
           return prev.map((block) =>
-            block.number === blockNumber.toString()
+            block.number === blockNumber
               ? { ...block, state: 'finalized' as BlockState }
               : block,
           )
@@ -340,7 +340,7 @@ export default function BlockTimeExecutionTracker() {
         }
         setBlocks((prev) => {
           return prev.map((block) =>
-            block.number === blockNumber.toString()
+            block.number === blockNumber
               ? { ...block, state: 'verified' as BlockState }
               : block,
           )
@@ -351,13 +351,13 @@ export default function BlockTimeExecutionTracker() {
       case 'BlockEnd': {
         setBlocks((prev) => {
           return prev.map((block) =>
-            block.number === event?.block_number?.toString()
+            block.number === event?.block_number
               ? {
                   ...block,
                   endTimestamp: event.timestamp_ns,
                   executionTime: calculateNsDifference(
                     event.timestamp_ns,
-                    block.startTimestamp,
+                    block.startTimestamp || '0',
                   ),
                 }
               : block,
@@ -497,7 +497,7 @@ export default function BlockTimeExecutionTracker() {
                         'bg-linear-to-t from-gray-300 to-gray-200',
                         'hover:shadow-lg transition-all duration-200 cursor-pointer',
                       )}
-                      title={`Block ${block.id}: ${fromNsToMsPrecise(block.executionTime ?? 0).toFixed(6)}ms execution time, ${totalTransactionTime.toFixed(6)}ms total tx time, ${block.transactions.length} transactions`}
+                      title={`Block ${block.number}: ${fromNsToMsPrecise(block.executionTime ?? 0).toFixed(6)}ms execution time, ${totalTransactionTime.toFixed(6)}ms total tx time, ${(block.transactions ?? []).length} transactions`}
                     >
                       {/* Parallelization Badge */}
                       {isHighlyParallel && (
@@ -535,7 +535,7 @@ export default function BlockTimeExecutionTracker() {
                     <div className="text-xs text-gray-400">
                       {totalTransactionTime.toFixed(6)}
                     </div>
-                    <div>{block.transactions.length} tx</div>
+                    <div>{(block.transactions ?? []).length} tx</div>
                   </div>
                 </motion.div>
               )
