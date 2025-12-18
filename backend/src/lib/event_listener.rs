@@ -124,6 +124,7 @@ pub struct EventData {
     pub seqno: u64,
     pub block_number: Option<u64>,
     pub txn_idx: Option<usize>,
+    pub txn_hash: Option<[u8; 32]>,
     pub payload: ExecEvent,
 }
 
@@ -181,6 +182,7 @@ fn event_to_data(event: &EventDescriptor<ExecEventDecoder>) -> Option<EventData>
         seqno,
         block_number,
         txn_idx,
+        txn_hash: None, // Will be populated by server when tracking TxnHeaderStart
         payload,
     })
 }
