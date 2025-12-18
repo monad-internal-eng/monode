@@ -165,6 +165,7 @@ export interface SerializableEventData {
   event_name: EventName
   block_number?: number
   txn_idx?: number
+  txn_hash?: string
   payload: SerializableExecEvent
   seqno: number
   timestamp_ns: string

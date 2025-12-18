@@ -16,7 +16,6 @@ export interface SwapData {
   tokenIn: string
   tokenOut: string
   price?: string
-  fee?: string
 }
 
 /**
@@ -49,7 +48,7 @@ export interface PancakeSwapV3SwapEvent {
 }
 
 /**
- * Raw LFJ (Trader Joe V2) Swap event data
+ * Raw LFJ Swap event data
  * event Swap(address indexed sender, address indexed to, uint24 id, bytes32 amountsIn, bytes32 amountsOut, uint24 volatilityAccumulator, bytes32 totalFees, bytes32 protocolFees)
  */
 export interface LFJSwapEvent {

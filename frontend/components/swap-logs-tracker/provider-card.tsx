@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Activity, ExternalLink } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
 import { getDexConfigByProvider } from '@/constants/dex-config'
 import { cn } from '@/lib/utils'
 import type { SwapsByProvider } from '@/types/swap'
@@ -29,7 +29,7 @@ export function ProviderCard({ data, className }: ProviderCardProps) {
       )}
     >
       <div
-        className="flex items-center justify-between px-4 py-3 border-b border-[#2a2a4a]/50"
+        className="flex items-center justify-between px-4 py-2.5 border-b border-[#2a2a4a]/50"
         style={{
           background: `linear-gradient(135deg, ${config.color}15 0%, transparent 100%)`,
         }}
@@ -43,30 +43,18 @@ export function ProviderCard({ data, className }: ProviderCardProps) {
           <span className="text-xs text-zinc-500">MON/AUSD</span>
         </div>
 
-        <div className="flex items-center gap-2">
-          {data.isLoading ? (
-            <span className="text-xs text-zinc-500">Connecting...</span>
-          ) : (
-            <div className="flex items-center gap-1">
-              <Activity className="w-3 h-3" style={{ color: config.color }} />
-              <span className="text-xs text-zinc-400">
-                {data.swaps.length} swap{data.swaps.length !== 1 ? 's' : ''}
-              </span>
-            </div>
-          )}
-          <a
-            href={`${config.explorerUrl}/address/${config.contractAddress}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-zinc-500 hover:text-zinc-300 transition-colors"
-            title="View contract"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
-        </div>
+        <a
+          href={`${config.explorerUrl}/address/${config.contractAddress}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-zinc-500 hover:text-zinc-300 transition-colors"
+          title="View contract"
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+        </a>
       </div>
 
-      <div className="flex-1 p-2 min-h-[180px] max-h-[280px] overflow-y-auto scrollbar-none">
+      <div className="p-2 h-[220px] overflow-y-auto scrollbar-none">
         {data.swaps.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-xs text-zinc-500 text-center">

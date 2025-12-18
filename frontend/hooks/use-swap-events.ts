@@ -5,6 +5,14 @@ import { DEX_CONFIGS, type DexProvider } from '@/constants/dex-config'
 import { useEvents } from '@/hooks/use-events'
 import type { SerializableEventData } from '@/types/events'
 import type { SwapData, SwapsByProvider } from '@/types/swap'
+import {
+  cleanHexData,
+  parseAddress,
+  parseLFJPackedAmounts,
+  parseSignedInt256,
+  parseTopicsString,
+  parseUint,
+} from '@/utils/abi-decode'
 
 const MAX_SWAPS_PER_PROVIDER = 10
 
@@ -19,17 +27,20 @@ function parseSwapEvent(
     return null
   }
 
-  const { address, topics, data } = event.payload
+  const { address, data } = event.payload
+  const topics = parseTopicsString(event.payload.topics as string | string[])
   const blockNumber = event.block_number ?? 0
   const txnIdx = event.txn_idx ?? 0
+  const txHash = event.txn_hash
 
   const id = `${blockNumber}-${txnIdx}-${event.seqno}`
   const timestamp = Number(BigInt(event.timestamp_ns) / BigInt(1_000_000))
 
   try {
+    let swap: SwapData | null = null
     switch (provider) {
       case 'uniswap-v4':
-        return parseUniswapV4Swap(
+        swap = parseUniswapV4Swap(
           id,
           address,
           topics,
@@ -37,8 +48,9 @@ function parseSwapEvent(
           blockNumber,
           timestamp,
         )
+        break
       case 'pancakeswap-v3':
-        return parsePancakeSwapV3Swap(
+        swap = parsePancakeSwapV3Swap(
           id,
           address,
           topics,
@@ -46,13 +58,18 @@ function parseSwapEvent(
           blockNumber,
           timestamp,
         )
+        break
       case 'lfj':
-        return parseLFJSwap(id, address, topics, data, blockNumber, timestamp)
+        swap = parseLFJSwap(id, address, topics, data, blockNumber, timestamp)
+        break
       case 'kuru':
-        return parseKuruTrade(id, address, topics, data, blockNumber, timestamp)
-      default:
-        return null
+        swap = parseKuruTrade(id, address, topics, data, blockNumber, timestamp)
+        break
     }
+    if (swap) {
+      swap.txHash = txHash ?? ''
+    }
+    return swap
   } catch {
     return null
   }
@@ -60,6 +77,9 @@ function parseSwapEvent(
 
 /**
  * Parse Uniswap V4 Swap event
+ * event Swap(PoolId indexed id, address indexed sender, int128 amount0, int128 amount1, ...)
+ * Positive = tokens sent (in), Negative = tokens received (out)
+ * token0 = MON, token1 = AUSD for this pool
  */
 function parseUniswapV4Swap(
   id: string,
@@ -69,30 +89,49 @@ function parseUniswapV4Swap(
   blockNumber: number,
   timestamp: number,
 ): SwapData {
-  const sender = topics[2] ? `0x${topics[2].slice(26)}` : address
+  const sender = topics[2] ? parseAddress(topics[2].slice(2)) : address
+  const hex = cleanHexData(data)
 
-  const cleanData = data.startsWith('0x') ? data.slice(2) : data
-  const amount0 = BigInt(`0x${cleanData.slice(0, 64)}`)
-  const amount1 = BigInt(`0x${cleanData.slice(64, 128)}`)
+  const amount0 = parseSignedInt256(hex.slice(0, 64))
+  const amount1 = parseSignedInt256(hex.slice(64, 128))
 
-  const isToken0In = amount0 > BigInt(0)
-
+  // Positive = sent, Negative = received
+  // token0 = MON, token1 = AUSD
+  if (amount0 > BigInt(0)) {
+    // Sending MON, receiving AUSD
+    return {
+      id,
+      provider: 'uniswap-v4',
+      blockNumber,
+      timestamp,
+      sender,
+      amountIn: amount0.toString(),
+      amountOut: (-amount1).toString(),
+      tokenIn: 'MON',
+      tokenOut: 'AUSD',
+      txHash: '',
+    }
+  }
+  // Sending AUSD, receiving MON
   return {
     id,
     provider: 'uniswap-v4',
-    txHash: '',
     blockNumber,
     timestamp,
     sender,
-    amountIn: (isToken0In ? amount0 : amount1).toString(),
-    amountOut: (isToken0In ? -amount1 : -amount0).toString(),
-    tokenIn: isToken0In ? 'MON' : 'AUSD',
-    tokenOut: isToken0In ? 'AUSD' : 'MON',
+    amountIn: amount1.toString(),
+    amountOut: (-amount0).toString(),
+    tokenIn: 'AUSD',
+    tokenOut: 'MON',
+    txHash: '',
   }
 }
 
 /**
  * Parse PancakeSwap V3 Swap event
+ * event Swap(address indexed sender, address indexed recipient, int256 amount0, int256 amount1, ...)
+ * Positive = tokens sent (in), Negative = tokens received (out)
+ * token0 = MON, token1 = AUSD for this pool
  */
 function parsePancakeSwapV3Swap(
   id: string,
@@ -102,32 +141,47 @@ function parsePancakeSwapV3Swap(
   blockNumber: number,
   timestamp: number,
 ): SwapData {
-  const sender = topics[1] ? `0x${topics[1].slice(26)}` : address
-  const recipient = topics[2] ? `0x${topics[2].slice(26)}` : undefined
+  const sender = topics[1] ? parseAddress(topics[1].slice(2)) : address
+  const recipient = topics[2] ? parseAddress(topics[2].slice(2)) : undefined
+  const hex = cleanHexData(data)
 
-  const cleanData = data.startsWith('0x') ? data.slice(2) : data
-  const amount0 = BigInt(`0x${cleanData.slice(0, 64)}`)
-  const amount1 = BigInt(`0x${cleanData.slice(64, 128)}`)
+  const amount0 = parseSignedInt256(hex.slice(0, 64))
+  const amount1 = parseSignedInt256(hex.slice(64, 128))
 
-  const isToken0In = amount0 > BigInt(0)
-
+  if (amount0 > BigInt(0)) {
+    return {
+      id,
+      provider: 'pancakeswap-v3',
+      blockNumber,
+      timestamp,
+      sender,
+      recipient,
+      amountIn: amount0.toString(),
+      amountOut: (-amount1).toString(),
+      tokenIn: 'MON',
+      tokenOut: 'AUSD',
+      txHash: '',
+    }
+  }
   return {
     id,
     provider: 'pancakeswap-v3',
-    txHash: '',
     blockNumber,
     timestamp,
     sender,
     recipient,
-    amountIn: (isToken0In ? amount0 : amount1).toString(),
-    amountOut: (isToken0In ? -amount1 : -amount0).toString(),
-    tokenIn: isToken0In ? 'MON' : 'AUSD',
-    tokenOut: isToken0In ? 'AUSD' : 'MON',
+    amountIn: amount1.toString(),
+    amountOut: (-amount0).toString(),
+    tokenIn: 'AUSD',
+    tokenOut: 'MON',
+    txHash: '',
   }
 }
 
 /**
- * Parse LFJ (Trader Joe V2) Swap event
+ * Parse LFJ Swap event
+ * event Swap(address indexed sender, address indexed to, uint24 id, bytes32 amountsIn, bytes32 amountsOut, ...)
+ * bytes32 layout: [amountY (upper 128 bits) | amountX (lower 128 bits)]
  */
 function parseLFJSwap(
   id: string,
@@ -137,25 +191,20 @@ function parseLFJSwap(
   blockNumber: number,
   timestamp: number,
 ): SwapData {
-  const sender = topics[1] ? `0x${topics[1].slice(26)}` : address
-  const recipient = topics[2] ? `0x${topics[2].slice(26)}` : undefined
+  const sender = topics[1] ? parseAddress(topics[1].slice(2)) : address
+  const recipient = topics[2] ? parseAddress(topics[2].slice(2)) : undefined
+  const hex = cleanHexData(data)
 
-  const cleanData = data.startsWith('0x') ? data.slice(2) : data
+  // Data layout: uint24 id (slot 0), bytes32 amountsIn (slot 1), bytes32 amountsOut (slot 2), ...
+  const [amountXIn, amountYIn] = parseLFJPackedAmounts(hex.slice(64, 128))
+  const [amountXOut, amountYOut] = parseLFJPackedAmounts(hex.slice(128, 192))
 
-  const amountsInHex = cleanData.slice(64, 128)
-  const amountsOutHex = cleanData.slice(128, 192)
-
-  const amountXIn = BigInt(`0x${amountsInHex.slice(0, 32)}`)
-  const amountYIn = BigInt(`0x${amountsInHex.slice(32, 64)}`)
-  const amountXOut = BigInt(`0x${amountsOutHex.slice(0, 32)}`)
-  const amountYOut = BigInt(`0x${amountsOutHex.slice(32, 64)}`)
-
+  // Determine swap direction based on which token was input
   const isXIn = amountXIn > BigInt(0)
 
   return {
     id,
     provider: 'lfj',
-    txHash: '',
     blockNumber,
     timestamp,
     sender,
@@ -164,11 +213,13 @@ function parseLFJSwap(
     amountOut: (isXIn ? amountYOut : amountXOut).toString(),
     tokenIn: isXIn ? 'MON' : 'AUSD',
     tokenOut: isXIn ? 'AUSD' : 'MON',
+    txHash: '',
   }
 }
 
 /**
  * Parse Kuru Trade event
+ * event Trade(uint64 orderId, address makerAddress, bool isBuy, uint256 price, uint256 updatedSize, uint256 filledSize, address takerAddress)
  */
 function parseKuruTrade(
   id: string,
@@ -178,18 +229,17 @@ function parseKuruTrade(
   blockNumber: number,
   timestamp: number,
 ): SwapData {
-  const cleanData = data.startsWith('0x') ? data.slice(2) : data
+  const hex = cleanHexData(data)
 
-  const makerAddress = `0x${cleanData.slice(24, 64)}`
-  const isBuy = cleanData.slice(64, 128) !== '0'.repeat(64)
-  const price = BigInt(`0x${cleanData.slice(128, 192)}`)
-  const filledSize = BigInt(`0x${cleanData.slice(256, 320)}`)
-  const takerAddress = `0x${cleanData.slice(344, 384)}`
+  const makerAddress = parseAddress(hex.slice(0, 64))
+  const isBuy = parseUint(hex.slice(64, 128)) !== BigInt(0)
+  const price = parseUint(hex.slice(128, 192))
+  const filledSize = parseUint(hex.slice(256, 320))
+  const takerAddress = parseAddress(hex.slice(320, 384))
 
   return {
     id,
     provider: 'kuru',
-    txHash: '',
     blockNumber,
     timestamp,
     sender: takerAddress,
@@ -199,6 +249,7 @@ function parseKuruTrade(
     tokenIn: isBuy ? 'AUSD' : 'MON',
     tokenOut: isBuy ? 'MON' : 'AUSD',
     price: price.toString(),
+    txHash: '',
   }
 }
 
@@ -219,7 +270,7 @@ export function useSwapEvents() {
             field: 'address' as const,
             filter: { values: [config.contractAddress.toLowerCase()] },
           },
-          { field: 'topics' as const, filter: { values: [config.eventTopic] } },
+          { field: 'topics' as const, filter: { values: config.eventTopics } },
         ],
       })),
     [],
@@ -229,13 +280,15 @@ export function useSwapEvents() {
     if (event.payload.type !== 'TxnLog') return
 
     const address = event.payload.address.toLowerCase()
-    const topic0 = event.payload.topics[0]
+    // Topics may come as concatenated string, parse into array
+    const topics = parseTopicsString(event.payload.topics as string | string[])
 
-    const matchingConfig = DEX_CONFIGS.find(
-      (config) =>
-        config.contractAddress.toLowerCase() === address &&
-        config.eventTopic === topic0,
-    )
+    const matchingConfig = DEX_CONFIGS.find((config) => {
+      if (config.contractAddress.toLowerCase() !== address) return false
+      return config.eventTopics.every(
+        (t, i) => topics[i]?.toLowerCase() === t.toLowerCase(),
+      )
+    })
 
     if (!matchingConfig) return
 

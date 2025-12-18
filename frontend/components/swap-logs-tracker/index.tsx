@@ -19,7 +19,7 @@ export default function SwapLogsTracker() {
             <span className="text-[#FF007A]">Uniswap V4</span>,{' '}
             <span className="text-[#1FC7D4]">PancakeSwap V3</span>,{' '}
             <span className="text-[#E84142]">LFJ</span>, and{' '}
-            <span className="text-[#836EF9]">Kuru</span>.
+            <span className="text-[#836EF9]">Kuru</span> pools.
           </p>
         </div>
 

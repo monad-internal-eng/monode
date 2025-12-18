@@ -7,20 +7,33 @@ export interface DexConfig {
   shortName: string
   provider: DexProvider
   contractAddress: string
-  poolAddress?: string
   eventSignature: string
-  eventTopic: string
+  eventTopics: string[]
   color: string
   explorerUrl: string
 }
 
 /**
- * Token addresses on Monad
+ * Token configuration for MON/AUSD pair
  */
-export const TOKEN_ADDRESSES = {
-  MON: '0x0000000000000000000000000000000000000000', // Native token
-  AUSD: '0x00000000eFE302BEAA2b3e6e1b18d08D69a9012a',
+export const TOKENS = {
+  MON: {
+    symbol: 'MON',
+    decimals: 18,
+    address: '0x0000000000000000000000000000000000000000', // Native token
+  },
+  AUSD: {
+    symbol: 'AUSD',
+    decimals: 6,
+    address: '0x00000000eFE302BEAA2b3e6e1b18d08D69a9012a',
+  },
 } as const
+
+export type TokenSymbol = keyof typeof TOKENS
+
+export function getTokenDecimals(symbol: string): number {
+  return symbol === 'MON' ? TOKENS.MON.decimals : TOKENS.AUSD.decimals
+}
 
 /**
  * Uniswap V4 Swap event signature
@@ -37,7 +50,7 @@ const PANCAKESWAP_V3_SWAP_SIGNATURE =
   'Swap(address,address,int256,int256,uint160,uint128,int24)'
 
 /**
- * LFJ (Trader Joe V2) Swap event signature
+ * LFJ Swap event signature
  * event Swap(address indexed sender, address indexed to, uint24 id, bytes32 amountsIn, bytes32 amountsOut, uint24 volatilityAccumulator, bytes32 totalFees, bytes32 protocolFees)
  */
 const LFJ_SWAP_SIGNATURE =
@@ -58,10 +71,12 @@ export const DEX_CONFIGS: DexConfig[] = [
     name: 'Uniswap V4',
     shortName: 'Uni V4',
     provider: 'uniswap-v4',
-    contractAddress:
-      '0xadaf30776f551bccdfb307c3fd8cdec198ca9a852434c8022ee32d1ccedd8219',
+    contractAddress: '0x188d586ddcf52439676ca21a244753fa19f9ea8e', // Uniswap v4 PoolManager on Monad
     eventSignature: UNISWAP_V4_SWAP_SIGNATURE,
-    eventTopic: keccak256(toBytes(UNISWAP_V4_SWAP_SIGNATURE)),
+    eventTopics: [
+      keccak256(toBytes(UNISWAP_V4_SWAP_SIGNATURE)),
+      '0xadaf30776f551bccdfb307c3fd8cdec198ca9a852434c8022ee32d1ccedd8219', // MON/AUSD poolId
+    ],
     color: '#FF007A',
     explorerUrl: 'https://monadvision.com',
   },
@@ -71,17 +86,17 @@ export const DEX_CONFIGS: DexConfig[] = [
     provider: 'pancakeswap-v3',
     contractAddress: '0xd5b70d70cbe6c42bcd1aaa662a21673a83f4615b',
     eventSignature: PANCAKESWAP_V3_SWAP_SIGNATURE,
-    eventTopic: keccak256(toBytes(PANCAKESWAP_V3_SWAP_SIGNATURE)),
+    eventTopics: [keccak256(toBytes(PANCAKESWAP_V3_SWAP_SIGNATURE))],
     color: '#1FC7D4',
     explorerUrl: 'https://monadvision.com',
   },
   {
-    name: 'LFJ (Trader Joe)',
+    name: 'LFJ',
     shortName: 'LFJ',
     provider: 'lfj',
     contractAddress: '0xdd0a93642B0e1e938a75B400f31095Af4C4BECE5',
     eventSignature: LFJ_SWAP_SIGNATURE,
-    eventTopic: keccak256(toBytes(LFJ_SWAP_SIGNATURE)),
+    eventTopics: [keccak256(toBytes(LFJ_SWAP_SIGNATURE))],
     color: '#E84142',
     explorerUrl: 'https://monadvision.com',
   },
@@ -91,9 +106,9 @@ export const DEX_CONFIGS: DexConfig[] = [
     provider: 'kuru',
     contractAddress: '0x0990a54d7abcaa35ac03814f5ed5c6afbbf45ac9',
     eventSignature: KURU_TRADE_SIGNATURE,
-    eventTopic: keccak256(toBytes(KURU_TRADE_SIGNATURE)),
+    eventTopics: [keccak256(toBytes(KURU_TRADE_SIGNATURE))],
     color: '#836EF9',
-    explorerUrl: 'https://monadvision.com',
+    explorerUrl: 'https://monadvision.com', // TODO: Should be common for all
   },
 ]
 
@@ -116,6 +131,6 @@ export function getAllDexContractAddresses(): string[] {
 /**
  * Get all event topics for filtering
  */
-export function getAllSwapEventTopics(): string[] {
-  return DEX_CONFIGS.map((config) => config.eventTopic)
+export function getAllSwapEventTopics(): string[][] {
+  return DEX_CONFIGS.map((config) => config.eventTopics)
 }
