@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { ArrowRight, ExternalLink, User } from 'lucide-react'
 import { formatUnits } from 'viem'
+import { EXPLORER_URL } from '@/constants/common'
 import {
   getDexConfigByProvider,
   getTokenDecimals,
@@ -81,7 +82,7 @@ export function SwapRow({ swap, showProvider = false }: SwapRowProps) {
 
       <div className="flex items-center gap-2 shrink-0">
         <a
-          href={`${config?.explorerUrl}/address/${swap.sender}`}
+          href={`${EXPLORER_URL}/address/${swap.sender}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1 text-zinc-500 hover:text-zinc-300 transition-colors"
@@ -97,7 +98,7 @@ export function SwapRow({ swap, showProvider = false }: SwapRowProps) {
           {formatTime(swap.timestamp)}
         </span>
         <a
-          href={`${config?.explorerUrl}/tx/${swap.txHash}`}
+          href={`${EXPLORER_URL}/tx/${swap.txHash}`}
           target="_blank"
           rel="noopener noreferrer"
           className="text-zinc-500 hover:text-zinc-300 transition-colors"

@@ -130,8 +130,8 @@ function parseUniswapV4Swap(
 /**
  * Parse PancakeSwap V3 Swap event
  * event Swap(address indexed sender, address indexed recipient, int256 amount0, int256 amount1, ...)
- * Positive = tokens sent (in), Negative = tokens received (out)
- * token0 = MON, token1 = AUSD for this pool
+ * Positive amount = tokens going INTO pool (user sends), Negative = tokens going OUT of pool (user receives)
+ * Pool is AUSD/WMON: token0 = AUSD (6 decimals), token1 = WMON (18 decimals)
  */
 function parsePancakeSwapV3Swap(
   id: string,
@@ -145,24 +145,13 @@ function parsePancakeSwapV3Swap(
   const recipient = topics[2] ? parseAddress(topics[2].slice(2)) : undefined
   const hex = cleanHexData(data)
 
-  const amount0 = parseSignedInt256(hex.slice(0, 64))
-  const amount1 = parseSignedInt256(hex.slice(64, 128))
+  const amount0 = parseSignedInt256(hex.slice(0, 64)) // AUSD
+  const amount1 = parseSignedInt256(hex.slice(64, 128)) // WMON
 
-  if (amount0 > BigInt(0)) {
-    return {
-      id,
-      provider: 'pancakeswap-v3',
-      blockNumber,
-      timestamp,
-      sender,
-      recipient,
-      amountIn: amount0.toString(),
-      amountOut: (-amount1).toString(),
-      tokenIn: 'MON',
-      tokenOut: 'AUSD',
-      txHash: '',
-    }
-  }
+  // amount0 > 0: user sends AUSD to pool, receives WMON
+  // amount0 < 0: user receives AUSD from pool, sends WMON
+  const isSellingAUSD = amount0 > BigInt(0)
+
   return {
     id,
     provider: 'pancakeswap-v3',
@@ -170,10 +159,10 @@ function parsePancakeSwapV3Swap(
     timestamp,
     sender,
     recipient,
-    amountIn: amount1.toString(),
-    amountOut: (-amount0).toString(),
-    tokenIn: 'AUSD',
-    tokenOut: 'MON',
+    amountIn: isSellingAUSD ? amount0.toString() : amount1.toString(),
+    amountOut: isSellingAUSD ? (-amount1).toString() : (-amount0).toString(),
+    tokenIn: isSellingAUSD ? 'AUSD' : 'WMON',
+    tokenOut: isSellingAUSD ? 'WMON' : 'AUSD',
     txHash: '',
   }
 }
@@ -219,23 +208,29 @@ function parseLFJSwap(
 
 /**
  * Parse Kuru Trade event
- * event Trade(uint64 orderId, address makerAddress, bool isBuy, uint256 price, uint256 updatedSize, uint256 filledSize, address takerAddress)
+ * event Trade(uint40 orderId, address indexed maker, bool isBuy, uint32 price, uint96 updatedSize, address indexed taker, address indexed origin, uint96 filledSize)
+ * Indexed params (maker, taker, origin) are in topics[1], topics[2], topics[3]
+ * Data contains: orderId, isBuy, price, updatedSize, filledSize
  */
 function parseKuruTrade(
   id: string,
   _address: string,
-  _topics: string[],
+  topics: string[],
   data: string,
   blockNumber: number,
   timestamp: number,
 ): SwapData {
   const hex = cleanHexData(data)
 
-  const makerAddress = parseAddress(hex.slice(0, 64))
+  // Indexed params from topics
+  const makerAddress = topics[1] ? parseAddress(topics[1].slice(2)) : ''
+  const takerAddress = topics[2] ? parseAddress(topics[2].slice(2)) : ''
+
+  // Non-indexed params from data
+  // Data layout: orderId[0:64], isBuy[64:128], price[128:192], updatedSize[192:256], filledSize[256:320]
   const isBuy = parseUint(hex.slice(64, 128)) !== BigInt(0)
   const price = parseUint(hex.slice(128, 192))
   const filledSize = parseUint(hex.slice(256, 320))
-  const takerAddress = parseAddress(hex.slice(320, 384))
 
   return {
     id,

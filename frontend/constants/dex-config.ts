@@ -10,17 +10,21 @@ export interface DexConfig {
   eventSignature: string
   eventTopics: string[]
   color: string
-  explorerUrl: string
 }
 
 /**
- * Token configuration for MON/AUSD pair
+ * Token configuration
  */
 export const TOKENS = {
   MON: {
     symbol: 'MON',
     decimals: 18,
     address: '0x0000000000000000000000000000000000000000', // Native token
+  },
+  WMON: {
+    symbol: 'WMON',
+    decimals: 18,
+    address: '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A', // Wrapped MON
   },
   AUSD: {
     symbol: 'AUSD',
@@ -32,7 +36,9 @@ export const TOKENS = {
 export type TokenSymbol = keyof typeof TOKENS
 
 export function getTokenDecimals(symbol: string): number {
-  return symbol === 'MON' ? TOKENS.MON.decimals : TOKENS.AUSD.decimals
+  if (symbol === 'MON' || symbol === 'WMON') return 18
+  if (symbol === 'AUSD') return 6
+  return 18 // Default
 }
 
 /**
@@ -43,11 +49,11 @@ const UNISWAP_V4_SWAP_SIGNATURE =
   'Swap(bytes32,address,int128,int128,uint160,uint128,int24,uint24)'
 
 /**
- * PancakeSwap V3 / Uniswap V3 Swap event signature
- * event Swap(address indexed sender, address indexed recipient, int256 amount0, int256 amount1, uint160 sqrtPriceX96, uint128 liquidity, int24 tick)
+ * PancakeSwap V3 Swap event signature (extended from Uniswap V3 with protocol fees)
+ * event Swap(address indexed sender, address indexed recipient, int256 amount0, int256 amount1, uint160 sqrtPriceX96, uint128 liquidity, int24 tick, uint128 protocolFeesToken0, uint128 protocolFeesToken1)
  */
 const PANCAKESWAP_V3_SWAP_SIGNATURE =
-  'Swap(address,address,int256,int256,uint160,uint128,int24)'
+  'Swap(address,address,int256,int256,uint160,uint128,int24,uint128,uint128)'
 
 /**
  * LFJ Swap event signature
@@ -58,10 +64,11 @@ const LFJ_SWAP_SIGNATURE =
 
 /**
  * Kuru Trade event signature
- * event Trade(uint64 orderId, address makerAddress, bool isBuy, uint256 price, uint256 updatedSize, uint256 filledSize, address takerAddress)
+ * event Trade(uint40 orderId, address indexed maker, bool isBuy, uint32 price, uint96 updatedSize, address indexed taker, address indexed origin, uint96 filledSize)
+ * Note: maker, taker, origin are indexed (in topics)
  */
 const KURU_TRADE_SIGNATURE =
-  'Trade(uint64,address,bool,uint256,uint256,uint256,address)'
+  'Trade(uint40,address,bool,uint32,uint96,address,address,uint96)'
 
 /**
  * DEX configurations for MON/AUSD pair tracking
@@ -78,7 +85,6 @@ export const DEX_CONFIGS: DexConfig[] = [
       '0xadaf30776f551bccdfb307c3fd8cdec198ca9a852434c8022ee32d1ccedd8219', // MON/AUSD poolId
     ],
     color: '#FF007A',
-    explorerUrl: 'https://monadvision.com',
   },
   {
     name: 'PancakeSwap V3',
@@ -88,7 +94,6 @@ export const DEX_CONFIGS: DexConfig[] = [
     eventSignature: PANCAKESWAP_V3_SWAP_SIGNATURE,
     eventTopics: [keccak256(toBytes(PANCAKESWAP_V3_SWAP_SIGNATURE))],
     color: '#1FC7D4',
-    explorerUrl: 'https://monadvision.com',
   },
   {
     name: 'LFJ',
@@ -98,7 +103,6 @@ export const DEX_CONFIGS: DexConfig[] = [
     eventSignature: LFJ_SWAP_SIGNATURE,
     eventTopics: [keccak256(toBytes(LFJ_SWAP_SIGNATURE))],
     color: '#E84142',
-    explorerUrl: 'https://monadvision.com',
   },
   {
     name: 'Kuru',
@@ -108,7 +112,6 @@ export const DEX_CONFIGS: DexConfig[] = [
     eventSignature: KURU_TRADE_SIGNATURE,
     eventTopics: [keccak256(toBytes(KURU_TRADE_SIGNATURE))],
     color: '#836EF9',
-    explorerUrl: 'https://monadvision.com', // TODO: Should be common for all
   },
 ]
 

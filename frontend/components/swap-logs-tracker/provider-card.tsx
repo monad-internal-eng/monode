@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { ExternalLink } from 'lucide-react'
+import { EXPLORER_URL } from '@/constants/common'
 import { getDexConfigByProvider } from '@/constants/dex-config'
 import { cn } from '@/lib/utils'
 import type { SwapsByProvider } from '@/types/swap'
@@ -44,7 +45,7 @@ export function ProviderCard({ data, className }: ProviderCardProps) {
         </div>
 
         <a
-          href={`${config.explorerUrl}/address/${config.contractAddress}`}
+          href={`${EXPLORER_URL}/address/${config.contractAddress}`}
           target="_blank"
           rel="noopener noreferrer"
           className="text-zinc-500 hover:text-zinc-300 transition-colors"
