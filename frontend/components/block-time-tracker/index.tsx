@@ -13,28 +13,14 @@ import type { SerializableEventData } from '@/types/events'
 
 /**
  * Convert nanoseconds to milliseconds with high precision
- * @param ns - Time in nanoseconds as string or number
+ * @param ns - Time in nanoseconds as string, number, or bigint
  * @returns Time in milliseconds with microsecond precision
  */
-function fromNsToMsPrecise(ns: string | number): number {
+function fromNsToMsPrecise(ns: string | number | bigint): number {
   const nsBigInt = BigInt(ns)
   const msPart = Number(nsBigInt / BigInt(1_000_000))
   const nsPart = Number(nsBigInt % BigInt(1_000_000))
   return msPart + nsPart / 1_000_000
-}
-
-/**
- * Safely calculate the difference between two nanosecond timestamps
- * Uses BigInt to avoid precision loss with large numbers
- * @param endNs - End timestamp in nanoseconds
- * @param startNs - Start timestamp in nanoseconds
- * @returns Difference in nanoseconds as a string to maintain full precision
- */
-function calculateNsDifference(
-  endNs: string | number,
-  startNs: string | number,
-): string {
-  return (BigInt(endNs) - BigInt(startNs)).toString()
 }
 
 /**
@@ -202,7 +188,7 @@ export default function BlockTimeExecutionTracker() {
                         id: payload.txn_index,
                         txnIndex: payload.txn_index,
                         txnHash: payload.txn_hash,
-                        startTimestamp: event.timestamp_ns,
+                        startTimestamp: BigInt(event.timestamp_ns),
                         transactionTime: undefined, // Will be calculated when TxnEnd is received
                         gasLimit: payload.gas_limit,
                         sender: payload.sender,
@@ -241,11 +227,9 @@ export default function BlockTimeExecutionTracker() {
                       tx.txnIndex === event.txn_idx && tx.startTimestamp
                         ? {
                             ...tx,
-                            endTimestamp: event.timestamp_ns,
-                            transactionTime: calculateNsDifference(
-                              event.timestamp_ns,
-                              tx.startTimestamp,
-                            ),
+                            endTimestamp: BigInt(event.timestamp_ns),
+                            transactionTime:
+                              BigInt(event.timestamp_ns) - tx.startTimestamp,
                           }
                         : tx,
                     ),
@@ -355,10 +339,9 @@ export default function BlockTimeExecutionTracker() {
               ? {
                   ...block,
                   endTimestamp: event.timestamp_ns,
-                  executionTime: calculateNsDifference(
-                    event.timestamp_ns,
-                    block.startTimestamp || '0',
-                  ),
+                  executionTime:
+                    BigInt(event.timestamp_ns) -
+                    BigInt(block.startTimestamp || 0),
                 }
               : block,
           )

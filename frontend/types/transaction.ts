@@ -6,9 +6,9 @@ export interface Transaction {
   id: number
   txnIndex: number
   txnHash?: string
-  startTimestamp?: string
-  endTimestamp?: string
-  transactionTime?: string // time between transaction start and transaction end - execution time of a transaction in ms
+  startTimestamp?: bigint
+  endTimestamp?: bigint
+  transactionTime?: bigint // time between transaction start and transaction end - execution time of a transaction in ms
   status?: boolean
   gasUsed?: number
   gasLimit?: number
