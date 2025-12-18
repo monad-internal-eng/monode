@@ -110,9 +110,6 @@ export default function BlockTimeExecutionTracker() {
   const handleEvent = useCallback((event: SerializableEventData) => {
     switch (event.payload.type) {
       case 'BlockStart': {
-        if (event.payload.type !== 'BlockStart') {
-          break
-        }
         const payload = event.payload
         const blockNumber = event.block_number || payload.block_number
         if (blockNumber === undefined) {
@@ -164,40 +161,38 @@ export default function BlockTimeExecutionTracker() {
       }
 
       case 'TxnHeaderStart': {
-        if (event.payload.type === 'TxnHeaderStart') {
-          const payload = event.payload
-          setBlocks((prev) => {
-            // check if blocks is empty
-            if (prev.length === 0) {
-              console.warn(
-                'TxnHeaderStart event received but no blocks exist yet:',
-                event,
-              )
-              return prev
-            }
-            // add a transaction to the last block
-            return prev.map((block, index) =>
-              index === prev.length - 1
-                ? {
-                    ...block,
-                    transactions: [
-                      ...(block.transactions ?? []),
-                      {
-                        id: payload.txn_index,
-                        txnIndex: payload.txn_index,
-                        txnHash: payload.txn_hash,
-                        startTimestamp: BigInt(event.timestamp_ns),
-                        transactionTime: undefined, // Will be calculated when TxnEnd is received
-                        gasLimit: payload.gas_limit,
-                        sender: payload.sender,
-                        to: payload.to,
-                      },
-                    ],
-                  }
-                : block,
+        const payload = event.payload
+        setBlocks((prev) => {
+          // check if blocks is empty
+          if (prev.length === 0) {
+            console.warn(
+              'TxnHeaderStart event received but no blocks exist yet:',
+              event,
             )
-          })
-        }
+            return prev
+          }
+          // add a transaction to the last block
+          return prev.map((block, index) =>
+            index === prev.length - 1
+              ? {
+                  ...block,
+                  transactions: [
+                    ...(block.transactions ?? []),
+                    {
+                      id: payload.txn_index,
+                      txnIndex: payload.txn_index,
+                      txnHash: payload.txn_hash,
+                      startTimestamp: BigInt(event.timestamp_ns),
+                      transactionTime: undefined, // Will be calculated when TxnEnd is received
+                      gasLimit: payload.gas_limit,
+                      sender: payload.sender,
+                      to: payload.to,
+                    },
+                  ],
+                }
+              : block,
+          )
+        })
         break
       }
 
@@ -240,43 +235,38 @@ export default function BlockTimeExecutionTracker() {
       }
 
       case 'TxnEvmOutput': {
-        if (event.payload.type === 'TxnEvmOutput') {
-          const payload = event.payload
-          setBlocks((prev) => {
-            // check if blocks is empty
-            if (prev.length === 0) {
-              console.warn(
-                'TxnEvmOutput event received but no blocks exist yet:',
-                event,
-              )
-              return prev
-            }
-            // update the last block
-            return prev.map((block, index) =>
-              index === prev.length - 1
-                ? {
-                    ...block,
-                    transactions: (block.transactions ?? []).map((tx) =>
-                      tx.txnIndex === payload.txn_index
-                        ? {
-                            ...tx,
-                            status: payload.status,
-                            gasUsed: payload.gas_used,
-                          }
-                        : tx,
-                    ),
-                  }
-                : block,
+        const payload = event.payload
+        setBlocks((prev) => {
+          // check if blocks is empty
+          if (prev.length === 0) {
+            console.warn(
+              'TxnEvmOutput event received but no blocks exist yet:',
+              event,
             )
-          })
-        }
+            return prev
+          }
+          // update the last block
+          return prev.map((block, index) =>
+            index === prev.length - 1
+              ? {
+                  ...block,
+                  transactions: (block.transactions ?? []).map((tx) =>
+                    tx.txnIndex === payload.txn_index
+                      ? {
+                          ...tx,
+                          status: payload.status,
+                          gasUsed: payload.gas_used,
+                        }
+                      : tx,
+                  ),
+                }
+              : block,
+          )
+        })
         break
       }
 
       case 'BlockQC': {
-        if (event.event_name !== 'BlockQC') {
-          break
-        }
         const payload = event.payload
         const blockNumber = event.block_number || payload.block_number
         if (blockNumber === undefined) {
@@ -293,9 +283,6 @@ export default function BlockTimeExecutionTracker() {
       }
 
       case 'BlockFinalized': {
-        if (event.event_name !== 'BlockFinalized') {
-          break
-        }
         const payload = event.payload
         const blockNumber = event.block_number || payload.block_number
         if (blockNumber === undefined) {
@@ -312,9 +299,6 @@ export default function BlockTimeExecutionTracker() {
       }
 
       case 'BlockVerified': {
-        if (event.event_name !== 'BlockVerified') {
-          break
-        }
         const payload = event.payload
         const blockNumber = event.block_number || payload.block_number
         if (blockNumber === undefined) {
