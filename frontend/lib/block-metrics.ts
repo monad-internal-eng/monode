@@ -5,7 +5,7 @@ import type { Block } from '@/types/block'
  * @param ns - Time in nanoseconds as string, number, or bigint
  * @returns Time in milliseconds with microsecond precision
  */
-export function fromNsToMsPrecise(ns: string | number | bigint): number {
+export function fromNsToMsPrecise(ns: bigint): number {
   const nsBigInt = BigInt(ns)
   const msPart = Number(nsBigInt / BigInt(1_000_000))
   const nsPart = Number(nsBigInt % BigInt(1_000_000))
@@ -20,39 +20,28 @@ export function fromNsToMsPrecise(ns: string | number | bigint): number {
  */
 export function calculateBarMetrics(
   block: Block,
-  maxBlockExecutionTime: string,
+  maxBlockExecutionTime: number,
 ) {
-  const blockExecutionTime = block.executionTime ?? '0'
-  const maxExecTime = Math.max(Number(maxBlockExecutionTime), 1) // Ensure minimum to avoid division by zero
+  const blockExecutionTime = block.executionTime ?? BigInt(0)
 
   // Calculate total transaction execution time with high precision
   const totalTransactionTimeNs = (block.transactions ?? []).reduce(
     (sum, tx) => sum + BigInt(tx.transactionTime ?? 0),
     BigInt(0),
   )
-  const totalTransactionTime = fromNsToMsPrecise(
-    totalTransactionTimeNs.toString(),
-  )
+  const totalTransactionTime = fromNsToMsPrecise(totalTransactionTimeNs)
 
   // Normalize bar height based on block time (container represents block execution time)
   // If no execution time, show minimal height for blocks that exist
-  let barHeightPercentage =
+  const barHeightPercentage =
     Number(blockExecutionTime) > 0
-      ? (fromNsToMsPrecise(blockExecutionTime) / maxExecTime) * 100
+      ? (fromNsToMsPrecise(blockExecutionTime) / maxBlockExecutionTime) * 100
       : 20 // Show something for blocks without execution time yet
-
-  // Guard against NaN
-  if (
-    Number.isNaN(barHeightPercentage) ||
-    !Number.isFinite(barHeightPercentage)
-  ) {
-    barHeightPercentage = 20
-  }
 
   // Calculate fill percentage (transaction time relative to block time)
   // If transactions run in parallel, total transaction time can be > block time
   // But the fill can't exceed 100% of the container
-  let fillPercentage =
+  const fillPercentage =
     Number(blockExecutionTime) > 0
       ? Math.min(
           (totalTransactionTime / fromNsToMsPrecise(blockExecutionTime)) * 100,
@@ -61,11 +50,6 @@ export function calculateBarMetrics(
       : totalTransactionTime > 0
         ? 50
         : 0 // Show some fill if we have transactions
-
-  // Guard against NaN
-  if (Number.isNaN(fillPercentage) || !Number.isFinite(fillPercentage)) {
-    fillPercentage = 0
-  }
 
   // Calculate efficiency metrics
   const parallelizationRatio =
@@ -83,4 +67,3 @@ export function calculateBarMetrics(
     isHighlyParallel,
   }
 }
-

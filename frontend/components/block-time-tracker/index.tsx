@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 import { useBlockTracker } from '@/hooks/use-block-tracker'
 import { calculateBarMetrics, fromNsToMsPrecise } from '@/lib/block-metrics'
 import { cn } from '@/lib/utils'
@@ -20,6 +21,21 @@ const MAX_BLOCKS_TO_SHOW = 20
 export default function BlockTimeExecutionTracker() {
   const { finalizedBlocks, maxBlockExecutionTime } =
     useBlockTracker(MAX_BLOCKS_TO_SHOW)
+
+  const avgBlockExecutionTime = useMemo(() => {
+    if (finalizedBlocks.length === 0) {
+      return 0
+    }
+
+    const totalBlockExecutionTime = finalizedBlocks.reduce(
+      (sum, block) => sum + (block.executionTime ?? BigInt(0)),
+      BigInt(0),
+    )
+
+    return Math.round(
+      fromNsToMsPrecise(totalBlockExecutionTime) / finalizedBlocks.length,
+    )
+  }, [finalizedBlocks])
 
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
@@ -44,15 +60,7 @@ export default function BlockTimeExecutionTracker() {
             Avg Execution Block Time
           </div>
           <div className="text-xl font-bold text-[#8888a0]">
-            {finalizedBlocks.length > 0
-              ? Math.round(
-                  finalizedBlocks.reduce(
-                    (sum, b) => sum + fromNsToMsPrecise(b?.executionTime ?? 0),
-                    0,
-                  ) / finalizedBlocks.length,
-                )
-              : 0}
-            ms
+            {avgBlockExecutionTime.toFixed(0)}ms
           </div>
         </div>
         <div className="bg-[#16162a]/80 p-3 rounded-lg text-center border border-[#2a2a4a]/50">
@@ -60,7 +68,7 @@ export default function BlockTimeExecutionTracker() {
             Max Execution Block Time
           </div>
           <div className="text-xl font-bold text-[#8888a0]">
-            {maxBlockExecutionTime}ms
+            {maxBlockExecutionTime.toFixed(0)}ms
           </div>
         </div>
       </div>
@@ -121,7 +129,7 @@ export default function BlockTimeExecutionTracker() {
                         'bg-linear-to-t from-gray-300 to-gray-200',
                         'hover:shadow-lg transition-all duration-200 cursor-pointer',
                       )}
-                      title={`Block ${block.number}: ${fromNsToMsPrecise(block.executionTime ?? 0).toFixed(6)}ms execution time, ${totalTransactionTime.toFixed(6)}ms total tx time, ${(block.transactions ?? []).length} transactions`}
+                      title={`Block ${block.number}: ${fromNsToMsPrecise(block.executionTime ?? BigInt(0)).toFixed(6)}ms execution time, ${totalTransactionTime.toFixed(6)}ms total tx time, ${(block.transactions ?? []).length} transactions`}
                     >
                       {/* Parallelization Badge */}
                       {isHighlyParallel && (
@@ -154,7 +162,9 @@ export default function BlockTimeExecutionTracker() {
                   {/* Block Stats */}
                   <div className="text-center text-xs text-gray-500 space-y-1">
                     <div className="font-medium">
-                      {fromNsToMsPrecise(block.executionTime ?? 0).toFixed(6)}
+                      {fromNsToMsPrecise(
+                        block.executionTime ?? BigInt(0),
+                      ).toFixed(6)}
                     </div>
                     <div className="text-xs text-gray-400">
                       {totalTransactionTime.toFixed(6)}

@@ -40,7 +40,7 @@ export function useBlockTracker(maxBlock: number = 20) {
                 {
                   ...lastBlock,
                   state: 'proposed',
-                  startTimestamp: event.timestamp_ns,
+                  startTimestamp: BigInt(event.timestamp_ns),
                 },
               ]
             } else {
@@ -51,7 +51,7 @@ export function useBlockTracker(maxBlock: number = 20) {
                   id: payload.block_id,
                   number: blockNumber,
                   state: 'proposed',
-                  startTimestamp: event.timestamp_ns,
+                  startTimestamp: BigInt(event.timestamp_ns),
                   transactions: [],
                 },
               ]
@@ -224,13 +224,12 @@ export function useBlockTracker(maxBlock: number = 20) {
         case 'BlockEnd':
           setBlocks((prev) => {
             return prev.map((block) =>
-              block.number === event?.block_number
+              block.number === event?.block_number && block.startTimestamp
                 ? {
                     ...block,
-                    endTimestamp: event.timestamp_ns,
+                    endTimestamp: BigInt(event.timestamp_ns),
                     executionTime:
-                      BigInt(event.timestamp_ns) -
-                      BigInt(block.startTimestamp || 0),
+                      BigInt(event.timestamp_ns) - block.startTimestamp,
                   }
                 : block,
             )
@@ -266,13 +265,15 @@ export function useBlockTracker(maxBlock: number = 20) {
   )
 
   const maxBlockExecutionTime = useMemo(() => {
-    const maxBlockExecutionTimeMs = fromNsToMsPrecise(
-      Math.max(
-        ...finalizedBlocks.map((block) => Number(block.executionTime) ?? 0),
-        1,
+    return fromNsToMsPrecise(
+      finalizedBlocks.reduce(
+        (max, block) =>
+          block.executionTime && block.executionTime > max
+            ? block.executionTime
+            : max,
+        BigInt(1),
       ),
     )
-    return Math.max(maxBlockExecutionTimeMs, 1).toFixed(0)
   }, [finalizedBlocks])
 
   return {
