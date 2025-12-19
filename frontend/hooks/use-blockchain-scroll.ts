@@ -14,23 +14,26 @@ export function useBlockchainScroll({
   isFollowingChain,
 }: UseBlockchainScrollOptions) {
   const gridRef = useRef<GridImperativeAPI>(null)
-  const prevNewestBlockIdRef = useRef<number | null>(null)
+  const prevNewestBlockNumberRef = useRef<number | null>(null)
 
-  // Sort blocks by ID (oldest on left, newest on right)
+  // Sort blocks by Number (oldest on left, newest on right)
   const sortedBlocks = useMemo(
-    () => [...blocks].sort((a, b) => a.id - b.id),
+    () => [...blocks].sort((a, b) => a.number - b.number),
     [blocks],
   )
 
-  const newestBlockId =
-    sortedBlocks.length > 0 ? sortedBlocks[sortedBlocks.length - 1].id : null
+  const newestBlockNumber =
+    sortedBlocks.length > 0
+      ? sortedBlocks[sortedBlocks.length - 1].number
+      : null
 
   // Auto-scroll to the end when new blocks are added (only if following chain)
   useLayoutEffect(() => {
-    if (!gridRef.current || newestBlockId === null || !isFollowingChain) return
-
-    const prevNewestId = prevNewestBlockIdRef.current
-    const hasNewBlock = prevNewestId === null || newestBlockId > prevNewestId
+    if (!gridRef.current || newestBlockNumber === null || !isFollowingChain)
+      return
+    const prevNewestNumber = prevNewestBlockNumberRef.current
+    const hasNewBlock =
+      prevNewestNumber === null || newestBlockNumber > prevNewestNumber
 
     if (hasNewBlock) {
       requestAnimationFrame(() => {
@@ -42,8 +45,8 @@ export function useBlockchainScroll({
       })
     }
 
-    prevNewestBlockIdRef.current = newestBlockId
-  }, [newestBlockId, isFollowingChain, sortedBlocks.length])
+    prevNewestBlockNumberRef.current = newestBlockNumber
+  }, [newestBlockNumber, isFollowingChain, sortedBlocks.length])
 
   return { gridRef, sortedBlocks }
 }

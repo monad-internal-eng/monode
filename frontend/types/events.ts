@@ -8,6 +8,10 @@ export type EventName =
   | 'BlockQC'
   | 'BlockFinalized'
   | 'BlockVerified'
+  | 'BlockEnd'
+  | 'TxnHeaderStart'
+  | 'TxnEnd'
+  | 'TxnEvmOutput'
 
 export type SerializableExecEvent =
   | {
@@ -31,6 +35,27 @@ export type SerializableExecEvent =
     }
   | { type: 'BlockFinalized'; block_number: number }
   | { type: 'BlockVerified'; block_number: number }
+  | { type: 'BlockEnd'; block_number: number }
+  | {
+      type: 'TxnHeaderStart'
+      txn_index: number
+      txn_hash: string
+      sender: string
+      to: string
+      gas_limit: number
+      max_fee_per_gas: string
+      max_priority_fee_per_gas: string
+      value: string
+      data: string
+      blob_data: string
+    }
+  | { type: 'TxnEnd' }
+  | {
+      type: 'TxnEvmOutput'
+      txn_index: number
+      status: boolean
+      gas_used: number
+    }
 
 export interface SerializableEventData {
   event_name: EventName

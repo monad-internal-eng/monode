@@ -1,4 +1,5 @@
 import BlockStateTracker from '@/components/block-state-tracker'
+import BlockTimeExecutionTracker from '@/components/block-time-tracker'
 import HotAccountsBubbleMap from '@/components/hot-accounts-bubble-map'
 import HotSlotsBubbleMap from '@/components/hot-slots-bubble-map'
 
@@ -19,6 +20,10 @@ export default function Home() {
         <div className="w-full h-px my-8 bg-linear-to-r from-transparent via-[#2a2a4a] to-transparent" />
 
         <HotSlotsBubbleMap />
+
+        <div className="w-full h-px my-8 bg-linear-to-r from-transparent via-[#2a2a4a] to-transparent" />
+
+        <BlockTimeExecutionTracker />
       </main>
     </div>
   )

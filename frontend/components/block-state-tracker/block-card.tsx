@@ -42,13 +42,13 @@ export const BlockCard = ({ block, className }: BlockCardProps) => {
       )}
     >
       <a
-        href={`https://monadvision.com/block/${block.id}`}
+        href={`https://monadvision.com/block/${block.number}`}
         target="_blank"
         rel="noopener noreferrer"
         className="font-bold drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] hover:underline underline-offset-2"
-        title={`View block #${block.id} on MonadVision`}
+        title={`View block #${block.number} on MonadVision`}
       >
-        #{block.id}
+        #{block.number}
       </a>
       <AnimatePresence mode="wait">
         <motion.span
