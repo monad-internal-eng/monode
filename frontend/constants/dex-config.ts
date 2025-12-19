@@ -1,13 +1,30 @@
-import { keccak256, toBytes } from 'viem'
+import { keccak256, parseAbi, toBytes } from 'viem'
 
 export type DexProvider = 'uniswap-v4' | 'pancakeswap-v3' | 'lfj' | 'kuru'
+
+/**
+ * Event ABIs for decoding with viem's decodeEventLog
+ */
+export const EVENT_ABIS = {
+  uniswapV4: parseAbi([
+    'event Swap(bytes32 indexed id, address indexed sender, int128 amount0, int128 amount1, uint160 sqrtPriceX96, uint128 liquidity, int24 tick, uint24 fee)',
+  ]),
+  pancakeswapV3: parseAbi([
+    'event Swap(address indexed sender, address indexed recipient, int256 amount0, int256 amount1, uint160 sqrtPriceX96, uint128 liquidity, int24 tick, uint128 protocolFeesToken0, uint128 protocolFeesToken1)',
+  ]),
+  lfj: parseAbi([
+    'event Swap(address indexed sender, address indexed to, uint24 id, bytes32 amountsIn, bytes32 amountsOut, uint24 volatilityAccumulator, bytes32 totalFees, bytes32 protocolFees)',
+  ]),
+  kuru: parseAbi([
+    'event Trade(uint40 orderId, address makerAddress, bool isBuy, uint256 price, uint96 updatedSize, address takerAddress, address txOrigin, uint96 filledSize)',
+  ]),
+} as const
 
 export interface DexConfig {
   name: string
   shortName: string
   provider: DexProvider
   contractAddress: string
-  eventSignature: string
   eventTopics: string[]
   color: string
 }
@@ -64,11 +81,10 @@ const LFJ_SWAP_SIGNATURE =
 
 /**
  * Kuru Trade event signature
- * event Trade(uint40 orderId, address indexed maker, bool isBuy, uint32 price, uint96 updatedSize, address indexed taker, address indexed origin, uint96 filledSize)
- * Note: maker, taker, origin are indexed (in topics)
+ * event Trade(uint40 orderId, address makerAddress, bool isBuy, uint256 price, uint96 updatedSize, address takerAddress, address txOrigin, uint96 filledSize)
  */
 const KURU_TRADE_SIGNATURE =
-  'Trade(uint40,address,bool,uint32,uint96,address,address,uint96)'
+  'Trade(uint40,address,bool,uint256,uint96,address,address,uint96)'
 
 /**
  * DEX configurations for MON/AUSD pair tracking
@@ -79,7 +95,6 @@ export const DEX_CONFIGS: DexConfig[] = [
     shortName: 'Uni V4',
     provider: 'uniswap-v4',
     contractAddress: '0x188d586ddcf52439676ca21a244753fa19f9ea8e', // Uniswap v4 PoolManager on Monad
-    eventSignature: UNISWAP_V4_SWAP_SIGNATURE,
     eventTopics: [
       keccak256(toBytes(UNISWAP_V4_SWAP_SIGNATURE)),
       '0xadaf30776f551bccdfb307c3fd8cdec198ca9a852434c8022ee32d1ccedd8219', // MON/AUSD poolId
@@ -91,7 +106,6 @@ export const DEX_CONFIGS: DexConfig[] = [
     shortName: 'Cake V3',
     provider: 'pancakeswap-v3',
     contractAddress: '0xd5b70d70cbe6c42bcd1aaa662a21673a83f4615b',
-    eventSignature: PANCAKESWAP_V3_SWAP_SIGNATURE,
     eventTopics: [keccak256(toBytes(PANCAKESWAP_V3_SWAP_SIGNATURE))],
     color: '#1FC7D4',
   },
@@ -100,7 +114,6 @@ export const DEX_CONFIGS: DexConfig[] = [
     shortName: 'LFJ',
     provider: 'lfj',
     contractAddress: '0xdd0a93642B0e1e938a75B400f31095Af4C4BECE5',
-    eventSignature: LFJ_SWAP_SIGNATURE,
     eventTopics: [keccak256(toBytes(LFJ_SWAP_SIGNATURE))],
     color: '#E84142',
   },
@@ -108,8 +121,7 @@ export const DEX_CONFIGS: DexConfig[] = [
     name: 'Kuru',
     shortName: 'Kuru',
     provider: 'kuru',
-    contractAddress: '0x0990a54d7abcaa35ac03814f5ed5c6afbbf45ac9',
-    eventSignature: KURU_TRADE_SIGNATURE,
+    contractAddress: '0xf39c4fD5465Ea2dD7b0756CeBC48a258b34FeBf3',
     eventTopics: [keccak256(toBytes(KURU_TRADE_SIGNATURE))],
     color: '#836EF9',
   },

@@ -1,18 +1,16 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
-import { DEX_CONFIGS, type DexProvider } from '@/constants/dex-config'
+import { decodeEventLog, type Hex } from 'viem'
+import {
+  DEX_CONFIGS,
+  type DexProvider,
+  EVENT_ABIS,
+} from '@/constants/dex-config'
 import { useEvents } from '@/hooks/use-events'
 import type { SerializableEventData } from '@/types/events'
 import type { SwapData, SwapsByProvider } from '@/types/swap'
-import {
-  cleanHexData,
-  parseAddress,
-  parseLFJPackedAmounts,
-  parseSignedInt256,
-  parseTopicsString,
-  parseUint,
-} from '@/utils/abi-decode'
+import { parseTopicsString } from '@/utils/abi-decode'
 
 const MAX_SWAPS_PER_PROVIDER = 10
 
@@ -27,8 +25,10 @@ function parseSwapEvent(
     return null
   }
 
-  const { address, data } = event.payload
-  const topics = parseTopicsString(event.payload.topics as string | string[])
+  const { data } = event.payload
+  const topicsRaw = parseTopicsString(event.payload.topics as string | string[])
+  const topics = topicsRaw as Hex[]
+  const dataHex = data as Hex
   const blockNumber = event.block_number ?? 0
   const txnIdx = event.txn_idx ?? 0
   const txHash = event.txn_hash
@@ -40,30 +40,22 @@ function parseSwapEvent(
     let swap: SwapData | null = null
     switch (provider) {
       case 'uniswap-v4':
-        swap = parseUniswapV4Swap(
-          id,
-          address,
-          topics,
-          data,
-          blockNumber,
-          timestamp,
-        )
+        swap = parseUniswapV4Swap(id, topics, dataHex, blockNumber, timestamp)
         break
       case 'pancakeswap-v3':
         swap = parsePancakeSwapV3Swap(
           id,
-          address,
           topics,
-          data,
+          dataHex,
           blockNumber,
           timestamp,
         )
         break
       case 'lfj':
-        swap = parseLFJSwap(id, address, topics, data, blockNumber, timestamp)
+        swap = parseLFJSwap(id, topics, dataHex, blockNumber, timestamp)
         break
       case 'kuru':
-        swap = parseKuruTrade(id, address, topics, data, blockNumber, timestamp)
+        swap = parseKuruTrade(id, topics, dataHex, blockNumber, timestamp)
         break
     }
     if (swap) {
@@ -76,29 +68,26 @@ function parseSwapEvent(
 }
 
 /**
- * Parse Uniswap V4 Swap event
- * event Swap(PoolId indexed id, address indexed sender, int128 amount0, int128 amount1, ...)
+ * Parse Uniswap V4 Swap event using viem's decodeEventLog
  * Positive = tokens sent (in), Negative = tokens received (out)
  * token0 = MON, token1 = AUSD for this pool
  */
 function parseUniswapV4Swap(
   id: string,
-  address: string,
-  topics: string[],
-  data: string,
+  topics: Hex[],
+  data: Hex,
   blockNumber: number,
   timestamp: number,
 ): SwapData {
-  const sender = topics[2] ? parseAddress(topics[2].slice(2)) : address
-  const hex = cleanHexData(data)
+  const decoded = decodeEventLog({
+    abi: EVENT_ABIS.uniswapV4,
+    data,
+    topics: topics as [Hex, ...Hex[]],
+  })
 
-  const amount0 = parseSignedInt256(hex.slice(0, 64))
-  const amount1 = parseSignedInt256(hex.slice(64, 128))
+  const { sender, amount0, amount1 } = decoded.args
 
-  // Positive = sent, Negative = received
-  // token0 = MON, token1 = AUSD
   if (amount0 > BigInt(0)) {
-    // Sending MON, receiving AUSD
     return {
       id,
       provider: 'uniswap-v4',
@@ -112,7 +101,7 @@ function parseUniswapV4Swap(
       txHash: '',
     }
   }
-  // Sending AUSD, receiving MON
+
   return {
     id,
     provider: 'uniswap-v4',
@@ -128,28 +117,24 @@ function parseUniswapV4Swap(
 }
 
 /**
- * Parse PancakeSwap V3 Swap event
- * event Swap(address indexed sender, address indexed recipient, int256 amount0, int256 amount1, ...)
+ * Parse PancakeSwap V3 Swap event using viem's decodeEventLog
  * Positive amount = tokens going INTO pool (user sends), Negative = tokens going OUT of pool (user receives)
  * Pool is AUSD/WMON: token0 = AUSD (6 decimals), token1 = WMON (18 decimals)
  */
 function parsePancakeSwapV3Swap(
   id: string,
-  address: string,
-  topics: string[],
-  data: string,
+  topics: Hex[],
+  data: Hex,
   blockNumber: number,
   timestamp: number,
 ): SwapData {
-  const sender = topics[1] ? parseAddress(topics[1].slice(2)) : address
-  const recipient = topics[2] ? parseAddress(topics[2].slice(2)) : undefined
-  const hex = cleanHexData(data)
+  const decoded = decodeEventLog({
+    abi: EVENT_ABIS.pancakeswapV3,
+    data,
+    topics: topics as [Hex, ...Hex[]],
+  })
 
-  const amount0 = parseSignedInt256(hex.slice(0, 64)) // AUSD
-  const amount1 = parseSignedInt256(hex.slice(64, 128)) // WMON
-
-  // amount0 > 0: user sends AUSD to pool, receives WMON
-  // amount0 < 0: user receives AUSD from pool, sends WMON
+  const { sender, recipient, amount0, amount1 } = decoded.args
   const isSellingAUSD = amount0 > BigInt(0)
 
   return {
@@ -168,27 +153,34 @@ function parsePancakeSwapV3Swap(
 }
 
 /**
- * Parse LFJ Swap event
- * event Swap(address indexed sender, address indexed to, uint24 id, bytes32 amountsIn, bytes32 amountsOut, ...)
+ * Parse LFJ Swap event using viem's decodeEventLog
  * bytes32 layout: [amountY (upper 128 bits) | amountX (lower 128 bits)]
  */
 function parseLFJSwap(
   id: string,
-  address: string,
-  topics: string[],
-  data: string,
+  topics: Hex[],
+  data: Hex,
   blockNumber: number,
   timestamp: number,
 ): SwapData {
-  const sender = topics[1] ? parseAddress(topics[1].slice(2)) : address
-  const recipient = topics[2] ? parseAddress(topics[2].slice(2)) : undefined
-  const hex = cleanHexData(data)
+  const decoded = decodeEventLog({
+    abi: EVENT_ABIS.lfj,
+    data,
+    topics: topics as [Hex, ...Hex[]],
+  })
 
-  // Data layout: uint24 id (slot 0), bytes32 amountsIn (slot 1), bytes32 amountsOut (slot 2), ...
-  const [amountXIn, amountYIn] = parseLFJPackedAmounts(hex.slice(64, 128))
-  const [amountXOut, amountYOut] = parseLFJPackedAmounts(hex.slice(128, 192))
+  const { sender, to, amountsIn, amountsOut } = decoded.args
 
-  // Determine swap direction based on which token was input
+  // Parse packed bytes32: upper 128 bits = amountY, lower 128 bits = amountX
+  const parsePackedAmounts = (packed: Hex): [bigint, bigint] => {
+    const val = BigInt(packed)
+    const amountX = val & ((BigInt(1) << BigInt(128)) - BigInt(1))
+    const amountY = val >> BigInt(128)
+    return [amountX, amountY]
+  }
+
+  const [amountXIn, amountYIn] = parsePackedAmounts(amountsIn)
+  const [amountXOut, amountYOut] = parsePackedAmounts(amountsOut)
   const isXIn = amountXIn > BigInt(0)
 
   return {
@@ -197,7 +189,7 @@ function parseLFJSwap(
     blockNumber,
     timestamp,
     sender,
-    recipient,
+    recipient: to,
     amountIn: (isXIn ? amountXIn : amountYIn).toString(),
     amountOut: (isXIn ? amountYOut : amountXOut).toString(),
     tokenIn: isXIn ? 'MON' : 'AUSD',
@@ -207,30 +199,39 @@ function parseLFJSwap(
 }
 
 /**
- * Parse Kuru Trade event
- * event Trade(uint40 orderId, address indexed maker, bool isBuy, uint32 price, uint96 updatedSize, address indexed taker, address indexed origin, uint96 filledSize)
- * Indexed params (maker, taker, origin) are in topics[1], topics[2], topics[3]
- * Data contains: orderId, isBuy, price, updatedSize, filledSize
+ * Parse Kuru Trade event using viem's decodeEventLog
+ *
+ * Kuru precision (from docs):
+ * - price: constant precision of 1e18 (raw_price = price / 1e18)
+ * - filledSize: in size_precision (market-specific, queried via getMarketParams())
+ * - isBuy: true = market buy (taker buying base), false = market sell (taker selling base)
+ *
+ * Formulas from Kuru docs:
+ * - base_raw = filledSize / size_precision
+ * - quote_raw = price * filledSize / (size_precision * 1e18)
+ *
+ * For MON/AUSD market, size_precision = 1e6
  */
 function parseKuruTrade(
   id: string,
-  _address: string,
-  topics: string[],
-  data: string,
+  topics: Hex[],
+  data: Hex,
   blockNumber: number,
   timestamp: number,
 ): SwapData {
-  const hex = cleanHexData(data)
+  const decoded = decodeEventLog({
+    abi: EVENT_ABIS.kuru,
+    data,
+    topics: topics as [Hex, ...Hex[]],
+  })
 
-  // Indexed params from topics
-  const makerAddress = topics[1] ? parseAddress(topics[1].slice(2)) : ''
-  const takerAddress = topics[2] ? parseAddress(topics[2].slice(2)) : ''
+  const { makerAddress, isBuy, price, takerAddress, filledSize } = decoded.args
 
-  // Non-indexed params from data
-  // Data layout: orderId[0:64], isBuy[64:128], price[128:192], updatedSize[192:256], filledSize[256:320]
-  const isBuy = parseUint(hex.slice(64, 128)) !== BigInt(0)
-  const price = parseUint(hex.slice(128, 192))
-  const filledSize = parseUint(hex.slice(256, 320))
+  // size_precision = 1e6 for this market
+  const SIZE_PRECISION = BigInt(1e6)
+  const baseAmountWei = (filledSize * BigInt(1e18)) / SIZE_PRECISION
+  const quoteAmountSmallest =
+    (price * filledSize * BigInt(1e6)) / (SIZE_PRECISION * BigInt(1e18))
 
   return {
     id,
@@ -239,8 +240,10 @@ function parseKuruTrade(
     timestamp,
     sender: takerAddress,
     recipient: makerAddress,
-    amountIn: filledSize.toString(),
-    amountOut: ((filledSize * price) / BigInt(1e18)).toString(),
+    amountIn: isBuy ? quoteAmountSmallest.toString() : baseAmountWei.toString(),
+    amountOut: isBuy
+      ? baseAmountWei.toString()
+      : quoteAmountSmallest.toString(),
     tokenIn: isBuy ? 'AUSD' : 'MON',
     tokenOut: isBuy ? 'MON' : 'AUSD',
     price: price.toString(),
