@@ -1,10 +1,11 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { useMemo } from 'react'
 import { useBlockTracker } from '@/hooks/use-block-tracker'
-import { calculateBarMetrics, fromNsToMsPrecise } from '@/lib/block-metrics'
-import { cn } from '@/lib/utils'
+import { fromNsToMsPrecise } from '@/lib/block-metrics'
+import BlockTime from './block-time'
+import BlockTimeLegend from './block-time-legend'
+import BlockTimeTrackerDescription from './block-time-tracker-description'
 
 const MAX_BLOCKS_TO_SHOW = 20
 
@@ -95,126 +96,22 @@ export default function BlockTimeExecutionTracker() {
 
           {/* Scrollable Blocks Container */}
           <div className="flex gap-2 p-8 bg-[#16162a]/80 rounded-r-lg border border-l-0 border-[#2a2a4a]/50 overflow-x-auto max-w-full scrollbar-none flex-1">
-            {finalizedBlocks.map((block) => {
-              const {
-                barHeightPercentage,
-                fillPercentage,
-                totalTransactionTime,
-                parallelizationRatio,
-                isHighlyParallel,
-              } = calculateBarMetrics(block, maxBlockExecutionTime)
-
-              return (
-                <motion.div
-                  key={block.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.05 }}
-                  className="flex flex-col items-center gap-2 min-w-20"
-                >
-                  {/* Block number Label */}
-                  <div className="text-xs font-medium text-[#8888a0]">
-                    #{block.number}
-                  </div>
-
-                  {/* Block Bar Container */}
-                  <div className="relative w-full h-32 flex flex-col justify-end p-1">
-                    {/* Block Time Container (represents total block execution time) */}
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: `${barHeightPercentage}%` }}
-                      transition={{ duration: 0.8, delay: 0.05 }}
-                      className={cn(
-                        'w-full rounded-t-md border-2 border-gray-400 relative',
-                        'bg-linear-to-t from-gray-300 to-gray-200',
-                        'hover:shadow-lg transition-all duration-200 cursor-pointer',
-                      )}
-                      title={`Block ${block.number}: ${fromNsToMsPrecise(block.executionTime ?? BigInt(0)).toFixed(6)}ms execution time, ${totalTransactionTime.toFixed(6)}ms total tx time, ${(block.transactions ?? []).length} transactions`}
-                    >
-                      {/* Parallelization Badge */}
-                      {isHighlyParallel && (
-                        <div className="absolute -top-4 right-1 text-[8px] bg-purple-600 text-white px-1 rounded z-10">
-                          {parallelizationRatio.toFixed(1)}x
-                        </div>
-                      )}
-                      {/* Transaction Time Fill */}
-                      <motion.div
-                        initial={{ height: 0 }}
-                        animate={{ height: `${fillPercentage}%` }}
-                        transition={{
-                          duration: 1.2,
-                          delay: 0.05,
-                        }}
-                        className={cn(
-                          'absolute bottom-0 left-0 w-full rounded-t-md bg-linear-to-t from-purple-500 to-purple-300',
-                          isHighlyParallel && 'animate-pulse',
-                        )}
-                        style={{
-                          boxShadow: isHighlyParallel
-                            ? '0 0 15px #ffd700, 0 0 30px #ffd700, 0 0 20px #a855f7, 0 0 40px #a855f7, 0 0 60px #a855f7, inset 0 0 20px rgba(255, 215, 0, 0.2), inset 0 0 10px rgba(168, 85, 247, 0.3)'
-                            : undefined,
-                        }}
-                        title={`${totalTransactionTime.toFixed(6)}ms total transaction execution time`}
-                      />
-                    </motion.div>
-                  </div>
-
-                  {/* Block Stats */}
-                  <div className="text-center text-xs text-gray-500 space-y-1">
-                    <div className="font-medium">
-                      {fromNsToMsPrecise(
-                        block.executionTime ?? BigInt(0),
-                      ).toFixed(6)}
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      {totalTransactionTime.toFixed(6)}
-                    </div>
-                    <div>{(block.transactions ?? []).length} tx</div>
-                  </div>
-                </motion.div>
-              )
-            })}
+            {finalizedBlocks.map((block) => (
+              <BlockTime
+                key={block.id}
+                block={block}
+                maxBlockExecutionTime={maxBlockExecutionTime}
+              />
+            ))}
           </div>
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap gap-4 mt-4 text-xs text-[#8888a0]">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-linear-to-t from-gray-200 to-gray-100 border border-gray-300 rounded" />
-            <span>Block execution time (container)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-linear-to-t from-purple-500 to-purple-300 rounded" />
-            <span>Transaction execution time</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div
-              className="w-3 h-3 bg-linear-to-t from-purple-500 to-purple-300 rounded animate-pulse"
-              style={{
-                boxShadow:
-                  '0 0 6px #ffd700, 0 0 12px #ffd700, 0 0 8px #a855f7, 0 0 16px #a855f7, 0 0 24px #a855f7',
-              }}
-            />
-            <span>High parallelization (&gt;1x ratio)</span>
-          </div>
-        </div>
+        <BlockTimeLegend />
       </div>
 
       {/* Description */}
-      <div className="text-sm text-[#8888a0] bg-[#16162a]/80 rounded-lg border border-[#2a2a4a]/50 p-4">
-        <p className="mb-2">
-          <strong>Real-time block execution visualization:</strong> Each bar
-          represents a block with its container height showing total block
-          execution time. The fill shows cumulative transaction execution time -
-          if transactions run in parallel, it will be visible as a glowing fill
-          and multiplier.
-        </p>
-        <p className="text-xs text-gray-500">
-          Data updates live from blockchain events. Glowing fill indicates high
-          parallelization (block execution would take longer if the transactions
-          run sequentially).
-        </p>
-      </div>
+      <BlockTimeTrackerDescription />
     </div>
   )
 }
