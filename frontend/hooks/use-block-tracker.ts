@@ -245,15 +245,15 @@ export function useBlockTracker(maxBlock: number = 20) {
 
   // Subscribe to real-time events
   useEvents({
-    subscribeToEvents: [
-      'BlockStart',
-      'BlockQC',
-      'BlockFinalized',
-      'BlockVerified',
-      'BlockEnd',
-      'TxnHeaderStart',
-      'TxnEnd',
-      'TxnEvmOutput',
+    filters: [
+      { eventName: 'BlockStart' },
+      { eventName: 'BlockQC' },
+      { eventName: 'BlockFinalized' },
+      { eventName: 'BlockVerified' },
+      { eventName: 'BlockEnd' },
+      { eventName: 'TxnHeaderStart' },
+      { eventName: 'TxnEnd' },
+      { eventName: 'TxnEvmOutput' },
     ],
     onEvent: handleEvent,
   })
