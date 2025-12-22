@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { RefreshCw, Wifi, WifiOff } from 'lucide-react'
 import { useSwapEvents } from '@/hooks/use-swap-events'
 import { cn } from '@/lib/utils'
-import { ProviderCard } from './provider-card'
+import { Swaps } from './swaps'
 
 export default function SwapLogsTracker() {
   const { allSwaps, isConnected, clearSwaps } = useSwapEvents()
@@ -60,7 +60,7 @@ export default function SwapLogsTracker() {
         </div>
       </div>
 
-      <ProviderCard data={allSwaps} isLoading={!isConnected} />
+      <Swaps data={allSwaps} isLoading={!isConnected} />
     </div>
   )
 }

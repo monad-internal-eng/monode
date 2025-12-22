@@ -11,11 +11,7 @@ interface ProviderCardProps {
   className?: string
 }
 
-export function ProviderCard({
-  data,
-  isLoading,
-  className,
-}: ProviderCardProps) {
+export function Swaps({ data, isLoading }: ProviderCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
@@ -24,7 +20,6 @@ export function ProviderCard({
       className={cn(
         'flex flex-col rounded-xl overflow-hidden',
         'bg-[#16162a]/80 border border-[#2a2a4a]/50',
-        className,
       )}
     >
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#2a2a4a]/50">
