@@ -2,52 +2,16 @@
 
 import { motion } from 'framer-motion'
 import { ArrowRight, ExternalLink, User } from 'lucide-react'
-import { formatUnits } from 'viem'
 import { EXPLORER_URL } from '@/constants/common'
-import {
-  getSwapProviderConfig,
-  getTokenDecimals,
-} from '@/constants/swap-provider-config'
-import { cn } from '@/lib/utils'
+import { getSwapProviderConfig } from '@/constants/swap-provider-config'
+import { formatTokenAmount } from '@/lib/amount'
+import { formatTimeDisplay } from '@/lib/timestamp'
+import { cn, shortenHex } from '@/lib/utils'
 import type { SwapData } from '@/types/swap'
 
 interface SwapRowProps {
   swap: SwapData
   showProvider?: boolean
-}
-
-function formatTokenAmount(
-  amount: string,
-  tokenSymbol: string,
-  tokenAddress?: string,
-): string {
-  // Use address for decimals lookup if available, fallback to symbol
-  const decimals = getTokenDecimals(tokenAddress ?? tokenSymbol)
-  const absAmount = amount.startsWith('-') ? amount.slice(1) : amount
-  const formatted = formatUnits(BigInt(absAmount), decimals)
-  const num = Number(formatted)
-
-  if (num === 0) return '0'
-  if (num < 0.001) return '<0.001'
-  if (num < 1) return num.toFixed(3)
-  if (num < 1000) return num.toFixed(2)
-  if (num < 1_000_000) return `${(num / 1000).toFixed(2)}K`
-  if (num < 1_000_000_000) return `${(num / 1_000_000).toFixed(2)}M`
-  return `${(num / 1_000_000_000).toFixed(2)}B`
-}
-
-function formatTime(timestamp: number): string {
-  const date = new Date(timestamp)
-  return date.toLocaleTimeString(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
-}
-
-function truncateAddress(address: string): string {
-  if (address.length < 12) return address
-  return `${address.slice(0, 6)}...${address.slice(-4)}`
 }
 
 export function SwapRow({ swap }: SwapRowProps) {
@@ -99,13 +63,11 @@ export function SwapRow({ swap }: SwapRowProps) {
           title={`Sender: ${swap.sender}`}
         >
           <User className="w-3 h-3" />
-          <span className="text-xs font-mono">
-            {truncateAddress(swap.sender)}
-          </span>
+          <span className="text-xs font-mono">{shortenHex(swap.sender)}</span>
         </a>
         <span className="text-xs text-zinc-600">•</span>
         <span className="text-xs text-zinc-500 tabular-nums">
-          {formatTime(swap.timestamp)}
+          {formatTimeDisplay(swap.timestamp)}
         </span>
         <a
           href={`${EXPLORER_URL}/tx/${swap.txHash}`}

@@ -8,7 +8,7 @@ export function formatTimestamp(timestampNs: string): string {
   return new Date(timestampMs).toISOString()
 }
 
-export function formatTimeDisplay(timestamp: string) {
+export function formatTimeDisplay(timestamp: number | string) {
   const date = new Date(timestamp)
   return date.toLocaleTimeString([], {
     hour12: false,
