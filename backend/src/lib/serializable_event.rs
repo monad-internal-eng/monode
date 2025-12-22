@@ -310,6 +310,8 @@ pub struct SerializableEventData {
     pub block_number: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub txn_idx: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub txn_hash: Option<B256>,
     pub payload: SerializableExecEvent,
     pub seqno: u64,
     pub timestamp_ns: u64,
@@ -321,6 +323,7 @@ impl From<&EventData> for SerializableEventData {
             event_name: data.event_name,
             block_number: data.block_number,
             txn_idx: data.txn_idx,
+            txn_hash: data.txn_hash.map(B256::from),
             payload: SerializableExecEvent::from(&data.payload),
             seqno: data.seqno,
             timestamp_ns: data.timestamp_ns.clone(),

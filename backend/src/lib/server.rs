@@ -181,6 +181,9 @@ async fn run_event_forwarder_task(
     let mut storage_accesses = TopKTracker::new(10_000);
     let mut stats_interval = tokio::time::interval(std::time::Duration::from_secs(5));
 
+    // Track current transaction hash per txn_idx
+    let mut current_txn_hashes: std::collections::HashMap<usize, [u8; 32]> = std::collections::HashMap::new();
+
     loop {
         tokio::select! {
             event_data = event_receiver.recv() => {
@@ -188,28 +191,45 @@ async fn run_event_forwarder_task(
                     warn!("Event receiver closed");
                     return;
                 }
-                let event_data = event_data.unwrap();
+                let mut event_data = event_data.unwrap();
+
+                // Track txn_hash from TxnHeaderStart events
+                if let EventName::TxnHeaderStart = event_data.event_name {
+                    if let ExecEvent::TxnHeaderStart { txn_index, txn_header_start, .. } = &event_data.payload {
+                        current_txn_hashes.insert(*txn_index, txn_header_start.txn_hash.bytes);
+                    }
+                }
+
+                // Populate txn_hash for events that have txn_idx
+                if let Some(txn_idx) = event_data.txn_idx {
+                    if let Some(hash) = current_txn_hashes.get(&txn_idx) {
+                        event_data.txn_hash = Some(*hash);
+                    }
+                }
+
+                // Clear txn_hash tracking on TxnEnd
+                if let EventName::TxnEnd = event_data.event_name {
+                    if let Some(txn_idx) = event_data.txn_idx {
+                        current_txn_hashes.remove(&txn_idx);
+                    }
+                }
 
                 if let EventName::AccountAccess = event_data.event_name {
                     if let ExecEvent::AccountAccess {
                         account_access,
                         ..
-                    } = event_data.payload {
+                    } = &event_data.payload {
                         let address = Address::from_slice(&account_access.address.bytes);
                         account_accesses.record(address);
-                    } else {
-                        unreachable!();
                     }
                 } else if let EventName::StorageAccess = event_data.event_name {
                     if let ExecEvent::StorageAccess {
                         storage_access,
                         ..
-                    } = event_data.payload {
+                    } = &event_data.payload {
                         let address = Address::from_slice(&storage_access.address.bytes);
                         let key = B256::from_slice(&storage_access.key.bytes);
                         storage_accesses.record((address, key));
-                    } else {
-                        unreachable!();
                     }
                 }
 
