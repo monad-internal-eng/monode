@@ -1,4 +1,4 @@
-use alloy_primitives::{Address, B256};
+use alloy_primitives::{Address, B256, U256};
 use serde::{Deserialize, Serialize};
 use super::event_listener::EventName;
 use super::serializable_event::{SerializableEventData, SerializableExecEvent};
@@ -165,6 +165,17 @@ pub enum ClientMessage {
     },
 }
 
+fn is_native_transfer(event: &SerializableEventData) -> bool {
+    if let SerializableExecEvent::TxnCallFrame {
+        value,
+        ..
+    } = event.payload {
+        value != U256::ZERO
+    } else {
+        false
+    }
+}
+
 /// Filter for events with support for multiple filter specs (OR logic between specs)
 #[derive(Clone, Debug, Default)]
 pub struct EventFilter {
@@ -178,10 +189,18 @@ impl EventFilter {
         Self { event_filters }
     }
 
+    fn includes_native_transfers(&self) -> bool {
+        self.event_filters.iter().any(|spec| spec.event_name == EventName::NativeTransfer)
+    }
+
     /// Checks if an event matches any filter spec (OR logic)
     /// Returns true if at least one spec matches (or if there are no specs)
     pub fn matches_event(&self, event: &SerializableEventData) -> bool {
         if self.event_filters.is_empty() {
+            return true;
+        }
+
+        if self.includes_native_transfers() && is_native_transfer(&event) {
             return true;
         }
 

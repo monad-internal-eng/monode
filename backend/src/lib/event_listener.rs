@@ -50,6 +50,7 @@ pub enum EventName {
     AccountAccess,
     StorageAccess,
     EvmError,
+    NativeTransfer,
 }
 
 impl EventName {
@@ -80,6 +81,7 @@ impl EventName {
             EventName::AccountAccess => "AccountAccess",
             EventName::StorageAccess => "StorageAccess",
             EventName::EvmError => "EvmError",
+            EventName::NativeTransfer => "NativeTransfer",
         }
     }
 
