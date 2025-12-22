@@ -50,7 +50,7 @@ function truncateAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`
 }
 
-export function SwapRow({ swap, showProvider = false }: SwapRowProps) {
+export function SwapRow({ swap }: SwapRowProps) {
   const config = getSwapProviderConfig(swap.provider)
 
   return (
@@ -65,14 +65,6 @@ export function SwapRow({ swap, showProvider = false }: SwapRowProps) {
         'border border-transparent hover:border-[#2a2a4a]/50',
       )}
     >
-      {showProvider && config && (
-        <div
-          className="w-2 h-2 rounded-full shrink-0"
-          style={{ backgroundColor: config.color }}
-          title={config.name}
-        />
-      )}
-
       <div className="flex items-center gap-1 flex-1 min-w-0">
         <span className="text-sm font-medium text-white tabular-nums">
           {formatTokenAmount(swap.amountIn, swap.tokenIn, swap.tokenInAddress)}
@@ -90,6 +82,15 @@ export function SwapRow({ swap, showProvider = false }: SwapRowProps) {
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
+        {config && (
+          <div
+            className="px-2.5 py-0.5 flex items-center justify-center rounded-full text-xs text-neutral-800 font-medium"
+            style={{ backgroundColor: config.color }}
+          >
+            {config.name}
+          </div>
+        )}
+        <span className="text-xs text-zinc-600">•</span>
         <a
           href={`${EXPLORER_URL}/address/${swap.sender}`}
           target="_blank"

@@ -10,10 +10,10 @@ import {
 } from '@/constants/swap-provider-config'
 import { useEvents } from '@/hooks/use-events'
 import type { SerializableEventData } from '@/types/events'
-import type { SwapData, SwapsByProvider } from '@/types/swap'
+import type { SwapData } from '@/types/swap'
 import { parseTopicsString } from '@/utils/abi-decode'
 
-const MAX_SWAPS_PER_PROVIDER = 10
+const MAX_SWAPS = 50
 
 /**
  * Parse raw log data into normalized SwapData based on the provider
@@ -236,9 +236,7 @@ function truncateAddress(address: string): string {
  * Hook to subscribe to and process swap events from all configured DEXs
  */
 export function useSwapEvents() {
-  const [swapsByProvider, setSwapsByProvider] = useState<
-    Map<SwapProvider, SwapData[]>
-  >(() => new Map(SWAP_PROVIDER_CONFIG.map((config) => [config.provider, []])))
+  const [allSwaps, setAllSwaps] = useState<SwapData[]>([])
 
   const filters = useMemo(
     () =>
@@ -274,21 +272,7 @@ export function useSwapEvents() {
     const swapData = parseSwapEvent(event, matchingConfig.provider)
     if (!swapData) return
 
-    setSwapsByProvider((prev) => {
-      const newMap = new Map(prev)
-      const existingSwaps = newMap.get(matchingConfig.provider) ?? []
-
-      if (existingSwaps.some((s) => s.id === swapData.id)) {
-        return prev
-      }
-
-      const updatedSwaps = [swapData, ...existingSwaps].slice(
-        0,
-        MAX_SWAPS_PER_PROVIDER,
-      )
-      newMap.set(matchingConfig.provider, updatedSwaps)
-      return newMap
-    })
+    setAllSwaps((prev) => [swapData, ...prev].slice(0, MAX_SWAPS))
   }, [])
 
   const { isConnected } = useEvents({
@@ -296,33 +280,11 @@ export function useSwapEvents() {
     onEvent: handleEvent,
   })
 
-  const swapsGrouped: SwapsByProvider[] = useMemo(
-    () =>
-      SWAP_PROVIDER_CONFIG.map((config) => ({
-        provider: config.provider,
-        swaps: swapsByProvider.get(config.provider) ?? [],
-        isLoading: !isConnected,
-      })),
-    [swapsByProvider, isConnected],
-  )
-
-  const allSwaps = useMemo(
-    () =>
-      Array.from(swapsByProvider.values())
-        .flat()
-        .sort((a, b) => b.timestamp - a.timestamp)
-        .slice(0, MAX_SWAPS_PER_PROVIDER * 2),
-    [swapsByProvider],
-  )
-
   const clearSwaps = useCallback(() => {
-    setSwapsByProvider(
-      new Map(SWAP_PROVIDER_CONFIG.map((config) => [config.provider, []])),
-    )
+    setAllSwaps([])
   }, [])
 
   return {
-    swapsByProvider: swapsGrouped,
     allSwaps,
     isConnected,
     clearSwaps,

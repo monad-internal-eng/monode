@@ -2,13 +2,12 @@
 
 import { motion } from 'framer-motion'
 import { RefreshCw, Wifi, WifiOff } from 'lucide-react'
-import { SWAP_PROVIDER_CONFIG } from '@/constants/swap-provider-config'
 import { useSwapEvents } from '@/hooks/use-swap-events'
 import { cn } from '@/lib/utils'
 import { ProviderCard } from './provider-card'
 
 export default function SwapLogsTracker() {
-  const { swapsByProvider, isConnected, clearSwaps } = useSwapEvents()
+  const { allSwaps, isConnected, clearSwaps } = useSwapEvents()
 
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
@@ -61,11 +60,7 @@ export default function SwapLogsTracker() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {swapsByProvider.map((providerData) => (
-          <ProviderCard key={providerData.provider} data={providerData} />
-        ))}
-      </div>
+      <ProviderCard data={allSwaps} isLoading={!isConnected} />
     </div>
   )
 }
