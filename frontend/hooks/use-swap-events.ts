@@ -3,10 +3,11 @@
 import { useCallback, useMemo, useState } from 'react'
 import { decodeEventLog, type Hex } from 'viem'
 import {
-  DEX_CONFIGS,
-  type DexProvider,
   EVENT_ABIS,
-} from '@/constants/dex-config'
+  getTokenByAddress,
+  SWAP_PROVIDER_CONFIG,
+  type SwapProvider,
+} from '@/constants/swap-provider-config'
 import { useEvents } from '@/hooks/use-events'
 import type { SerializableEventData } from '@/types/events'
 import type { SwapData, SwapsByProvider } from '@/types/swap'
@@ -19,7 +20,7 @@ const MAX_SWAPS_PER_PROVIDER = 10
  */
 function parseSwapEvent(
   event: SerializableEventData,
-  provider: DexProvider,
+  provider: SwapProvider,
 ): SwapData | null {
   if (event.payload.type !== 'TxnLog') {
     return null
@@ -39,6 +40,18 @@ function parseSwapEvent(
   try {
     let swap: SwapData | null = null
     switch (provider) {
+      case 'kuru':
+        swap = parseKuruFlowSwap(id, topics, dataHex, blockNumber, timestamp)
+        break
+      case 'monorail':
+        swap = parseMonorailAggregated(
+          id,
+          topics,
+          dataHex,
+          blockNumber,
+          timestamp,
+        )
+        break
       case 'uniswap-v4':
         swap = parseUniswapV4Swap(id, topics, dataHex, blockNumber, timestamp)
         break
@@ -50,12 +63,6 @@ function parseSwapEvent(
           blockNumber,
           timestamp,
         )
-        break
-      case 'lfj':
-        swap = parseLFJSwap(id, topics, dataHex, blockNumber, timestamp)
-        break
-      case 'kuru':
-        swap = parseKuruTrade(id, topics, dataHex, blockNumber, timestamp)
         break
     }
     if (swap) {
@@ -152,67 +159,7 @@ function parsePancakeSwapV3Swap(
   }
 }
 
-/**
- * Parse LFJ Swap event using viem's decodeEventLog
- * bytes32 layout: [amountY (upper 128 bits) | amountX (lower 128 bits)]
- */
-function parseLFJSwap(
-  id: string,
-  topics: Hex[],
-  data: Hex,
-  blockNumber: number,
-  timestamp: number,
-): SwapData {
-  const decoded = decodeEventLog({
-    abi: EVENT_ABIS.lfj,
-    data,
-    topics: topics as [Hex, ...Hex[]],
-  })
-
-  const { sender, to, amountsIn, amountsOut } = decoded.args
-
-  // Parse packed bytes32: upper 128 bits = amountY, lower 128 bits = amountX
-  const parsePackedAmounts = (packed: Hex): [bigint, bigint] => {
-    const val = BigInt(packed)
-    const amountX = val & ((BigInt(1) << BigInt(128)) - BigInt(1))
-    const amountY = val >> BigInt(128)
-    return [amountX, amountY]
-  }
-
-  const [amountXIn, amountYIn] = parsePackedAmounts(amountsIn)
-  const [amountXOut, amountYOut] = parsePackedAmounts(amountsOut)
-  const isXIn = amountXIn > BigInt(0)
-
-  return {
-    id,
-    provider: 'lfj',
-    blockNumber,
-    timestamp,
-    sender,
-    recipient: to,
-    amountIn: (isXIn ? amountXIn : amountYIn).toString(),
-    amountOut: (isXIn ? amountYOut : amountXOut).toString(),
-    tokenIn: isXIn ? 'MON' : 'AUSD',
-    tokenOut: isXIn ? 'AUSD' : 'MON',
-    txHash: '',
-  }
-}
-
-/**
- * Parse Kuru Trade event using viem's decodeEventLog
- *
- * Kuru precision (from docs):
- * - price: constant precision of 1e18 (raw_price = price / 1e18)
- * - filledSize: in size_precision (market-specific, queried via getMarketParams())
- * - isBuy: true = market buy (taker buying base), false = market sell (taker selling base)
- *
- * Formulas from Kuru docs:
- * - base_raw = filledSize / size_precision
- * - quote_raw = price * filledSize / (size_precision * 1e18)
- *
- * For MON/AUSD market, size_precision = 1e6
- */
-function parseKuruTrade(
+function parseKuruFlowSwap(
   id: string,
   topics: Hex[],
   data: Hex,
@@ -225,30 +172,64 @@ function parseKuruTrade(
     topics: topics as [Hex, ...Hex[]],
   })
 
-  const { makerAddress, isBuy, price, takerAddress, filledSize } = decoded.args
-
-  // size_precision = 1e6 for this market
-  const SIZE_PRECISION = BigInt(1e6)
-  const baseAmountWei = (filledSize * BigInt(1e18)) / SIZE_PRECISION
-  const quoteAmountSmallest =
-    (price * filledSize * BigInt(1e6)) / (SIZE_PRECISION * BigInt(1e18))
+  const { user, tokenIn, tokenOut, amountIn, amountOut } = decoded.args
+  const tokenInInfo = getTokenByAddress(tokenIn)
+  const tokenOutInfo = getTokenByAddress(tokenOut)
 
   return {
     id,
     provider: 'kuru',
     blockNumber,
     timestamp,
-    sender: takerAddress,
-    recipient: makerAddress,
-    amountIn: isBuy ? quoteAmountSmallest.toString() : baseAmountWei.toString(),
-    amountOut: isBuy
-      ? baseAmountWei.toString()
-      : quoteAmountSmallest.toString(),
-    tokenIn: isBuy ? 'AUSD' : 'MON',
-    tokenOut: isBuy ? 'MON' : 'AUSD',
-    price: price.toString(),
+    sender: user,
+    amountIn: amountIn.toString(),
+    amountOut: amountOut.toString(),
+    tokenIn: tokenInInfo?.symbol ?? truncateAddress(tokenIn),
+    tokenOut: tokenOutInfo?.symbol ?? truncateAddress(tokenOut),
+    tokenInAddress: tokenIn,
+    tokenOutAddress: tokenOut,
     txHash: '',
   }
+}
+
+function parseMonorailAggregated(
+  id: string,
+  topics: Hex[],
+  data: Hex,
+  blockNumber: number,
+  timestamp: number,
+): SwapData {
+  const decoded = decodeEventLog({
+    abi: EVENT_ABIS.monorail,
+    data,
+    topics: topics as [Hex, ...Hex[]],
+  })
+
+  const { sender, tokenIn, tokenOut, amountIn, amountOut } = decoded.args
+  const tokenInInfo = getTokenByAddress(tokenIn)
+  const tokenOutInfo = getTokenByAddress(tokenOut)
+
+  return {
+    id,
+    provider: 'monorail',
+    blockNumber,
+    timestamp,
+    sender,
+    amountIn: amountIn.toString(),
+    amountOut: amountOut.toString(),
+    tokenIn: tokenInInfo?.symbol ?? truncateAddress(tokenIn),
+    tokenOut: tokenOutInfo?.symbol ?? truncateAddress(tokenOut),
+    tokenInAddress: tokenIn,
+    tokenOutAddress: tokenOut,
+    txHash: '',
+  }
+}
+
+/**
+ * Truncate address for display when token not found in list
+ */
+function truncateAddress(address: string): string {
+  return `${address.slice(0, 6)}...${address.slice(-4)}`
 }
 
 /**
@@ -256,12 +237,12 @@ function parseKuruTrade(
  */
 export function useSwapEvents() {
   const [swapsByProvider, setSwapsByProvider] = useState<
-    Map<DexProvider, SwapData[]>
-  >(() => new Map(DEX_CONFIGS.map((config) => [config.provider, []])))
+    Map<SwapProvider, SwapData[]>
+  >(() => new Map(SWAP_PROVIDER_CONFIG.map((config) => [config.provider, []])))
 
   const filters = useMemo(
     () =>
-      DEX_CONFIGS.map((config) => ({
+      SWAP_PROVIDER_CONFIG.map((config) => ({
         eventName: 'TxnLog' as const,
         fieldFilters: [
           {
@@ -281,7 +262,7 @@ export function useSwapEvents() {
     // Topics may come as concatenated string, parse into array
     const topics = parseTopicsString(event.payload.topics as string | string[])
 
-    const matchingConfig = DEX_CONFIGS.find((config) => {
+    const matchingConfig = SWAP_PROVIDER_CONFIG.find((config) => {
       if (config.contractAddress.toLowerCase() !== address) return false
       return config.eventTopics.every(
         (t, i) => topics[i]?.toLowerCase() === t.toLowerCase(),
@@ -317,7 +298,7 @@ export function useSwapEvents() {
 
   const swapsGrouped: SwapsByProvider[] = useMemo(
     () =>
-      DEX_CONFIGS.map((config) => ({
+      SWAP_PROVIDER_CONFIG.map((config) => ({
         provider: config.provider,
         swaps: swapsByProvider.get(config.provider) ?? [],
         isLoading: !isConnected,
@@ -336,7 +317,7 @@ export function useSwapEvents() {
 
   const clearSwaps = useCallback(() => {
     setSwapsByProvider(
-      new Map(DEX_CONFIGS.map((config) => [config.provider, []])),
+      new Map(SWAP_PROVIDER_CONFIG.map((config) => [config.provider, []])),
     )
   }, [])
 

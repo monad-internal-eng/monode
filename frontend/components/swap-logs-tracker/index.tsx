@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { RefreshCw, Wifi, WifiOff } from 'lucide-react'
+import { SWAP_PROVIDER_CONFIG } from '@/constants/swap-provider-config'
 import { useSwapEvents } from '@/hooks/use-swap-events'
 import { cn } from '@/lib/utils'
 import { ProviderCard } from './provider-card'
@@ -13,13 +14,10 @@ export default function SwapLogsTracker() {
     <div className="w-full flex flex-col gap-4 sm:gap-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-white">DEX Swap Tracker</h2>
+          <h2 className="text-xl font-bold text-white">Swap Tracker</h2>
           <p className="text-sm text-[#a0a0b0]">
-            Real-time MON/AUSD swap events from{' '}
-            <span className="text-[#FF007A]">Uniswap V4</span>,{' '}
-            <span className="text-[#1FC7D4]">PancakeSwap V3</span>,{' '}
-            <span className="text-[#E84142]">LFJ</span>, and{' '}
-            <span className="text-[#836EF9]">Kuru</span> pools.
+            Real-time swap events from Kuru and Monorail aggregators, Uniswap V4
+            and PancakeSwap V3 pools.
           </p>
         </div>
 

@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { ExternalLink } from 'lucide-react'
 import { EXPLORER_URL } from '@/constants/common'
-import { getDexConfigByProvider } from '@/constants/dex-config'
+import { getSwapProviderConfig } from '@/constants/swap-provider-config'
 import { cn } from '@/lib/utils'
 import type { SwapsByProvider } from '@/types/swap'
 import { SwapRow } from './swap-row'
@@ -14,7 +14,7 @@ interface ProviderCardProps {
 }
 
 export function ProviderCard({ data, className }: ProviderCardProps) {
-  const config = getDexConfigByProvider(data.provider)
+  const config = getSwapProviderConfig(data.provider)
 
   if (!config) return null
 
@@ -41,7 +41,6 @@ export function ProviderCard({ data, className }: ProviderCardProps) {
             style={{ backgroundColor: config.color }}
           />
           <h3 className="text-sm font-semibold text-white">{config.name}</h3>
-          <span className="text-xs text-zinc-500">MON/AUSD</span>
         </div>
 
         <a

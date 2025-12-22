@@ -5,9 +5,9 @@ import { ArrowRight, ExternalLink, User } from 'lucide-react'
 import { formatUnits } from 'viem'
 import { EXPLORER_URL } from '@/constants/common'
 import {
-  getDexConfigByProvider,
+  getSwapProviderConfig,
   getTokenDecimals,
-} from '@/constants/dex-config'
+} from '@/constants/swap-provider-config'
 import { cn } from '@/lib/utils'
 import type { SwapData } from '@/types/swap'
 
@@ -16,8 +16,13 @@ interface SwapRowProps {
   showProvider?: boolean
 }
 
-function formatTokenAmount(amount: string, token: string): string {
-  const decimals = getTokenDecimals(token)
+function formatTokenAmount(
+  amount: string,
+  tokenSymbol: string,
+  tokenAddress?: string,
+): string {
+  // Use address for decimals lookup if available, fallback to symbol
+  const decimals = getTokenDecimals(tokenAddress ?? tokenSymbol)
   const absAmount = amount.startsWith('-') ? amount.slice(1) : amount
   const formatted = formatUnits(BigInt(absAmount), decimals)
   const num = Number(formatted)
@@ -46,7 +51,7 @@ function truncateAddress(address: string): string {
 }
 
 export function SwapRow({ swap, showProvider = false }: SwapRowProps) {
-  const config = getDexConfigByProvider(swap.provider)
+  const config = getSwapProviderConfig(swap.provider)
 
   return (
     <motion.div
@@ -70,12 +75,16 @@ export function SwapRow({ swap, showProvider = false }: SwapRowProps) {
 
       <div className="flex items-center gap-1 flex-1 min-w-0">
         <span className="text-sm font-medium text-white tabular-nums">
-          {formatTokenAmount(swap.amountIn, swap.tokenIn)}
+          {formatTokenAmount(swap.amountIn, swap.tokenIn, swap.tokenInAddress)}
         </span>
         <span className="text-xs text-zinc-500">{swap.tokenIn}</span>
         <ArrowRight className="w-3 h-3 text-emerald-500 mx-1 shrink-0" />
         <span className="text-sm font-medium text-white tabular-nums">
-          {formatTokenAmount(swap.amountOut, swap.tokenOut)}
+          {formatTokenAmount(
+            swap.amountOut,
+            swap.tokenOut,
+            swap.tokenOutAddress,
+          )}
         </span>
         <span className="text-xs text-zinc-500">{swap.tokenOut}</span>
       </div>
