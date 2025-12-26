@@ -24,10 +24,12 @@ export default function BlockStateTracker() {
 
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-white">Monad Block Tracker</h2>
-          <p className="text-sm text-[#a0a0b0]">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+        <div className="flex-1">
+          <h2 className="text-lg sm:text-xl font-bold text-white">
+            Monad Block Tracker
+          </h2>
+          <p className="text-xs sm:text-sm text-[#a0a0b0] mt-1">
             Blocks progress through states:{' '}
             <span className="text-amber-400">Proposed</span> →{' '}
             <span className="text-indigo-400">Voted</span> →{' '}
@@ -37,7 +39,7 @@ export default function BlockStateTracker() {
               href="https://docs.monad.xyz/monad-arch/consensus/block-states"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2"
+              className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2 whitespace-nowrap"
             >
               Learn more
             </a>
@@ -45,7 +47,7 @@ export default function BlockStateTracker() {
         </div>
 
         {/* Control Panel */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           <FollowChainToggle
             isFollowing={isFollowingChain}
             onChange={setIsFollowingChain}
@@ -60,7 +62,7 @@ export default function BlockStateTracker() {
       </div>
 
       {/* Execution SDK Blockchain visualization */}
-      <div className="flex flex-col bg-[#16162a]/80 rounded-xl border border-[#2a2a4a]/50 p-4">
+      <div className="flex flex-col bg-[#16162a]/80 rounded-xl border border-[#2a2a4a]/50 p-3 sm:p-4">
         <Blockchain blocks={blocks} isFollowingChain={isFollowingChain} />
       </div>
     </div>

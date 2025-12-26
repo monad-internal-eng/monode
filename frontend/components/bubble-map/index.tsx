@@ -65,16 +65,18 @@ export function BubbleMap<T extends BubbleItem>({
     <div className="w-full flex flex-col gap-4 sm:gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-white">{title}</h2>
-          <p className="text-sm text-[#a0a0b0]">{description}</p>
+          <h2 className="text-lg sm:text-xl font-bold text-white">{title}</h2>
+          <p className="text-xs sm:text-sm text-[#a0a0b0] mt-1">
+            {description}
+          </p>
         </div>
       </div>
 
-      <div className="relative min-h-[400px] w-full bg-[#16162a]/80 rounded-xl border border-[#2a2a4a]/50 p-8 flex items-center justify-center">
+      <div className="relative min-h-[300px] sm:min-h-[400px] w-full bg-[#16162a]/80 rounded-xl border border-[#2a2a4a]/50 p-4 sm:p-6 lg:p-8 flex items-center justify-center">
         {items.length === 0 ? (
           <Spinner text="Waiting for data..." />
         ) : (
-          <div className="max-w-5xl relative flex flex-wrap items-center justify-center gap-6 z-10 w-full">
+          <div className="max-w-5xl relative flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:gap-6 z-10 w-full">
             {items.map((item) => {
               const size = getSize(item.hits)
 
@@ -95,7 +97,7 @@ export function BubbleMap<T extends BubbleItem>({
                   <div
                     className={cn(
                       'absolute inset-0 rounded-full bg-linear-to-br backdrop-blur-sm border transition-all duration-300',
-                      'flex items-center justify-center flex-col text-center p-2',
+                      'flex items-center justify-center flex-col text-center p-1.5 sm:p-2',
                       'group-hover:scale-110 group-hover:z-20 group-hover:shadow-lg',
                       getColor(item.hits),
                     )}
@@ -104,8 +106,8 @@ export function BubbleMap<T extends BubbleItem>({
                   </div>
 
                   {/* Tooltip */}
-                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto z-50 w-max max-w-[250px]">
-                    <div className="bg-[#0e0e1a] border border-[#2a2a4a] rounded-lg p-3 shadow-xl">
+                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto z-50 w-max max-w-[200px] sm:max-w-[250px]">
+                    <div className="bg-[#0e0e1a] border border-[#2a2a4a] rounded-lg p-2 sm:p-3 shadow-xl text-xs sm:text-sm">
                       {renderTooltip(item)}
                     </div>
                     {/* Arrow */}
