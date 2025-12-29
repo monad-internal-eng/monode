@@ -23,8 +23,8 @@ const BlockTime = ({ block, maxBlockExecutionTime }: BlockTimeProps) => {
 
   const formattedBlockExecutionTime = fromNsToMsPrecise(
     block.executionTime ?? BigInt(0),
-  ).toFixed(6)
-  const formattedTotalTransactionTime = totalTransactionTime.toFixed(6)
+  ).toFixed(4)
+  const formattedTotalTransactionTime = totalTransactionTime.toFixed(4)
   const numberOfTransactions = (block.transactions ?? []).length
 
   return (
@@ -82,11 +82,11 @@ const BlockTime = ({ block, maxBlockExecutionTime }: BlockTimeProps) => {
 
       {/* Block Stats */}
       <div className="text-center text-xs text-gray-500 space-y-1">
-        <div className="font-medium">{formattedBlockExecutionTime}</div>
+        <div className="font-medium">{formattedBlockExecutionTime} ms</div>
         <div className="text-xs text-gray-400">
-          {formattedTotalTransactionTime}
+          {formattedTotalTransactionTime} ms
         </div>
-        <div>{numberOfTransactions} tx</div>
+        <div>{numberOfTransactions}</div>
       </div>
     </motion.div>
   )

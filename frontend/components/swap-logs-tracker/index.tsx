@@ -11,16 +11,18 @@ export default function SwapLogsTracker() {
 
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-white">Swap Tracker</h2>
-          <p className="text-sm text-[#a0a0b0]">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+        <div className="flex-1">
+          <h2 className="text-lg sm:text-xl font-bold text-white">
+            Swap Tracker
+          </h2>
+          <p className="text-xs sm:text-sm text-[#a0a0b0] mt-1">
             Real-time swap events from Kuru and Monorail aggregators, Uniswap V4
             and PancakeSwap V3 pools.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
