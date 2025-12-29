@@ -31,15 +31,15 @@ export default function HotAccountsBubbleMap() {
   return (
     <BubbleMap
       title="Hot Accounts Map"
-      description="Real-time visualization of most accessed accounts"
+      description="Accounts most frequently accessed during parallel transaction execution."
       items={accounts}
       renderBubbleContent={(account) => (
         <>
-          <span className="font-bold text-white drop-shadow-md text-sm truncate w-full px-2">
+          <span className="text-sm font-normal truncate w-full px-2">
             {shortenHex(account.address)}
           </span>
-          <span className="text-xs text-white/80 font-mono mt-0.5">
-            {account.hits} hits
+          <span className="text-base font-bold font-mono mt-0.5">
+            {account.hits}
           </span>
         </>
       )}
@@ -58,6 +58,7 @@ export default function HotAccountsBubbleMap() {
           />
         </div>
       )}
+      bottomDescription="Access frequency observed directly from execution events."
     />
   )
 }
