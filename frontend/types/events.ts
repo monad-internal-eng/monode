@@ -27,6 +27,7 @@ export type EventName =
   | 'AccountAccess'
   | 'StorageAccess'
   | 'EvmError'
+  | 'NativeTransfer'
 
 export type SerializableExecEvent =
   | {
