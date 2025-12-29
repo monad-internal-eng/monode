@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { BLOCK_STATE_COLORS, BLOCK_STATE_CONFIG } from '@/constants/block-state'
+import { BLOCK_STATE_CONFIG } from '@/constants/block-state'
 import { formatTimeDisplay } from '@/lib/timestamp'
 import { cn } from '@/lib/utils'
 import type { Block, BlockState } from '@/types/block'
@@ -14,9 +14,7 @@ interface BlockCardProps {
 
 const STATE_ORDER: BlockState[] = ['proposed', 'voted', 'finalized', 'verified']
 
-/**
- * Progress dots showing block state progression
- */
+/** Progress dots showing block state progression */
 function ProgressDots({ currentState }: { currentState: BlockState }) {
   const currentIndex = STATE_ORDER.indexOf(currentState)
 
@@ -24,7 +22,9 @@ function ProgressDots({ currentState }: { currentState: BlockState }) {
     <div className="flex items-center gap-1">
       {STATE_ORDER.map((state, index) => {
         const isActive = index <= currentIndex
-        const dotColor = isActive ? BLOCK_STATE_COLORS[state].dot : undefined
+        const dotColor = isActive
+          ? BLOCK_STATE_CONFIG[state].dotColor
+          : undefined
 
         return (
           <div key={state} className="flex items-center">
@@ -52,15 +52,12 @@ function ProgressDots({ currentState }: { currentState: BlockState }) {
   )
 }
 
-/**
- * Individual block card in the blockchain visualization.
- * Dark card design with progress dots, status badge, and timestamp.
- */
-export const BlockCard = ({
+/** Block card with progress dots, status badge, and timestamp */
+export function BlockCard({
   block,
   isLatest = false,
   className,
-}: BlockCardProps) => {
+}: BlockCardProps) {
   const config = BLOCK_STATE_CONFIG[block.state]
 
   return (
@@ -75,17 +72,13 @@ export const BlockCard = ({
       }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className={cn(
-        'relative flex flex-col items-center rounded-xl',
-        'select-none cursor-default',
-        'bg-zinc-900/80 border border-zinc-800',
-        'w-[120px] h-[150px] sm:w-[140px] sm:h-[170px]',
-        'p-3 sm:p-4',
+        'relative flex flex-col items-center rounded-xl select-none cursor-default',
+        'bg-zinc-900/80 border border-zinc-800 hover:border-zinc-700',
+        'w-[120px] h-[150px] sm:w-[140px] sm:h-[170px] p-3 sm:p-4',
         'transition-all duration-300',
-        'hover:border-zinc-700',
         className,
       )}
     >
-      {/* LIVE indicator for latest block */}
       {isLatest && (
         <div className="absolute -top-2 -right-2 flex items-center gap-1 px-1.5 py-0.5 bg-zinc-800 border border-zinc-700 rounded text-[10px] text-zinc-400">
           <span className="relative flex h-1.5 w-1.5">
@@ -96,12 +89,10 @@ export const BlockCard = ({
         </div>
       )}
 
-      {/* Progress dots */}
       <div className="mb-3">
         <ProgressDots currentState={block.state} />
       </div>
 
-      {/* Block number */}
       <a
         href={`https://monadvision.com/block/${block.number}`}
         target="_blank"
@@ -112,7 +103,6 @@ export const BlockCard = ({
         #{block.number.toLocaleString()}
       </a>
 
-      {/* Status badge */}
       <AnimatePresence mode="wait">
         <motion.div
           key={config.label}
@@ -129,12 +119,10 @@ export const BlockCard = ({
         </motion.div>
       </AnimatePresence>
 
-      {/* Description */}
       <span className="text-[11px] text-zinc-500 mt-1.5">
         {config.description}
       </span>
 
-      {/* Timestamp */}
       {block.timestamp && (
         <motion.div
           initial={{ opacity: 0 }}

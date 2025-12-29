@@ -10,9 +10,10 @@ import type { TransferData } from '@/types/transfer'
 
 interface TransferRowProps {
   transfer: TransferData
+  gridClass: string
 }
 
-export function TransferRow({ transfer }: TransferRowProps) {
+export function TransferRow({ transfer, gridClass }: TransferRowProps) {
   const tokenSymbol = transfer.type === 'native' ? 'MON' : 'WMON'
 
   return (
@@ -21,9 +22,8 @@ export function TransferRow({ transfer }: TransferRowProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 4 }}
       transition={{ duration: 0.15 }}
-      className="grid grid-cols-[1fr_1fr_1fr_100px_120px] gap-4 px-4 py-3 items-center border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors"
+      className={`${gridClass} py-3 items-center border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors`}
     >
-      {/* From */}
       <a
         href={`${EXPLORER_URL}/address/${transfer.from}`}
         target="_blank"
@@ -34,7 +34,6 @@ export function TransferRow({ transfer }: TransferRowProps) {
         {shortenHex(transfer.from)}
       </a>
 
-      {/* To */}
       <a
         href={`${EXPLORER_URL}/address/${transfer.to}`}
         target="_blank"
@@ -45,17 +44,12 @@ export function TransferRow({ transfer }: TransferRowProps) {
         {shortenHex(transfer.to)}
       </a>
 
-      {/* Amount */}
       <span className="text-sm font-medium text-white tabular-nums">
         {formatTokenAmount(transfer.value, tokenSymbol)}
       </span>
 
-      {/* Token */}
-      <div>
-        <TokenBadge symbol={tokenSymbol} />
-      </div>
+      <TokenBadge symbol={tokenSymbol} />
 
-      {/* Time */}
       <span className="text-sm text-zinc-500 tabular-nums">
         {formatTimeDisplay(transfer.timestamp)}
       </span>

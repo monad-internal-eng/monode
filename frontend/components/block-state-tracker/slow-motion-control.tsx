@@ -60,7 +60,7 @@ export function SlowMotionControl({
               : 'bg-zinc-800 text-zinc-500',
           )}
         >
-          (3s)
+          (30s)
         </span>
       </button>
 

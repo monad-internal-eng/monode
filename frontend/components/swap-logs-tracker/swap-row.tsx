@@ -12,9 +12,10 @@ import type { SwapData } from '@/types/swap'
 
 interface SwapRowProps {
   swap: SwapData
+  gridClass: string
 }
 
-export function SwapRow({ swap }: SwapRowProps) {
+export function SwapRow({ swap, gridClass }: SwapRowProps) {
   const config = getSwapProviderConfig(swap.provider)
 
   return (
@@ -23,9 +24,8 @@ export function SwapRow({ swap }: SwapRowProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 4 }}
       transition={{ duration: 0.15 }}
-      className="grid grid-cols-[1fr_1fr_100px_100px_120px] gap-4 px-4 py-3 items-center border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors"
+      className={`${gridClass} py-3 items-center border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors`}
     >
-      {/* From Token */}
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-white tabular-nums">
           {formatTokenAmount(swap.amountIn, swap.tokenIn, swap.tokenInAddress)}
@@ -34,7 +34,6 @@ export function SwapRow({ swap }: SwapRowProps) {
         <ArrowRight className="w-3 h-3 text-zinc-600 shrink-0" />
       </div>
 
-      {/* To Token */}
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-white tabular-nums">
           {formatTokenAmount(
@@ -46,22 +45,16 @@ export function SwapRow({ swap }: SwapRowProps) {
         <TokenBadge symbol={swap.tokenOut} />
       </div>
 
-      {/* Provider */}
-      <div>
-        {config && (
-          <span
-            className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
-            style={{
-              backgroundColor: `${config.color}20`,
-              color: config.color,
-            }}
-          >
-            {config.name}
-          </span>
-        )}
-      </div>
+      {config && (
+        <span
+          className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+          style={{ backgroundColor: `${config.color}20`, color: config.color }}
+        >
+          {config.name}
+        </span>
+      )}
+      {!config && <span />}
 
-      {/* Sender */}
       <a
         href={`${EXPLORER_URL}/address/${swap.sender}`}
         target="_blank"
@@ -72,7 +65,6 @@ export function SwapRow({ swap }: SwapRowProps) {
         {shortenHex(swap.sender)}
       </a>
 
-      {/* Time */}
       <span className="text-sm text-zinc-500 tabular-nums">
         {formatTimeDisplay(swap.timestamp)}
       </span>

@@ -1,5 +1,3 @@
-'use client'
-
 import { cn } from '@/lib/utils'
 
 interface TokenBadgeProps {
@@ -17,17 +15,14 @@ const TOKEN_COLORS: Record<string, { bg: string; text: string }> = {
 
 const DEFAULT_COLORS = { bg: 'bg-zinc-500/20', text: 'text-zinc-400' }
 
-/**
- * Token badge component displaying token symbol with color coding
- */
+/** Token badge with color coding based on symbol */
 export function TokenBadge({ symbol, className }: TokenBadgeProps) {
   const colors = TOKEN_COLORS[symbol.toUpperCase()] ?? DEFAULT_COLORS
 
   return (
     <span
       className={cn(
-        'inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-medium',
-        'border border-current/20',
+        'inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-medium border border-current/20',
         colors.bg,
         colors.text,
         className,

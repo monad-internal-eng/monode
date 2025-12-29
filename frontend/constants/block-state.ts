@@ -1,40 +1,24 @@
 import type { BlockState } from '@/types/block'
 
-// Slow motion configuration
 export const SLOW_MOTION_DURATION_SECONDS = 30
 export const SLOW_MOTION_BLOCK_INTERVAL_MS = 800
 
 /**
- * Color tokens for block states.
- * Using semantic colors that convey progression toward completion.
+ * Color tokens for block states (hex values for inline styles).
+ * - Proposed: Amber - awaiting execution
+ * - Executing: Purple - actively processing (Monad brand)
+ * - Finalized: Purple - execution complete
+ * - Verified: Green - fully verified on chain
  */
-export const BLOCK_STATE_COLORS = {
-  proposed: {
-    primary: '#f59e0b', // amber-500
-    dot: '#f59e0b',
-  },
-  voted: {
-    primary: '#836ef9', // purple (Monad brand)
-    dot: '#836ef9',
-  },
-  finalized: {
-    primary: '#836ef9', // purple
-    dot: '#836ef9',
-  },
-  verified: {
-    primary: '#22c55e', // green-500
-    dot: '#22c55e',
-  },
+const STATE_COLORS: Record<BlockState, string> = {
+  proposed: '#f59e0b',
+  voted: '#836ef9',
+  finalized: '#836ef9',
+  verified: '#22c55e',
 }
 
 /**
- * Configuration for each block state including display label and colors.
- *
- * Color progression conveys block lifecycle:
- * - Proposed: Amber - "pending", awaiting action
- * - Voted/Executing: Purple - "in progress", actively executing (Monad brand)
- * - Finalized: Purple - "confirmed", execution complete
- * - Verified: Green - "complete", fully verified on chain
+ * Configuration for each block state including display properties
  */
 export const BLOCK_STATE_CONFIG: Record<
   BlockState,
@@ -49,34 +33,32 @@ export const BLOCK_STATE_CONFIG: Record<
     label: 'Proposed',
     description: 'Pending execution',
     badgeClass: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-    dotColor: BLOCK_STATE_COLORS.proposed.dot,
+    dotColor: STATE_COLORS.proposed,
   },
   voted: {
     label: 'Executing',
     description: 'Processing transactions',
     badgeClass: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-    dotColor: BLOCK_STATE_COLORS.voted.dot,
+    dotColor: STATE_COLORS.voted,
   },
   finalized: {
     label: 'Finalized',
     description: 'Execution complete',
     badgeClass: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-    dotColor: BLOCK_STATE_COLORS.finalized.dot,
+    dotColor: STATE_COLORS.finalized,
   },
   verified: {
     label: 'Verified',
     description: 'On chain',
     badgeClass: 'bg-green-500/20 text-green-400 border-green-500/30',
-    dotColor: BLOCK_STATE_COLORS.verified.dot,
+    dotColor: STATE_COLORS.verified,
   },
 }
 
-/**
- * Legend items for the block state tracker
- */
+/** Legend items for the block state tracker UI */
 export const BLOCK_STATE_LEGEND = [
-  { label: 'Proposed', color: BLOCK_STATE_COLORS.proposed.dot },
-  { label: 'Executing', color: BLOCK_STATE_COLORS.voted.dot },
-  { label: 'Finalized', color: BLOCK_STATE_COLORS.finalized.dot },
-  { label: 'Verified', color: BLOCK_STATE_COLORS.verified.dot },
+  { label: 'Proposed', color: STATE_COLORS.proposed },
+  { label: 'Executing', color: STATE_COLORS.voted },
+  { label: 'Finalized', color: STATE_COLORS.finalized },
+  { label: 'Verified', color: STATE_COLORS.verified },
 ]
