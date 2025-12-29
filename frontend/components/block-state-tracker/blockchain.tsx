@@ -8,9 +8,9 @@ import type { Block } from '@/types/block'
 import { BlockCard } from './block-card'
 
 const BLOCK_DIMENSIONS = {
-  small: { itemWidth: 110, gridHeight: 96 },
-  medium: { itemWidth: 130, gridHeight: 112 },
-  large: { itemWidth: 162, gridHeight: 140 },
+  small: { itemWidth: 136, gridHeight: 160 },
+  medium: { itemWidth: 156, gridHeight: 180 },
+  large: { itemWidth: 156, gridHeight: 180 },
 }
 
 const getResponsiveDimensions = () => {
@@ -35,21 +35,21 @@ interface BlockchainProps {
 
 interface BlockCellData {
   blocks: Block[]
+  latestBlockNumber: number
 }
 
 function BlockCell({
   columnIndex,
   style,
   blocks,
+  latestBlockNumber,
 }: CellComponentProps<BlockCellData>) {
   const block = blocks[columnIndex]
+  const isLatest = block.number === latestBlockNumber
 
   return (
     <div style={style} className="flex items-center justify-center relative">
-      {columnIndex > 0 && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 sm:w-3.5 lg:w-4.5 h-0.5 sm:h-0.5 lg:h-1 bg-[#3a3a5a] rounded-full" />
-      )}
-      <BlockCard block={block} />
+      <BlockCard block={block} isLatest={isLatest} />
     </div>
   )
 }
@@ -88,14 +88,17 @@ export function Blockchain({ blocks, isFollowingChain }: BlockchainProps) {
     e.preventDefault()
   }, [])
 
+  const latestBlockNumber =
+    sortedBlocks.length > 0 ? Math.max(...sortedBlocks.map((b) => b.number)) : 0
+
   return (
     <div
       ref={containerRef}
-      className="flex-1 p-4 overflow-hidden min-h-[120px] sm:min-h-[152px] lg:min-h-[172px]"
+      className="flex-1 p-4 overflow-hidden min-h-[170px] sm:min-h-[190px]"
       onWheel={isFollowingChain ? preventScroll : undefined}
     >
       {sortedBlocks.length === 0 ? (
-        <div className="flex items-center justify-center w-full h-[88px] sm:h-[120px] lg:h-[140px]">
+        <div className="flex items-center justify-center w-full h-[160px] sm:h-[180px]">
           <Spinner text="Waiting for blocks..." />
         </div>
       ) : (
@@ -109,7 +112,7 @@ export function Blockchain({ blocks, isFollowingChain }: BlockchainProps) {
           defaultWidth={containerWidth}
           overscanCount={3}
           cellComponent={BlockCell}
-          cellProps={{ blocks: sortedBlocks }}
+          cellProps={{ blocks: sortedBlocks, latestBlockNumber }}
           className="scrollbar-none"
           style={{
             overflowX: isFollowingChain ? 'hidden' : 'auto',

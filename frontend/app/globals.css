@@ -384,6 +384,22 @@
   /* Text sizes */
   --text-2xs: 0.625rem;
 
+  /* H1 Typography - Britti Sans */
+  --typography-h1-font-size-lg: 48px;
+  --typography-h1-font-weight: 500;
+  --typography-h1-letter-spacing: -1.92px;
+  --typography-h1-line-height: 100%;
+
+  /* H2 Typography - Britti Sans */
+  --typography-h2-font-size: 30px;
+  --typography-h2-font-weight: 500;
+  --typography-h2-line-height: 100%;
+
+  /* Body/Subheading Typography */
+  --typography-body-font-size: 16px;
+  --typography-body-line-height: 24px;
+  --typography-body-font-weight: 400;
+
   --breakpoint-xxs: 23.5rem;
   --breakpoint-xs: 30rem;
 

@@ -5,63 +5,78 @@ export const SLOW_MOTION_DURATION_SECONDS = 30
 export const SLOW_MOTION_BLOCK_INTERVAL_MS = 800
 
 /**
- * Tailwind color tokens for block states.
+ * Color tokens for block states.
  * Using semantic colors that convey progression toward completion.
  */
 export const BLOCK_STATE_COLORS = {
   proposed: {
     primary: '#f59e0b', // amber-500
-    secondary: '#d97706', // amber-600
+    dot: '#f59e0b',
   },
   voted: {
-    primary: '#818cf8', // indigo-400
-    secondary: '#6366f1', // indigo-500
+    primary: '#836ef9', // purple (Monad brand)
+    dot: '#836ef9',
   },
   finalized: {
-    primary: '#4ade80', // green-400 (light green)
-    secondary: '#22c55e', // green-500
+    primary: '#836ef9', // purple
+    dot: '#836ef9',
   },
   verified: {
-    primary: '#16a34a', // green-600 (dark green)
-    secondary: '#15803d', // green-700
+    primary: '#22c55e', // green-500
+    dot: '#22c55e',
   },
 }
 
 /**
- * Configuration for each block state including display label and gradient colors.
+ * Configuration for each block state including display label and colors.
  *
  * Color progression conveys block lifecycle:
  * - Proposed: Amber - "pending", awaiting action
- * - Voted: Indigo - "confidence", has validator support (Monad brand)
- * - Finalized: Light Green - "confirmed", execution complete
- * - Verified: Dark Green - "complete", fully verified and immutable
+ * - Voted/Executing: Purple - "in progress", actively executing (Monad brand)
+ * - Finalized: Purple - "confirmed", execution complete
+ * - Verified: Green - "complete", fully verified on chain
  */
 export const BLOCK_STATE_CONFIG: Record<
   BlockState,
   {
     label: string
-    gradient: string
-    shadow: string
+    description: string
+    badgeClass: string
+    dotColor: string
   }
 > = {
   proposed: {
     label: 'Proposed',
-    gradient: `linear-gradient(to bottom right, ${BLOCK_STATE_COLORS.proposed.primary}, ${BLOCK_STATE_COLORS.proposed.secondary})`,
-    shadow: '0 8px 16px -4px rgba(245, 158, 11, 0.4)',
+    description: 'Pending execution',
+    badgeClass: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    dotColor: BLOCK_STATE_COLORS.proposed.dot,
   },
   voted: {
-    label: 'Voted',
-    gradient: `linear-gradient(to bottom right, ${BLOCK_STATE_COLORS.voted.primary}, ${BLOCK_STATE_COLORS.voted.secondary})`,
-    shadow: '0 8px 16px -4px rgba(99, 102, 241, 0.4)',
+    label: 'Executing',
+    description: 'Processing transactions',
+    badgeClass: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    dotColor: BLOCK_STATE_COLORS.voted.dot,
   },
   finalized: {
     label: 'Finalized',
-    gradient: `linear-gradient(to bottom right, ${BLOCK_STATE_COLORS.finalized.primary}, ${BLOCK_STATE_COLORS.finalized.secondary})`,
-    shadow: '0 8px 16px -4px rgba(74, 222, 128, 0.4)',
+    description: 'Execution complete',
+    badgeClass: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    dotColor: BLOCK_STATE_COLORS.finalized.dot,
   },
   verified: {
     label: 'Verified',
-    gradient: `linear-gradient(to bottom right, ${BLOCK_STATE_COLORS.verified.primary}, ${BLOCK_STATE_COLORS.verified.secondary})`,
-    shadow: '0 8px 16px -4px rgba(22, 163, 74, 0.4)',
+    description: 'On chain',
+    badgeClass: 'bg-green-500/20 text-green-400 border-green-500/30',
+    dotColor: BLOCK_STATE_COLORS.verified.dot,
   },
 }
+
+/**
+ * Legend items for the block state tracker
+ */
+export const BLOCK_STATE_LEGEND = [
+  { label: 'Proposed', color: BLOCK_STATE_COLORS.proposed.dot },
+  { label: 'Executing', color: BLOCK_STATE_COLORS.voted.dot },
+  { label: 'Finalized', color: BLOCK_STATE_COLORS.finalized.dot },
+  { label: 'Verified', color: BLOCK_STATE_COLORS.verified.dot },
+]

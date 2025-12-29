@@ -42,7 +42,7 @@ export function CircularTimer({
           fill="none"
           stroke="currentColor"
           strokeWidth={STROKE_WIDTH}
-          className="text-indigo-950/60"
+          className="text-purple-950/60"
         />
         {/* Animated progress circle */}
         <motion.circle
@@ -53,7 +53,7 @@ export function CircularTimer({
           stroke="currentColor"
           strokeWidth={STROKE_WIDTH}
           strokeLinecap="round"
-          className="text-indigo-400"
+          className="text-purple-400"
           style={{
             strokeDasharray: circumference,
           }}
@@ -64,7 +64,7 @@ export function CircularTimer({
         />
       </svg>
       {/* Centered number */}
-      <span className="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-medium text-indigo-300">
+      <span className="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-medium text-purple-300">
         {remainingSeconds}
       </span>
     </div>
