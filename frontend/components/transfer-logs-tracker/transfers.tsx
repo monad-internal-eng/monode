@@ -8,7 +8,6 @@ import { TransferRow } from './transfer-row'
 interface TransfersProps {
   data: TransferData[]
   isLoading: boolean
-  className?: string
 }
 
 export function Transfers({ data, isLoading }: TransfersProps) {
