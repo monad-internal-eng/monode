@@ -24,12 +24,12 @@ export function TransferRow({ transfer }: TransferRowProps) {
       exit={{ opacity: 0, y: 4 }}
       transition={{ duration: 0.15 }}
       className={cn(
-        'flex items-center justify-between gap-2 px-3 py-2 rounded-lg h-10',
+        'flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-2 rounded-lg min-h-10',
         'bg-[#1a1a2e]/60 hover:bg-[#1a1a2e] transition-colors',
         'border border-transparent hover:border-[#2a2a4a]/50',
       )}
     >
-      <div className="flex items-center gap-1 flex-1 min-w-0">
+      <div className="flex items-center gap-1 flex-1 min-w-0 flex-wrap sm:flex-nowrap">
         <a
           href={`${EXPLORER_URL}/address/${transfer.from}`}
           target="_blank"
@@ -52,13 +52,15 @@ export function TransferRow({ transfer }: TransferRowProps) {
           <span className="text-xs font-mono">{shortenHex(transfer.to)}</span>
         </a>
         <span className="text-xs text-zinc-600 mx-1">•</span>
-        <span className="text-sm font-medium text-white tabular-nums">
-          {formatTokenAmount(transfer.value, tokenSymbol)}
-        </span>
-        <span className="text-xs text-zinc-500">{tokenSymbol}</span>
+        <div className="flex items-baseline gap-1">
+          <span className="text-sm font-medium text-white tabular-nums">
+            {formatTokenAmount(transfer.value, tokenSymbol)}
+          </span>
+          <span className="text-xs text-zinc-500">{tokenSymbol}</span>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2 shrink-0 flex-wrap sm:flex-nowrap">
         {config && (
           <div
             className="px-2.5 py-0.5 flex items-center justify-center rounded-full text-xs text-neutral-800 font-medium"

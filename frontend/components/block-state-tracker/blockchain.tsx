@@ -7,8 +7,26 @@ import { useBlockchainScroll } from '@/hooks/use-blockchain-scroll'
 import type { Block } from '@/types/block'
 import { BlockCard } from './block-card'
 
-const ITEM_WIDTH = 162
-const GRID_HEIGHT = 140
+const BLOCK_DIMENSIONS = {
+  small: { itemWidth: 110, gridHeight: 96 },
+  medium: { itemWidth: 130, gridHeight: 112 },
+  large: { itemWidth: 162, gridHeight: 140 },
+}
+
+const getResponsiveDimensions = () => {
+  if (typeof window === 'undefined') {
+    return BLOCK_DIMENSIONS.large
+  }
+
+  const width = window.innerWidth
+  if (width < 640) {
+    return BLOCK_DIMENSIONS.small
+  }
+  if (width < 768) {
+    return BLOCK_DIMENSIONS.medium
+  }
+  return BLOCK_DIMENSIONS.large
+}
 
 interface BlockchainProps {
   blocks: Block[]
@@ -29,7 +47,7 @@ function BlockCell({
   return (
     <div style={style} className="flex items-center justify-center relative">
       {columnIndex > 0 && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-4.5 h-1 bg-[#3a3a5a] rounded-full" />
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 sm:w-3.5 lg:w-4.5 h-0.5 sm:h-0.5 lg:h-1 bg-[#3a3a5a] rounded-full" />
       )}
       <BlockCard block={block} />
     </div>
@@ -44,6 +62,7 @@ function BlockCell({
 export function Blockchain({ blocks, isFollowingChain }: BlockchainProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
+  const [dimensions, setDimensions] = useState(getResponsiveDimensions())
 
   const { gridRef, sortedBlocks } = useBlockchainScroll({
     blocks,
@@ -54,10 +73,13 @@ export function Blockchain({ blocks, isFollowingChain }: BlockchainProps) {
     const node = containerRef.current
     if (!node) return
 
-    const updateWidth = () => setContainerWidth(node.clientWidth)
-    updateWidth()
+    const updateDimensions = () => {
+      setContainerWidth(node.clientWidth)
+      setDimensions(getResponsiveDimensions())
+    }
+    updateDimensions()
 
-    const resizeObserver = new ResizeObserver(updateWidth)
+    const resizeObserver = new ResizeObserver(updateDimensions)
     resizeObserver.observe(node)
     return () => resizeObserver.disconnect()
   }, [])
@@ -69,21 +91,21 @@ export function Blockchain({ blocks, isFollowingChain }: BlockchainProps) {
   return (
     <div
       ref={containerRef}
-      className="flex-1 p-4 overflow-hidden min-h-[152px] sm:min-h-[172px]"
+      className="flex-1 p-4 overflow-hidden min-h-[120px] sm:min-h-[152px] lg:min-h-[172px]"
       onWheel={isFollowingChain ? preventScroll : undefined}
     >
       {sortedBlocks.length === 0 ? (
-        <div className="flex items-center justify-center w-full h-[120px] sm:h-[140px]">
+        <div className="flex items-center justify-center w-full h-[88px] sm:h-[120px] lg:h-[140px]">
           <Spinner text="Waiting for blocks..." />
         </div>
       ) : (
         <Grid
           gridRef={gridRef}
           columnCount={sortedBlocks.length}
-          columnWidth={ITEM_WIDTH}
+          columnWidth={dimensions.itemWidth}
           rowCount={1}
-          rowHeight={GRID_HEIGHT}
-          defaultHeight={GRID_HEIGHT}
+          rowHeight={dimensions.gridHeight}
+          defaultHeight={dimensions.gridHeight}
           defaultWidth={containerWidth}
           overscanCount={3}
           cellComponent={BlockCell}

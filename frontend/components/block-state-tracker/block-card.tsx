@@ -37,7 +37,9 @@ export const BlockCard = ({ block, className }: BlockCardProps) => {
         'flex flex-col items-center justify-center rounded-xl font-semibold',
         'select-none cursor-default text-white',
         'transition-[background,box-shadow] duration-500 ease-in-out',
-        'w-34 h-34 text-lg p-3',
+        'w-[90px] h-[90px] sm:w-[114px] sm:h-[114px] lg:w-34 lg:h-34',
+        'text-sm sm:text-base lg:text-lg',
+        'p-2 sm:p-2.5 lg:p-3',
         className,
       )}
     >
@@ -45,7 +47,7 @@ export const BlockCard = ({ block, className }: BlockCardProps) => {
         href={`https://monadvision.com/block/${block.number}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="font-bold drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] hover:underline underline-offset-2"
+        className="font-bold drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] hover:underline underline-offset-2 text-sm sm:text-base"
         title={`View block #${block.number} on MonadVision`}
       >
         #{block.number}
@@ -57,7 +59,7 @@ export const BlockCard = ({ block, className }: BlockCardProps) => {
           animate={{ opacity: 0.9, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.15, ease: 'easeOut' }}
-          className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)] text-base mt-2"
+          className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)] text-xs sm:text-sm lg:text-base mt-1 sm:mt-1.5 lg:mt-2"
         >
           {config.label}
         </motion.span>
@@ -66,12 +68,12 @@ export const BlockCard = ({ block, className }: BlockCardProps) => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex flex-col items-center gap-0.5 mt-3"
+          className="flex flex-col items-center gap-0.5 mt-1.5 sm:mt-2 lg:mt-3"
         >
-          <span className="text-sm text-white/80 text-center leading-none">
+          <span className="text-xs sm:text-sm text-white/80 text-center leading-none">
             {formatTimeDisplay(block.timestamp)}
           </span>
-          <span className="text-xs text-white/60 text-center leading-none">
+          <span className="text-[10px] sm:text-xs text-white/60 text-center leading-none">
             {formatDateDisplay(block.timestamp)}
           </span>
         </motion.div>
