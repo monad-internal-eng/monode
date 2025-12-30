@@ -33,8 +33,8 @@ export function BubbleMap<T extends BubbleItem>({
   renderBubbleContent,
   renderTooltip,
   bottomDescription,
-  minSize = 120,
-  maxSize = 140,
+  minSize = 90,
+  maxSize = 110,
 }: BubbleMapProps<T>) {
   const maxHits = Math.max(...items.map((i) => i.hits), 1)
 
@@ -48,26 +48,24 @@ export function BubbleMap<T extends BubbleItem>({
   const getColor = (hits: number) => {
     const ratio = hits / maxHits
 
-    if (ratio > 0.7) return 'bg-[#B63537] border-0 text-white'
-    return 'bg-[#C88328] border-0 text-black'
+    if (ratio > 0.7) return 'bg-[#B63537] text-white'
+    return 'bg-[#C88328] text-black'
   }
 
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg sm:text-xl font-bold text-white">{title}</h2>
-          <p className="text-xs sm:text-sm text-[#a0a0b0] mt-1">
-            {description}
-          </p>
-        </div>
+      <div className="flex flex-col gap-1.5">
+        <h2 className="text-2xl sm:text-3xl font-bold text-white">{title}</h2>
+        <p className="text-sm sm:text-base text-[#a0a0b0] max-w-3/4">
+          {description}
+        </p>
       </div>
 
-      <div className="relative min-h-[300px] sm:min-h-[400px] w-full bg-[#17151E] rounded-xl border border-[#201E29] p-4 sm:p-6 lg:p-8 flex flex-col gap-10 items-center justify-center">
+      <div className="relative min-h-[250px] sm:min-h-[350px] w-full bg-[#17151E] rounded-xl border border-[#201E29] p-3 sm:p-5 lg:p-7 flex flex-col gap-10 items-center justify-center">
         {items.length === 0 ? (
           <Spinner text="Waiting for data..." />
         ) : (
-          <div className="max-w-5xl relative flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:gap-6 z-10 w-full">
+          <div className="max-w-5xl relative flex flex-wrap items-center justify-center gap-2 sm:gap-3 z-10 w-full">
             {items.map((item) => {
               const size = getSize(item.hits)
 
@@ -87,9 +85,9 @@ export function BubbleMap<T extends BubbleItem>({
                   {/* Bubble */}
                   <div
                     className={cn(
-                      'absolute inset-0 rounded-full bg-linear-to-br backdrop-blur-sm border transition-all duration-300',
+                      'absolute inset-0 rounded-full transition-all duration-300',
                       'flex items-center justify-center flex-col text-center p-1.5 sm:p-2',
-                      'group-hover:scale-110 group-hover:z-20 group-hover:shadow-lg',
+                      'group-hover:z-20 group-hover:shadow-[0_0_0_2px_#17151E,0_0_0_4px_#9C6EF8]',
                       getColor(item.hits),
                     )}
                   >
@@ -112,7 +110,9 @@ export function BubbleMap<T extends BubbleItem>({
         {/* Bottom description */}
         {bottomDescription && (
           <div>
-            <p className="text-sm text-[#888198]">{bottomDescription}</p>
+            <p className="text-center text-sm text-[#888198]">
+              {bottomDescription}
+            </p>
           </div>
         )}
       </div>
