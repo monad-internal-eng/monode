@@ -5,16 +5,16 @@ export const SLOW_MOTION_EVENT_INTERVAL_MS = 150
 
 /**
  * Color tokens for block states (hex values for inline styles).
- * - Proposed: Amber - awaiting execution
- * - Executing: Purple - actively processing (Monad brand)
- * - Finalized: Purple - execution complete
- * - Verified: Green - fully verified on chain
+ * - Proposed: Amber/orange - awaiting execution
+ * - Voted: Purple - received votes
+ * - Finalized: Blue - on chain
+ * - Verified: Green - on chain, state verified
  */
-const STATE_COLORS: Record<BlockState, string> = {
-  proposed: '#f59e0b',
-  voted: '#836ef9',
-  finalized: '#836ef9',
-  verified: '#22c55e',
+export const STATE_COLORS: Record<BlockState, string> = {
+  proposed: '#d4631f',
+  voted: '#8b68d9',
+  finalized: '#4680d6',
+  verified: '#2aad7c',
 }
 
 /**
@@ -25,31 +25,26 @@ export const BLOCK_STATE_CONFIG: Record<
   {
     label: string
     description?: string
-    badgeClass: string
-    dotColor: string
+    color: string
   }
 > = {
   proposed: {
     label: 'Proposed',
-    badgeClass: 'bg-amber-500/15 text-amber-400 border-amber-400',
-    dotColor: STATE_COLORS.proposed,
+    color: STATE_COLORS.proposed,
   },
   voted: {
     label: 'Voted',
-    badgeClass: 'bg-purple-500/15 text-purple-400 border-purple-400',
-    dotColor: STATE_COLORS.voted,
+    color: STATE_COLORS.voted,
   },
   finalized: {
     label: 'Finalized',
     description: 'On chain',
-    badgeClass: 'bg-purple-500/15 text-purple-400 border-purple-400',
-    dotColor: STATE_COLORS.finalized,
+    color: STATE_COLORS.finalized,
   },
   verified: {
     label: 'Verified',
     description: 'On chain, state verified',
-    badgeClass: 'bg-green-500/15 text-green-400 border-green-400',
-    dotColor: STATE_COLORS.verified,
+    color: STATE_COLORS.verified,
   },
 }
 

@@ -123,10 +123,12 @@ export function BlockCard({
 
       <div className="flex flex-col gap-2.5">
         <span
-          className={cn(
-            'px-3 py-0.5 rounded-full text-sm font-medium border backdrop-blur-sm w-fit',
-            config.badgeClass,
-          )}
+          className="px-3 py-0.5 rounded-full text-sm font-medium border backdrop-blur-sm w-fit"
+          style={{
+            color: config.color,
+            borderColor: config.color,
+            backgroundColor: `${config.color}25`,
+          }}
         >
           {config.label}
         </span>
