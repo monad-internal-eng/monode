@@ -3,6 +3,11 @@
 import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
 import { Spinner } from '@/components/spinner'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 
 export interface BubbleItem {
@@ -82,26 +87,27 @@ export function BubbleMap<T extends BubbleItem>({
                   }}
                   className="group relative cursor-pointer"
                 >
-                  {/* Bubble */}
-                  <div
-                    className={cn(
-                      'absolute inset-0 rounded-full transition-all duration-300',
-                      'flex items-center justify-center flex-col text-center p-1.5 sm:p-2',
-                      'group-hover:z-20 group-hover:shadow-[0_0_0_2px_#17151E,0_0_0_4px_#9C6EF8]',
-                      getColor(item.hits),
-                    )}
-                  >
-                    {renderBubbleContent(item)}
-                  </div>
-
-                  {/* Tooltip */}
-                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto z-50 w-max max-w-[200px] sm:max-w-[250px]">
-                    <div className="bg-[#0e0e1a] border border-[#2a2a4a] rounded-lg p-2 sm:p-3 shadow-xl text-xs sm:text-sm">
+                  {/* Bubble & Tooltip */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div
+                        className={cn(
+                          'absolute inset-0 rounded-full transition-all duration-300',
+                          'flex items-center justify-center flex-col text-center p-1.5 sm:p-2',
+                          'group-hover:z-20 group-hover:shadow-[0_0_0_2px_#17151E,0_0_0_4px_#9C6EF8]',
+                          getColor(item.hits),
+                        )}
+                      >
+                        {renderBubbleContent(item)}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      sideOffset={5}
+                      className="bg-[#0e0e1a] border border-[#2a2a4a] rounded-lg p-2 sm:p-3 shadow-xl text-xs sm:text-sm w-[250px]"
+                    >
                       {renderTooltip(item)}
-                    </div>
-                    {/* Arrow */}
-                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-2 h-2 bg-[#0e0e1a] border-b border-r border-[#2a2a4a] rotate-45 -mt-1" />
-                  </div>
+                    </TooltipContent>
+                  </Tooltip>
                 </motion.div>
               )
             })}
