@@ -8,9 +8,8 @@ import type { Block } from '@/types/block'
 import { BlockCard } from './block-card'
 
 const BLOCK_DIMENSIONS = {
-  small: { itemWidth: 136, gridHeight: 160 },
-  medium: { itemWidth: 156, gridHeight: 180 },
-  large: { itemWidth: 156, gridHeight: 180 },
+  small: { itemWidth: 200, gridHeight: 244 }, // w-48 + gap
+  large: { itemWidth: 240, gridHeight: 250 }, // w-56 + gap
 }
 
 const getResponsiveDimensions = () => {
@@ -21,9 +20,6 @@ const getResponsiveDimensions = () => {
   const width = window.innerWidth
   if (width < 640) {
     return BLOCK_DIMENSIONS.small
-  }
-  if (width < 768) {
-    return BLOCK_DIMENSIONS.medium
   }
   return BLOCK_DIMENSIONS.large
 }
@@ -94,11 +90,11 @@ export function Blockchain({ blocks, isFollowingChain }: BlockchainProps) {
   return (
     <div
       ref={containerRef}
-      className="flex-1 p-4 overflow-hidden min-h-[170px] sm:min-h-[190px]"
+      className="flex-1 overflow-visible min-h-60 sm:min-h-64"
       onWheel={isFollowingChain ? preventScroll : undefined}
     >
       {sortedBlocks.length === 0 ? (
-        <div className="flex items-center justify-center w-full h-[160px] sm:h-[180px]">
+        <div className="flex items-center justify-center w-full h-56 sm:h-60">
           <Spinner text="Waiting for blocks..." />
         </div>
       ) : (

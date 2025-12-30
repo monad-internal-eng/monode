@@ -1,10 +1,13 @@
 'use client'
 
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion } from 'framer-motion'
+import { Check } from 'lucide-react'
+import Link from 'next/link'
 import { BLOCK_STATE_CONFIG } from '@/constants/block-state'
 import { formatTimeDisplay } from '@/lib/timestamp'
 import { cn } from '@/lib/utils'
 import type { Block, BlockState } from '@/types/block'
+import { formatBlockNumber } from '@/utils/ui'
 
 interface BlockCardProps {
   block: Block
@@ -14,34 +17,54 @@ interface BlockCardProps {
 
 const STATE_ORDER: BlockState[] = ['proposed', 'voted', 'finalized', 'verified']
 
-/** Progress dots showing block state progression */
-function ProgressDots({ currentState }: { currentState: BlockState }) {
+/** Horizontal state tracker with circles, links, and state numbers */
+function StateTracker({ currentState }: { currentState: BlockState }) {
   const currentIndex = STATE_ORDER.indexOf(currentState)
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center">
       {STATE_ORDER.map((state, index) => {
-        const isActive = index <= currentIndex
-        const dotColor = isActive
-          ? BLOCK_STATE_CONFIG[state].dotColor
-          : undefined
+        const isDone = index < currentIndex
+        const isCurrent = index === currentIndex
+        const isPending = index > currentIndex
+        const stateNumber = index + 1
 
         return (
           <div key={state} className="flex items-center">
             <motion.div
               className={cn(
-                'w-2 h-2 rounded-full transition-colors duration-300',
-                !isActive && 'bg-zinc-700',
+                'w-5 h-5 rounded-full flex items-center justify-center border transition-all duration-300',
+                isDone && 'bg-zinc-800 border-zinc-700',
+                isCurrent && 'bg-zinc-700 border-zinc-600',
+                isPending && 'bg-zinc-800/50 border-zinc-800',
               )}
-              style={isActive ? { backgroundColor: dotColor } : undefined}
-              animate={isActive ? { scale: [1, 1.2, 1] } : undefined}
-              transition={{ duration: 0.3 }}
-            />
+              animate={{ scale: isCurrent ? [1, 1.05, 1] : 1 }}
+              transition={{
+                duration: 1,
+                repeat: isCurrent ? Infinity : 0,
+                repeatDelay: 0.5,
+              }}
+            >
+              {isDone ? (
+                <Check className="w-2.5 h-2.5 text-zinc-500" />
+              ) : (
+                <span
+                  className={cn(
+                    'text-[10px] font-medium',
+                    isCurrent && 'text-white',
+                    isPending && 'text-zinc-600',
+                  )}
+                >
+                  {stateNumber}
+                </span>
+              )}
+            </motion.div>
+
             {index < STATE_ORDER.length - 1 && (
               <div
                 className={cn(
-                  'w-2 h-0.5 mx-0.5 rounded-full transition-colors duration-300',
-                  index < currentIndex ? 'bg-zinc-600' : 'bg-zinc-800',
+                  'w-2 h-0.5 mx-1 transition-colors duration-300',
+                  index < currentIndex ? 'bg-zinc-700' : 'bg-zinc-800/30',
                 )}
               />
             )}
@@ -52,7 +75,7 @@ function ProgressDots({ currentState }: { currentState: BlockState }) {
   )
 }
 
-/** Block card with progress dots, status badge, and timestamp */
+/** Block card with state tracker and timestamp */
 export function BlockCard({
   block,
   isLatest = false,
@@ -72,64 +95,53 @@ export function BlockCard({
       }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className={cn(
-        'relative flex flex-col items-center rounded-xl select-none cursor-default',
-        'bg-zinc-900/80 border border-zinc-800 hover:border-zinc-700',
-        'w-[120px] h-[150px] sm:w-[140px] sm:h-[170px] p-3 sm:p-4',
-        'transition-all duration-300',
+        'relative flex flex-col gap-y-4 text-left rounded-xl select-none bg-zinc-900/80 border border-zinc-800 hover:border-zinc-700 w-48 h-52 sm:w-56 sm:h-54 p-4 transition-all duration-300',
         className,
       )}
     >
       {isLatest && (
-        <div className="absolute -top-2 -right-2 flex items-center gap-1 px-1.5 py-0.5 bg-zinc-800 border border-zinc-700 rounded text-[10px] text-zinc-400">
+        <div className="absolute -top-4.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 bg-purple-500/15 border border-purple-400 rounded-full text-sm font-medium text-purple-400 backdrop-blur-sm">
           <span className="relative flex h-1.5 w-1.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500" />
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-purple-500" />
           </span>
           LIVE
         </div>
       )}
 
-      <div className="mb-3">
-        <ProgressDots currentState={block.state} />
-      </div>
-
-      <a
+      <Link
         href={`https://monadvision.com/block/${block.number}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="font-medium text-white hover:underline underline-offset-2 text-sm sm:text-base mb-2"
+        className="font-mono text-xl sm:text-2xl font-medium text-white hover:underline underline-offset-2 cursor-pointer"
         title={`View block #${block.number} on MonadVision`}
       >
-        #{block.number.toLocaleString()}
-      </a>
+        {formatBlockNumber(block.number)}
+      </Link>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={config.label}
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.15, ease: 'easeOut' }}
+      <StateTracker currentState={block.state} />
+
+      <div className="flex flex-col gap-2.5">
+        <span
           className={cn(
-            'px-2 py-0.5 rounded text-xs font-medium border',
+            'px-3 py-0.5 rounded-full text-sm font-medium border backdrop-blur-sm w-fit',
             config.badgeClass,
           )}
         >
           {config.label}
-        </motion.div>
-      </AnimatePresence>
-
-      <span className="text-[11px] text-zinc-500 mt-1.5">
-        {config.description}
-      </span>
+        </span>
+        {config.description && (
+          <span className="text-xs text-zinc-500">{config.description}</span>
+        )}
+      </div>
 
       {block.timestamp && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="mt-auto pt-2"
+          className="mt-auto"
         >
-          <span className="text-xs text-zinc-500">
+          <span className="text-sm sm:text-base text-zinc-500">
             {formatTimeDisplay(block.timestamp)}
           </span>
         </motion.div>

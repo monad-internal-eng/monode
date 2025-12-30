@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  SLOW_MOTION_BLOCK_INTERVAL_MS,
   SLOW_MOTION_DURATION_SECONDS,
+  SLOW_MOTION_EVENT_INTERVAL_MS,
 } from '@/constants/block-state'
 import type { SerializableEventData } from '@/types/events'
 
@@ -87,7 +87,7 @@ export function useBlockchainSlowMotion({
           onProcessEventRef.current(event)
         }
       }
-    }, SLOW_MOTION_BLOCK_INTERVAL_MS)
+    }, SLOW_MOTION_EVENT_INTERVAL_MS)
 
     // Start the countdown timer
     countdownIntervalRef.current = setInterval(() => {

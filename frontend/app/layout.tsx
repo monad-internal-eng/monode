@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Roboto_Mono } from 'next/font/google'
 import localFont from 'next/font/local'
 import './globals.css'
 import { Providers } from './providers'
@@ -7,6 +8,11 @@ const brittiSans = localFont({
   src: './britti-sans-variable.woff2',
   variable: '--font-britti-sans',
   display: 'swap',
+})
+
+const robotoMono = Roboto_Mono({
+  variable: '--font-roboto-mono',
+  subsets: ['latin'],
 })
 
 export const metadata: Metadata = {
@@ -21,7 +27,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${brittiSans.variable} antialiased bg-[#0f0f1a]`}>
+      <body
+        className={`${brittiSans.variable} ${robotoMono.variable} antialiased bg-[#0f0f1a]`}
+      >
         <Providers>{children}</Providers>
       </body>
     </html>

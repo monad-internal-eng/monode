@@ -1,7 +1,7 @@
 import type { BlockState } from '@/types/block'
 
 export const SLOW_MOTION_DURATION_SECONDS = 30
-export const SLOW_MOTION_BLOCK_INTERVAL_MS = 800
+export const SLOW_MOTION_EVENT_INTERVAL_MS = 150
 
 /**
  * Color tokens for block states (hex values for inline styles).
@@ -24,33 +24,31 @@ export const BLOCK_STATE_CONFIG: Record<
   BlockState,
   {
     label: string
-    description: string
+    description?: string
     badgeClass: string
     dotColor: string
   }
 > = {
   proposed: {
     label: 'Proposed',
-    description: 'Pending execution',
-    badgeClass: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    badgeClass: 'bg-amber-500/15 text-amber-400 border-amber-400',
     dotColor: STATE_COLORS.proposed,
   },
   voted: {
-    label: 'Executing',
-    description: 'Processing transactions',
-    badgeClass: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    label: 'Voted',
+    badgeClass: 'bg-purple-500/15 text-purple-400 border-purple-400',
     dotColor: STATE_COLORS.voted,
   },
   finalized: {
     label: 'Finalized',
-    description: 'Execution complete',
-    badgeClass: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    description: 'On chain',
+    badgeClass: 'bg-purple-500/15 text-purple-400 border-purple-400',
     dotColor: STATE_COLORS.finalized,
   },
   verified: {
     label: 'Verified',
-    description: 'On chain',
-    badgeClass: 'bg-green-500/20 text-green-400 border-green-500/30',
+    description: 'On chain, state verified',
+    badgeClass: 'bg-green-500/15 text-green-400 border-green-400',
     dotColor: STATE_COLORS.verified,
   },
 }
@@ -58,7 +56,7 @@ export const BLOCK_STATE_CONFIG: Record<
 /** Legend items for the block state tracker UI */
 export const BLOCK_STATE_LEGEND = [
   { label: 'Proposed', color: STATE_COLORS.proposed },
-  { label: 'Executing', color: STATE_COLORS.voted },
+  { label: 'Voted', color: STATE_COLORS.voted },
   { label: 'Finalized', color: STATE_COLORS.finalized },
   { label: 'Verified', color: STATE_COLORS.verified },
 ]
