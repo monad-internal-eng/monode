@@ -33,46 +33,54 @@ export default function HotSlotsBubbleMap() {
   return (
     <BubbleMap
       title="Hot Slots Map"
-      description="Most frequently accessed storage slots"
+      description="Storage slots with the highest concurrent access during block execution."
       items={slots}
-      minSize={80}
-      maxSize={160}
       renderBubbleContent={(slot) => (
         <>
-          <span className="font-bold text-white drop-shadow-md text-sm truncate w-full px-2">
-            {shortenHex(slot.address)}
-          </span>
-          <span className="text-[10px] text-white/90 font-mono mt-0.5 truncate w-full px-2">
+          <span className="text-xs font-normal w-full">
             {shortenHex(slot.slot)}
           </span>
-          <span className="text-xs text-white/80 font-mono mt-0.5">
-            {slot.hits} hits
+          <span className="text-sm font-bold font-mono mt-0.5">
+            {slot.hits}
           </span>
         </>
       )}
       renderTooltip={(slot) => (
-        <div className="flex flex-col gap-2">
-          <div>
-            <span className="text-[10px] text-[#a0a0b0] uppercase tracking-wider">
-              Contract
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2">
+            {/* TODO: Add contract detail as name */}
+            <span className="text-sm text-[#9C6EF8] uppercase tracking-wider">
+              Link
             </span>
-            <p className="text-xs font-mono text-white break-all">
-              {slot.address}
-            </p>
+            <div className="flex flex-col gap-1">
+              <p className="text-2xs font-mono text-[#8888a0] break-all">
+                Contract:{' '}
+                <span className="text-white text-xs">
+                  {shortenHex(slot.address)}
+                </span>
+              </p>
+              <p className="text-2xs font-mono text-[#8888a0] break-all">
+                Slot:{' '}
+                <span className="text-white text-xs">
+                  {shortenHex(slot.slot)}
+                </span>
+              </p>
+            </div>
           </div>
-          <div>
-            <span className="text-[10px] text-[#a0a0b0] uppercase tracking-wider">
-              Slot Key
-            </span>
-            <p className="text-xs font-mono text-white break-all">
-              {slot.slot}
-            </p>
+          <div className="flex flex-col gap-0">
+            <div className="border-t border-[#2C2735] my-2" />
+            <div className="flex flex-row justify-between">
+              <p className="text-white font-medium">
+                {slot.hits} <span className="text-[#8888a0]">hits</span>
+              </p>
+              <ExplorerLink
+                href={`https://monadvision.com/address/${slot.address}`}
+              />
+            </div>
           </div>
-          <ExplorerLink
-            href={`https://monadvision.com/address/${slot.address}`}
-          />
         </div>
       )}
+      bottomDescription="Slots may be accessed simultaneously across parallel transactions."
     />
   )
 }

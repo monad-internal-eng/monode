@@ -3,6 +3,11 @@
 import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
 import { Spinner } from '@/components/spinner'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 
 export interface BubbleItem {
@@ -16,6 +21,7 @@ interface BubbleMapProps<T extends BubbleItem> {
   items: T[]
   renderBubbleContent: (item: T) => ReactNode
   renderTooltip: (item: T) => ReactNode
+  bottomDescription?: string
   minSize?: number
   maxSize?: number
 }
@@ -31,52 +37,40 @@ export function BubbleMap<T extends BubbleItem>({
   items,
   renderBubbleContent,
   renderTooltip,
-  minSize = 60,
-  maxSize = 180,
+  bottomDescription,
+  minSize = 90,
+  maxSize = 110,
 }: BubbleMapProps<T>) {
   const maxHits = Math.max(...items.map((i) => i.hits), 1)
 
   const getSize = (hits: number) => {
-    const scale = hits / maxHits
-    return minSize + scale * (maxSize - minSize)
+    const ratio = hits / maxHits
+
+    if (ratio > 0.7) return maxSize
+    return minSize
   }
 
   const getColor = (hits: number) => {
     const ratio = hits / maxHits
 
-    if (ratio > 0.9)
-      return 'from-red-600/80 to-red-500/80 border-red-500/50 shadow-red-500/20'
-    if (ratio > 0.8)
-      return 'from-red-500/80 to-orange-500/80 border-red-400/50 shadow-red-500/20'
-    if (ratio > 0.7)
-      return 'from-orange-500/80 to-yellow-500/80 border-orange-400/50 shadow-orange-500/20'
-    if (ratio > 0.6)
-      return 'from-yellow-500/80 to-green-500/80 border-yellow-400/50 shadow-yellow-500/20'
-    if (ratio > 0.5)
-      return 'from-green-500/80 to-emerald-500/80 border-green-400/50 shadow-green-500/20'
-    if (ratio > 0.4)
-      return 'from-emerald-500/80 to-cyan-500/80 border-emerald-400/50 shadow-emerald-500/20'
-    if (ratio > 0.3)
-      return 'from-cyan-500/80 to-sky-500/80 border-cyan-400/50 shadow-cyan-500/20'
-    return 'from-blue-500/80 to-indigo-500/80 border-blue-400/50 shadow-blue-500/20'
+    if (ratio > 0.7) return 'bg-[#B63537] text-white'
+    return 'bg-[#C88328] text-black'
   }
 
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg sm:text-xl font-bold text-white">{title}</h2>
-          <p className="text-xs sm:text-sm text-[#a0a0b0] mt-1">
-            {description}
-          </p>
-        </div>
+      <div className="flex flex-col gap-1.5">
+        <h2 className="text-2xl sm:text-3xl font-bold text-white">{title}</h2>
+        <p className="text-sm sm:text-base text-[#a0a0b0] max-w-3/4">
+          {description}
+        </p>
       </div>
 
-      <div className="relative min-h-[300px] sm:min-h-[400px] w-full bg-[#16162a]/80 rounded-xl border border-[#2a2a4a]/50 p-4 sm:p-6 lg:p-8 flex items-center justify-center">
+      <div className="relative min-h-[250px] sm:min-h-[350px] w-full bg-[#17151E] rounded-xl border border-[#201E29] p-3 sm:p-5 lg:p-7 flex flex-col gap-10 items-center justify-center">
         {items.length === 0 ? (
           <Spinner text="Waiting for data..." />
         ) : (
-          <div className="max-w-5xl relative flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:gap-6 z-10 w-full">
+          <div className="max-w-5xl relative flex flex-wrap items-center justify-center gap-2 sm:gap-3 z-10 w-full">
             {items.map((item) => {
               const size = getSize(item.hits)
 
@@ -93,29 +87,38 @@ export function BubbleMap<T extends BubbleItem>({
                   }}
                   className="group relative cursor-pointer"
                 >
-                  {/* Bubble */}
-                  <div
-                    className={cn(
-                      'absolute inset-0 rounded-full bg-linear-to-br backdrop-blur-sm border transition-all duration-300',
-                      'flex items-center justify-center flex-col text-center p-1.5 sm:p-2',
-                      'group-hover:scale-110 group-hover:z-20 group-hover:shadow-lg',
-                      getColor(item.hits),
-                    )}
-                  >
-                    {renderBubbleContent(item)}
-                  </div>
-
-                  {/* Tooltip */}
-                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto z-50 w-max max-w-[200px] sm:max-w-[250px]">
-                    <div className="bg-[#0e0e1a] border border-[#2a2a4a] rounded-lg p-2 sm:p-3 shadow-xl text-xs sm:text-sm">
+                  {/* Bubble & Tooltip */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div
+                        className={cn(
+                          'absolute inset-0 rounded-full transition-all duration-300',
+                          'flex items-center justify-center flex-col text-center p-1.5 sm:p-2',
+                          'group-hover:z-20 group-hover:shadow-[0_0_0_2px_#17151E,0_0_0_4px_#9C6EF8]',
+                          getColor(item.hits),
+                        )}
+                      >
+                        {renderBubbleContent(item)}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      sideOffset={5}
+                      className="bg-[#0e0e1a] border border-[#2a2a4a] rounded-lg p-2 sm:p-3 shadow-xl text-xs sm:text-sm w-[250px]"
+                    >
                       {renderTooltip(item)}
-                    </div>
-                    {/* Arrow */}
-                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-2 h-2 bg-[#0e0e1a] border-b border-r border-[#2a2a4a] rotate-45 -mt-1" />
-                  </div>
+                    </TooltipContent>
+                  </Tooltip>
                 </motion.div>
               )
             })}
+          </div>
+        )}
+        {/* Bottom description */}
+        {bottomDescription && (
+          <div>
+            <p className="text-center text-sm text-[#888198]">
+              {bottomDescription}
+            </p>
           </div>
         )}
       </div>
