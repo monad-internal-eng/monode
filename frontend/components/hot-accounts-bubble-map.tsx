@@ -1,10 +1,10 @@
 'use client'
 
 import { useMemo } from 'react'
-import { BubbleMap } from '@/components/bubble-map'
+import { BubbleMap } from '@/components/ui/bubble-map'
+import { ExplorerLink } from '@/components/ui/bubble-map/explorer-link'
 import { useEvents } from '@/hooks/use-events'
 import { shortenHex } from '@/lib/utils'
-import { ExplorerLink } from './bubble-map/explorer-link'
 
 interface HotAccount {
   id: string
@@ -31,33 +31,43 @@ export default function HotAccountsBubbleMap() {
   return (
     <BubbleMap
       title="Hot Accounts Map"
-      description="Real-time visualization of most accessed accounts"
+      description="Accounts most frequently accessed during parallel transaction execution."
       items={accounts}
       renderBubbleContent={(account) => (
         <>
-          <span className="font-bold text-white drop-shadow-md text-sm truncate w-full px-2">
+          <span className="text-xs font-normal w-full">
             {shortenHex(account.address)}
           </span>
-          <span className="text-xs text-white/80 font-mono mt-0.5">
-            {account.hits} hits
+          <span className="text-sm font-bold font-mono mt-0.5">
+            {account.hits}
           </span>
         </>
       )}
       renderTooltip={(account) => (
-        <div className="flex flex-col gap-2">
-          <div>
-            <span className="text-[10px] text-[#a0a0b0] uppercase tracking-wider">
-              Contract
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2">
+            {/* TODO: Add contract detail as name */}
+            <span className="text-sm text-[#9C6EF8] uppercase tracking-wider">
+              Link
             </span>
-            <p className="text-xs font-mono text-white break-all">
+            <p className="text-xs font-mono text-[#8888a0] break-all">
               {account.address}
             </p>
           </div>
-          <ExplorerLink
-            href={`https://monadvision.com/address/${account.address}`}
-          />
+          <div className="flex flex-col gap-0">
+            <div className="border-t border-[#2C2735] my-2" />
+            <div className="flex flex-row justify-between">
+              <p className="text-white font-medium">
+                {account.hits} <span className="text-[#8888a0]">hits</span>
+              </p>
+              <ExplorerLink
+                href={`https://monadvision.com/address/${account.address}`}
+              />
+            </div>
+          </div>
         </div>
       )}
+      bottomDescription="Access frequency observed directly from execution events."
     />
   )
 }
