@@ -23,11 +23,10 @@ export default function Home() {
 
         <div className="w-full h-px my-8 bg-linear-to-r from-transparent via-[#2a2a4a] to-transparent" />
 
-        <HotAccountsBubbleMap />
-
-        <div className="w-full h-px my-8 bg-linear-to-r from-transparent via-[#2a2a4a] to-transparent" />
-
-        <HotSlotsBubbleMap />
+        <div className="flex flex-col md:flex-row gap-4">
+          <HotAccountsBubbleMap />
+          <HotSlotsBubbleMap />
+        </div>
 
         <div className="w-full h-px my-8 bg-linear-to-r from-transparent via-[#2a2a4a] to-transparent" />
 

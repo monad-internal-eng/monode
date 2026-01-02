@@ -1,24 +1,30 @@
 const BlockTimeLegend = () => {
   return (
-    <div className="flex flex-wrap gap-4 mt-4 text-xs text-[#8888a0]">
-      <div className="flex items-center gap-2">
-        <div className="w-3 h-3 bg-linear-to-t from-gray-200 to-gray-100 border border-gray-300 rounded" />
-        <span>Block execution time (container)</span>
+    <div className="flex flex-row justify-between items-center text-xs sm:text-sm text-[#a0a0b0]">
+      <div className="flex flex-wrap gap-6">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-10 bg-[#454150] rounded-t-sm" />
+          <p>Finalized</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-10 bg-[#454150] rounded-t-sm relative">
+            <div className="absolute bottom-0 left-0 w-full h-1/2 bg-[#696274] rounded-t-sm" />
+          </div>
+          <p>Executing</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div
+            className="w-4 h-10 bg-[#7B66A2] rounded-t-sm"
+            style={{
+              boxShadow: '0 0 5px #7B66A2, 0 0 10px #7B66A2',
+            }}
+          />
+          <p>Parallel Execution</p>
+        </div>
       </div>
-      <div className="flex items-center gap-2">
-        <div className="w-3 h-3 bg-linear-to-t from-purple-500 to-purple-300 rounded" />
-        <span>Transaction execution time</span>
-      </div>
-      <div className="flex items-center gap-2">
-        <div
-          className="w-3 h-3 bg-linear-to-t from-purple-500 to-purple-300 rounded animate-pulse"
-          style={{
-            boxShadow:
-              '0 0 6px #ffd700, 0 0 12px #ffd700, 0 0 8px #a855f7, 0 0 16px #a855f7, 0 0 24px #a855f7',
-          }}
-        />
-        <span>High parallelization (&gt;1x ratio)</span>
-      </div>
+      <p className="max-w-1/3 text-right">
+        Height = execution time. Purple glow = concurrent transactions observed.
+      </p>
     </div>
   )
 }
