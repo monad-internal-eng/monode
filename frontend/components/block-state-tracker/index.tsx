@@ -30,8 +30,8 @@ export default function BlockStateTracker() {
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
       <SectionHeader
-        title="Monad Block Execution Tracker"
-        description="Track blocks as they move through execution and verification, observed live via execution events."
+        title="Monad Block Tracker"
+        description="Blocks advance through consensus states in real time as execution events stream directly from the daemon."
       >
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           <button
