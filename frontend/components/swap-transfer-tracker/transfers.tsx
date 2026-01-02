@@ -1,6 +1,7 @@
 'use client'
 
 import { AnimatePresence } from 'framer-motion'
+import { cn } from '@/lib/utils'
 import type { TransferData } from '@/types/transfer'
 import { TransferRow } from './transfer-row'
 
@@ -15,7 +16,10 @@ export function Transfers({ data, isLoading }: TransfersProps) {
   return (
     <div className="flex flex-col">
       <div
-        className={`${TABLE_GRID} py-3 text-xs font-medium text-zinc-400 border-b border-zinc-800`}
+        className={cn(
+          'py-3 text-xs font-medium text-zinc-400 border-b border-zinc-800',
+          TABLE_GRID,
+        )}
       >
         <span>From</span>
         <span>To</span>

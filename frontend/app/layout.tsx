@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Roboto_Mono } from 'next/font/google'
 import localFont from 'next/font/local'
 import './globals.css'
+import { cn } from '@/lib/utils'
 import { Providers } from './providers'
 
 const brittiSans = localFont({
@@ -28,7 +29,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${brittiSans.variable} ${robotoMono.variable} antialiased bg-[#0f0f1a]`}
+        className={cn(
+          brittiSans.variable,
+          robotoMono.variable,
+          'antialiased bg-[#0f0f1a]',
+        )}
       >
         <Providers>{children}</Providers>
       </body>
