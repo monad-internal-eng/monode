@@ -14,8 +14,8 @@ export default function Home() {
             Execution Events SDK Showcase
           </h1>
           <p className="mt-3 text-base font-normal leading-6 text-text-secondary">
-            Live visualization of parallel EVM execution events streamed directly from Monad&apos;s
-            execution engine.
+            Live visualization of parallel EVM execution events streamed
+            directly from Monad&apos;s execution engine.
           </p>
         </div>
 
