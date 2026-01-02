@@ -1,10 +1,10 @@
 'use client'
 
 import { useMemo } from 'react'
-import { BubbleMap } from '@/components/bubble-map'
+import { BubbleMap } from '@/components/ui/bubble-map'
+import { ExplorerLink } from '@/components/ui/bubble-map/explorer-link'
 import { useEvents } from '@/hooks/use-events'
 import { shortenHex } from '@/lib/utils'
-import { ExplorerLink } from './bubble-map/explorer-link'
 
 interface HotSlot {
   id: string

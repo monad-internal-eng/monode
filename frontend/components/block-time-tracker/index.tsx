@@ -2,6 +2,7 @@
 
 import { Clock, TrendingUp } from 'lucide-react'
 import { useMemo } from 'react'
+import { SectionHeader } from '@/components/ui/section-header'
 import { useBlockTracker } from '@/hooks/use-block-tracker'
 import { fromNsToMsPrecise } from '@/lib/block-metrics'
 import BlockTime from './block-time'
@@ -41,14 +42,10 @@ export default function BlockTimeExecutionTracker() {
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
       {/* Block Statistics */}
-      <div className="flex flex-col gap-1.5">
-        <h2 className="text-2xl sm:text-3xl font-bold text-white">
-          Execution Block Time
-        </h2>
-        <p className="text-sm sm:text-base text-[#a0a0b0] max-w-3/4">
-          Execution time observed directly from execution events.
-        </p>
-      </div>
+      <SectionHeader
+        title="Execution Block Time"
+        description="Execution time observed directly from execution events."
+      />
       <div className="flex flex-col md:flex-row gap-4">
         <div className="bg-[#17151E] rounded-xl border border-[#201E29] p-5 w-full flex flex-col gap-4">
           <div className="flex flex-row justify-between">
@@ -95,14 +92,10 @@ export default function BlockTimeExecutionTracker() {
       </div>
 
       {/* Horizontal Scroll Container with Block Bars */}
-      <div className="flex flex-col gap-1.5">
-        <h2 className="text-2xl sm:text-3xl font-bold text-white">
-          Block Execution Timeline
-        </h2>
-        <p className="text-sm sm:text-base text-[#a0a0b0] max-w-3/4">
-          Each bar represents a block. Height shows total execution time.
-        </p>
-      </div>
+      <SectionHeader
+        title="Block Execution Timeline"
+        description="Each bar represents a block. Height shows total execution time."
+      />
       <div className="w-full flex flex-col gap-5 bg-[#17151E] rounded-xl border border-[#201E29] p-4 sm:p-6 lg:p-8">
         {/* Scrollable Blocks Container */}
         <div className="flex gap-2 sm:gap-4 p-4 sm:p-6 lg:p-8 overflow-x-auto max-w-full scrollbar-none flex-1">

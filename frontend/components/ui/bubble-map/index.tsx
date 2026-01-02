@@ -2,7 +2,8 @@
 
 import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
-import { Spinner } from '@/components/spinner'
+import { SectionHeader } from '@/components/ui/section-header'
+import { Spinner } from '@/components/ui/spinner'
 import {
   Tooltip,
   TooltipContent,
@@ -59,12 +60,7 @@ export function BubbleMap<T extends BubbleItem>({
 
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
-      <div className="flex flex-col gap-1.5">
-        <h2 className="text-2xl sm:text-3xl font-bold text-white">{title}</h2>
-        <p className="text-sm sm:text-base text-[#a0a0b0] max-w-3/4">
-          {description}
-        </p>
-      </div>
+      <SectionHeader title={title} description={description} />
 
       <div className="relative min-h-[250px] sm:min-h-[350px] w-full bg-[#17151E] rounded-xl border border-[#201E29] p-3 sm:p-5 lg:p-7 flex flex-col gap-10 items-center justify-center">
         {items.length === 0 ? (

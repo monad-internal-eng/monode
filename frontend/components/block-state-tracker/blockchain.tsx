@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { type CellComponentProps, Grid } from 'react-window'
-import { Spinner } from '@/components/spinner'
+import { Spinner } from '@/components/ui/spinner'
 import { useBlockchainScroll } from '@/hooks/use-blockchain-scroll'
 import type { Block } from '@/types/block'
 import { BlockCard } from './block-card'
