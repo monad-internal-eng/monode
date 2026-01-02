@@ -14,7 +14,7 @@ const TABLE_GRID = 'grid grid-cols-5 gap-6 px-4'
 
 export function Swaps({ data, isLoading }: SwapsProps) {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col min-w-179.5 md:min-w-0">
       <div
         className={cn(
           'py-3 text-xs font-medium text-zinc-400 border-b border-zinc-800',

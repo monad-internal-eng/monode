@@ -73,11 +73,17 @@ export default function SwapTransferTracker() {
             <div className="mt-1 w-full h-px bg-zinc-800" />
           </div>
 
-          <TabsContent value="transfers" className="mt-0">
+          <TabsContent
+            value="transfers"
+            className="mt-0 overflow-x-auto scrollbar-none"
+          >
             <Transfers data={allTransfers} isLoading={!isTransferConnected} />
           </TabsContent>
 
-          <TabsContent value="swaps" className="mt-0">
+          <TabsContent
+            value="swaps"
+            className="mt-0 overflow-x-auto scrollbar-none"
+          >
             <Swaps data={allSwaps} isLoading={!isSwapConnected} />
           </TabsContent>
         </Tabs>
