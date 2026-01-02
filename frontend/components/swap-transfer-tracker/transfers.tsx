@@ -1,6 +1,7 @@
 'use client'
 
 import { AnimatePresence } from 'framer-motion'
+import { cn } from '@/lib/utils'
 import type { TransferData } from '@/types/transfer'
 import { TransferRow } from './transfer-row'
 
@@ -9,13 +10,16 @@ interface TransfersProps {
   isLoading: boolean
 }
 
-const TABLE_GRID = 'grid grid-cols-[1fr_1fr_1fr_100px_120px] gap-4 px-4'
+const TABLE_GRID = 'grid grid-cols-5 gap-6 px-4'
 
 export function Transfers({ data, isLoading }: TransfersProps) {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col min-w-179.5 md:min-w-0">
       <div
-        className={`${TABLE_GRID} py-3 text-xs font-medium text-zinc-500 border-b border-zinc-800`}
+        className={cn(
+          'py-3 text-xs font-medium text-zinc-400 border-b border-zinc-800',
+          TABLE_GRID,
+        )}
       >
         <span>From</span>
         <span>To</span>
@@ -24,10 +28,10 @@ export function Transfers({ data, isLoading }: TransfersProps) {
         <span>Time</span>
       </div>
 
-      <div className="h-[400px] overflow-y-auto scrollbar-none">
+      <div className="h-96 overflow-y-auto scrollbar-none">
         {data.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-zinc-400">
               {isLoading ? 'Waiting for events...' : 'No transfers yet'}
             </p>
           </div>
