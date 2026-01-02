@@ -1,68 +1,33 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { RefreshCw, Wifi, WifiOff } from 'lucide-react'
+import { ArrowLeftRight } from 'lucide-react'
+import { LiveIndicator } from '@/components/ui/live-indicator'
+import { SectionHeader } from '@/components/ui/section-header'
 import { useSwapEvents } from '@/hooks/use-swap-events'
-import { cn } from '@/lib/utils'
 import { Swaps } from './swaps'
 
 export default function SwapLogsTracker() {
-  const { allSwaps, isConnected, clearSwaps } = useSwapEvents()
+  const { allSwaps, isConnected } = useSwapEvents()
 
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-        <div className="flex-1">
-          <h2 className="text-lg sm:text-xl font-bold text-white">
-            Swap Tracker
-          </h2>
-          <p className="text-xs sm:text-sm text-[#a0a0b0] mt-1">
-            Real-time swap events from Kuru and Monorail aggregators, Uniswap V4
-            and PancakeSwap V3 pools.
-          </p>
-        </div>
+      <SectionHeader
+        title="Swap Tracker"
+        description="Real-time swap events from Kuru and Monorail aggregators, Uniswap V4 and PancakeSwap V3 pools."
+      />
 
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className={cn(
-              'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium',
-              isConnected
-                ? 'bg-green-500/10 text-green-400 border border-green-500/20'
-                : 'bg-red-500/10 text-red-400 border border-red-500/20',
-            )}
-          >
-            {isConnected ? (
-              <>
-                <Wifi className="w-3 h-3" />
-                <span>Live</span>
-              </>
-            ) : (
-              <>
-                <WifiOff className="w-3 h-3" />
-                <span>Connecting</span>
-              </>
-            )}
-          </motion.div>
-
-          <button
-            type="button"
-            onClick={clearSwaps}
-            className={cn(
-              'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium',
-              'bg-[#2a2a4a]/50 text-zinc-400 hover:text-white hover:bg-[#2a2a4a]',
-              'border border-[#2a2a4a]/50 transition-colors',
-            )}
-            title="Clear all swaps"
-          >
-            <RefreshCw className="w-3 h-3" />
-            <span>Clear</span>
-          </button>
+      <div className="flex flex-col bg-zinc-900/50 rounded-xl border border-zinc-800 overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-800">
+          <ArrowLeftRight className="w-4 h-4 text-emerald-400" />
+          <span className="text-sm font-medium text-white">Swaps</span>
+          <LiveIndicator isConnected={isConnected} />
         </div>
+        <Swaps data={allSwaps} isLoading={!isConnected} />
       </div>
 
-      <Swaps data={allSwaps} isLoading={!isConnected} />
+      <p className="text-xs text-zinc-500">
+        Swaps highlight DEX activity across multiple protocols.
+      </p>
     </div>
   )
 }

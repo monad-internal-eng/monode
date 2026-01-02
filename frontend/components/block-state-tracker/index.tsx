@@ -1,15 +1,17 @@
 'use client'
 
+import { Pause, Play } from 'lucide-react'
+import { useState } from 'react'
+import { SectionHeader } from '@/components/ui/section-header'
+import { BLOCK_STATE_LEGEND } from '@/constants/block-state'
 import { useExecutionEventBlocks } from '@/hooks/use-execution-event-blocks'
+import { cn } from '@/lib/utils'
 import { Blockchain } from './blockchain'
-import { FollowChainToggle } from './follow-chain-toggle'
 import { SlowMotionControl } from './slow-motion-control'
 
 /**
- * BlockStateTracker visualizes the blockchain with blocks progressing through states:
- * Proposed → Voted → Finalized → Verified
- *
- * Shows execution events from the SDK.
+ * Visualizes the blockchain with blocks progressing through states:
+ * Proposed → Executing → Finalized → Verified
  */
 export default function BlockStateTracker() {
   const {
@@ -22,36 +24,33 @@ export default function BlockStateTracker() {
     setIsFollowingChain,
   } = useExecutionEventBlocks()
 
+  const [isHovering, setIsHovering] = useState(false)
+  const isPaused = !isFollowingChain || isHovering
+
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-        <div className="flex-1">
-          <h2 className="text-lg sm:text-xl font-bold text-white">
-            Monad Block Tracker
-          </h2>
-          <p className="text-xs sm:text-sm text-[#a0a0b0] mt-1">
-            Blocks progress through states:{' '}
-            <span className="text-amber-400">Proposed</span> →{' '}
-            <span className="text-indigo-400">Voted</span> →{' '}
-            <span className="text-green-400">Finalized</span> →{' '}
-            <span className="text-green-600">Verified</span>.{' '}
-            <a
-              href="https://docs.monad.xyz/monad-arch/consensus/block-states"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2 whitespace-nowrap"
-            >
-              Learn more
-            </a>
-          </p>
-        </div>
-
-        {/* Control Panel */}
+      <SectionHeader
+        title="Monad Block Tracker"
+        description="Blocks advance through consensus states in real time as execution events stream directly from the daemon."
+      >
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-          <FollowChainToggle
-            isFollowing={isFollowingChain}
-            onChange={setIsFollowingChain}
-          />
+          <button
+            type="button"
+            onClick={() => setIsFollowingChain(!isFollowingChain)}
+            className={cn(
+              'flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium cursor-pointer transition-all duration-200',
+              isFollowingChain
+                ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700'
+                : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white',
+            )}
+          >
+            {isFollowingChain ? (
+              <Pause className="w-4 h-4" />
+            ) : (
+              <Play className="w-4 h-4" />
+            )}
+            {isFollowingChain ? 'Pause' : 'Resume'}
+          </button>
           <SlowMotionControl
             isActive={isSlowMotion}
             remainingSeconds={remainingSeconds}
@@ -59,12 +58,35 @@ export default function BlockStateTracker() {
             onStop={stopSlowMotion}
           />
         </div>
+      </SectionHeader>
+
+      <div className="flex items-center gap-4 sm:gap-6">
+        {BLOCK_STATE_LEGEND.map((item) => (
+          <div key={item.label} className="flex items-center gap-2">
+            <div
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: item.color }}
+            />
+            <span className="text-xs sm:text-sm text-zinc-400">
+              {item.label}
+            </span>
+          </div>
+        ))}
       </div>
 
-      {/* Execution SDK Blockchain visualization */}
-      <div className="flex flex-col bg-[#16162a]/80 rounded-xl border border-[#2a2a4a]/50 p-3 sm:p-4">
-        <Blockchain blocks={blocks} isFollowingChain={isFollowingChain} />
-      </div>
+      <button
+        type="button"
+        className="overflow-visible"
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+      >
+        <Blockchain blocks={blocks} isFollowingChain={!isPaused} />
+      </button>
+
+      <p className="text-sm text-zinc-500">
+        Updates reflect execution events, not RPC polling. <u>Hover to pause</u>
+        .
+      </p>
     </div>
   )
 }

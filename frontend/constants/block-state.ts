@@ -1,67 +1,57 @@
 import type { BlockState } from '@/types/block'
 
-// Slow motion configuration
 export const SLOW_MOTION_DURATION_SECONDS = 30
-export const SLOW_MOTION_BLOCK_INTERVAL_MS = 800
+export const SLOW_MOTION_EVENT_INTERVAL_MS = 75
 
 /**
- * Tailwind color tokens for block states.
- * Using semantic colors that convey progression toward completion.
+ * Color tokens for block states (hex values for inline styles).
+ * - Proposed: Amber/orange - awaiting execution
+ * - Voted: Purple - received votes
+ * - Finalized: Blue - on chain
+ * - Verified: Green - on chain, state verified
  */
-export const BLOCK_STATE_COLORS = {
-  proposed: {
-    primary: '#f59e0b', // amber-500
-    secondary: '#d97706', // amber-600
-  },
-  voted: {
-    primary: '#818cf8', // indigo-400
-    secondary: '#6366f1', // indigo-500
-  },
-  finalized: {
-    primary: '#4ade80', // green-400 (light green)
-    secondary: '#22c55e', // green-500
-  },
-  verified: {
-    primary: '#16a34a', // green-600 (dark green)
-    secondary: '#15803d', // green-700
-  },
+export const STATE_COLORS: Record<BlockState, string> = {
+  proposed: '#d4631f',
+  voted: '#8b68d9',
+  finalized: '#4680d6',
+  verified: '#2aad7c',
 }
 
 /**
- * Configuration for each block state including display label and gradient colors.
- *
- * Color progression conveys block lifecycle:
- * - Proposed: Amber - "pending", awaiting action
- * - Voted: Indigo - "confidence", has validator support (Monad brand)
- * - Finalized: Light Green - "confirmed", execution complete
- * - Verified: Dark Green - "complete", fully verified and immutable
+ * Configuration for each block state including display properties
  */
 export const BLOCK_STATE_CONFIG: Record<
   BlockState,
   {
     label: string
-    gradient: string
-    shadow: string
+    description?: string
+    color: string
   }
 > = {
   proposed: {
     label: 'Proposed',
-    gradient: `linear-gradient(to bottom right, ${BLOCK_STATE_COLORS.proposed.primary}, ${BLOCK_STATE_COLORS.proposed.secondary})`,
-    shadow: '0 8px 16px -4px rgba(245, 158, 11, 0.4)',
+    color: STATE_COLORS.proposed,
   },
   voted: {
     label: 'Voted',
-    gradient: `linear-gradient(to bottom right, ${BLOCK_STATE_COLORS.voted.primary}, ${BLOCK_STATE_COLORS.voted.secondary})`,
-    shadow: '0 8px 16px -4px rgba(99, 102, 241, 0.4)',
+    color: STATE_COLORS.voted,
   },
   finalized: {
     label: 'Finalized',
-    gradient: `linear-gradient(to bottom right, ${BLOCK_STATE_COLORS.finalized.primary}, ${BLOCK_STATE_COLORS.finalized.secondary})`,
-    shadow: '0 8px 16px -4px rgba(74, 222, 128, 0.4)',
+    description: 'On chain',
+    color: STATE_COLORS.finalized,
   },
   verified: {
     label: 'Verified',
-    gradient: `linear-gradient(to bottom right, ${BLOCK_STATE_COLORS.verified.primary}, ${BLOCK_STATE_COLORS.verified.secondary})`,
-    shadow: '0 8px 16px -4px rgba(22, 163, 74, 0.4)',
+    description: 'On chain, state verified',
+    color: STATE_COLORS.verified,
   },
 }
+
+/** Legend items for the block state tracker UI */
+export const BLOCK_STATE_LEGEND = [
+  { label: 'Proposed', color: STATE_COLORS.proposed },
+  { label: 'Voted', color: STATE_COLORS.voted },
+  { label: 'Finalized', color: STATE_COLORS.finalized },
+  { label: 'Verified', color: STATE_COLORS.verified },
+]

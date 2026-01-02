@@ -111,7 +111,9 @@
   /* Typography */
   --font-sans: var(--font-britti-sans), system-ui, sans-serif;
   --font-britti-sans: var(--font-britti-sans), system-ui, sans-serif;
-  --font-mono: ui-monospace, Menlo, Monaco, "Cascadia Mono", monospace;
+  --font-mono:
+    var(--font-roboto-mono), ui-monospace, Menlo, Monaco, "Cascadia Mono",
+    monospace;
 
   /* Line heights */
   --leading-4: 1rem; /* 16px */

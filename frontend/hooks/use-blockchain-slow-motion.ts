@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  SLOW_MOTION_BLOCK_INTERVAL_MS,
   SLOW_MOTION_DURATION_SECONDS,
+  SLOW_MOTION_EVENT_INTERVAL_MS,
 } from '@/constants/block-state'
 import type { SerializableEventData } from '@/types/events'
 
@@ -31,6 +31,7 @@ export function useBlockchainSlowMotion({
   const processIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const isSlowMotionRef = useRef(false)
+  const endTimeRef = useRef<number>(0)
 
   // Keep refs in sync with callbacks to avoid stale closures
   const onProcessEventRef = useRef(onProcessEvent)
@@ -70,12 +71,24 @@ export function useBlockchainSlowMotion({
     setRemainingSeconds(0)
   }, [cleanup])
 
+  // Calculate remaining seconds from end time (handles background tab throttling)
+  const updateRemainingSeconds = useCallback(() => {
+    const now = Date.now()
+    const remaining = Math.max(0, Math.ceil((endTimeRef.current - now) / 1000))
+    setRemainingSeconds(remaining)
+
+    if (remaining <= 0 && isSlowMotionRef.current) {
+      stopSlowMotion()
+    }
+  }, [stopSlowMotion])
+
   // Start slow motion mode
   const startSlowMotion = useCallback(() => {
     if (isSlowMotionRef.current) return
 
     isSlowMotionRef.current = true
     setIsSlowMotion(true)
+    endTimeRef.current = Date.now() + SLOW_MOTION_DURATION_SECONDS * 1000
     setRemainingSeconds(SLOW_MOTION_DURATION_SECONDS)
     eventQueueRef.current = []
 
@@ -87,19 +100,11 @@ export function useBlockchainSlowMotion({
           onProcessEventRef.current(event)
         }
       }
-    }, SLOW_MOTION_BLOCK_INTERVAL_MS)
+    }, SLOW_MOTION_EVENT_INTERVAL_MS)
 
-    // Start the countdown timer
-    countdownIntervalRef.current = setInterval(() => {
-      setRemainingSeconds((prev) => {
-        if (prev <= 1) {
-          stopSlowMotion()
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-  }, [stopSlowMotion])
+    // Start the countdown timer using timestamp-based calculation
+    countdownIntervalRef.current = setInterval(updateRemainingSeconds, 1000)
+  }, [updateRemainingSeconds])
 
   // Queue an event (called from the event handler)
   const queueEvent = useCallback((event: SerializableEventData) => {
@@ -110,6 +115,20 @@ export function useBlockchainSlowMotion({
       onProcessEventRef.current(event)
     }
   }, [])
+
+  // Handle visibility change to update timer when tab becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isSlowMotionRef.current) {
+        updateRemainingSeconds()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [updateRemainingSeconds])
 
   // Cleanup on unmount
   useEffect(() => {
