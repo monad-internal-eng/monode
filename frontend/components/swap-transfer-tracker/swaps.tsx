@@ -9,13 +9,13 @@ interface SwapsProps {
   isLoading: boolean
 }
 
-const TABLE_GRID = 'grid grid-cols-[1fr_1fr_100px_100px_120px] gap-4 px-4'
+const TABLE_GRID = 'grid grid-cols-5 gap-6 px-4'
 
 export function Swaps({ data, isLoading }: SwapsProps) {
   return (
     <div className="flex flex-col">
       <div
-        className={`${TABLE_GRID} py-3 text-xs font-medium text-zinc-500 border-b border-zinc-800`}
+        className={`${TABLE_GRID} py-3 text-xs font-medium text-zinc-400 border-b border-zinc-800`}
       >
         <span>From Token</span>
         <span>To Token</span>
@@ -24,10 +24,10 @@ export function Swaps({ data, isLoading }: SwapsProps) {
         <span>Time</span>
       </div>
 
-      <div className="h-[400px] overflow-y-auto scrollbar-none">
+      <div className="h-96 overflow-y-auto scrollbar-none">
         {data.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-zinc-400">
               {isLoading ? 'Waiting for events...' : 'No swaps yet'}
             </p>
           </div>
