@@ -5,6 +5,7 @@ import { BubbleMap } from '@/components/ui/bubble-map'
 import { ExplorerLink } from '@/components/ui/bubble-map/explorer-link'
 import { useEvents } from '@/hooks/use-events'
 import { shortenHex } from '@/lib/utils'
+import { formatIntNumber } from '@/utils/ui'
 
 interface HotAccount {
   id: string
@@ -39,7 +40,7 @@ export default function HotAccountsBubbleMap() {
             {shortenHex(account.address)}
           </span>
           <span className="text-sm font-bold font-mono mt-0.5">
-            {account.hits}
+            {formatIntNumber(account.hits)}
           </span>
         </>
       )}
@@ -58,7 +59,8 @@ export default function HotAccountsBubbleMap() {
             <div className="border-t border-[#2C2735] my-2" />
             <div className="flex flex-row justify-between">
               <p className="text-white font-medium">
-                {account.hits} <span className="text-[#8888a0]">hits</span>
+                {formatIntNumber(account.hits)}{' '}
+                <span className="text-[#8888a0]">hits</span>
               </p>
               <ExplorerLink
                 href={`https://monadvision.com/address/${account.address}`}
