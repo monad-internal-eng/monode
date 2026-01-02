@@ -179,7 +179,7 @@ async fn run_event_forwarder_task(
 ) {
     let mut account_accesses = TopKTracker::new(10_000);
     let mut storage_accesses = TopKTracker::new(10_000);
-    let mut stats_interval = tokio::time::interval(std::time::Duration::from_secs(5));
+    let mut stats_interval = tokio::time::interval(std::time::Duration::from_secs(1));
 
     // Track current transaction hash per txn_idx
     let mut current_txn_hashes: std::collections::HashMap<usize, [u8; 32]> = std::collections::HashMap::new();
