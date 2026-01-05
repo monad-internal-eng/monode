@@ -123,10 +123,7 @@ export default function BlockTimeExecutionTracker() {
         <button
           type="button"
           className="flex-1"
-          onMouseEnter={() => {
-            setIsHovering(true)
-            console.log('hovering')
-          }}
+          onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
         >
           <BlockTimeTimeline
