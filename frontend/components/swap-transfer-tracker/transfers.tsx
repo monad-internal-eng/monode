@@ -10,7 +10,7 @@ interface TransfersProps {
   isLoading: boolean
 }
 
-const TABLE_GRID = 'grid grid-cols-5 gap-6 px-4'
+const TABLE_GRID = 'grid grid-cols-6 gap-6 px-4'
 
 export function Transfers({ data, isLoading }: TransfersProps) {
   return (
@@ -21,6 +21,7 @@ export function Transfers({ data, isLoading }: TransfersProps) {
           TABLE_GRID,
         )}
       >
+        <span>Transaction Hash</span>
         <span>From</span>
         <span>To</span>
         <span>Amount</span>
