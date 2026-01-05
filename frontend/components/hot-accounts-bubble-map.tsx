@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { BubbleMap } from '@/components/ui/bubble-map'
 import { ExplorerLink } from '@/components/ui/bubble-map/explorer-link'
+import { useContractLabels } from '@/hooks/use-contract-labels'
 import { useEvents } from '@/hooks/use-events'
 import { shortenHex } from '@/lib/utils'
 import { formatIntNumber } from '@/utils/ui'
@@ -29,6 +30,9 @@ export default function HotAccountsBubbleMap() {
       .sort((a, b) => b.hits - a.hits)
   }, [accountAccesses])
 
+  const addresses = useMemo(() => accounts.map((a) => a.address), [accounts])
+  const { getLabel } = useContractLabels(addresses)
+
   return (
     <BubbleMap
       title="Hot Accounts Map"
@@ -44,31 +48,34 @@ export default function HotAccountsBubbleMap() {
           </span>
         </>
       )}
-      renderTooltip={(account) => (
-        <div className="flex flex-col gap-1">
-          <div className="flex flex-col gap-2">
-            {/* TODO: Add contract detail as name */}
-            <span className="text-sm text-[#9C6EF8] uppercase tracking-wider">
-              Link
-            </span>
-            <p className="text-xs font-mono text-[#8888a0] break-all">
-              {account.address}
-            </p>
-          </div>
-          <div className="flex flex-col gap-0">
-            <div className="border-t border-[#2C2735] my-2" />
-            <div className="flex flex-row justify-between">
-              <p className="text-white font-medium">
-                {formatIntNumber(account.hits)}{' '}
-                <span className="text-[#8888a0]">hits</span>
+      renderTooltip={(account) => {
+        const label = getLabel(account.address)
+        const displayName = label?.displayName ?? shortenHex(account.address)
+        return (
+          <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-2">
+              <span className="text-sm text-[#9C6EF8] tracking-wider uppercase">
+                {displayName}
+              </span>
+              <p className="text-xs font-mono text-[#8888a0] break-all">
+                {account.address}
               </p>
-              <ExplorerLink
-                href={`https://monadvision.com/address/${account.address}`}
-              />
+            </div>
+            <div className="flex flex-col gap-0">
+              <div className="border-t border-[#2C2735] my-2" />
+              <div className="flex flex-row justify-between">
+                <p className="text-white font-medium">
+                  {formatIntNumber(account.hits)}{' '}
+                  <span className="text-[#8888a0]">hits</span>
+                </p>
+                <ExplorerLink
+                  href={`https://monadvision.com/address/${account.address}`}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }}
       bottomDescription="Account access frequencies during transaction execution."
     />
   )
