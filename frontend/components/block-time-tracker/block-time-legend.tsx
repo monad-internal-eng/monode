@@ -2,7 +2,7 @@ import { Info } from 'lucide-react'
 
 const BlockTimeLegend = () => {
   return (
-    <div className="flex flex-col justify-between gap-4 text-xs sm:flex-row sm:text-sm text-[#a0a0b0]">
+    <div className="flex flex-col justify-between gap-6 text-xs sm:gap-4 sm:flex-row sm:text-sm text-[#a0a0b0]">
       <div className="flex flex-row gap-2 sm:max-w-1/3 text-zinc-500">
         <Info className="w-4 h-[1lh]" />
         <div className="flex flex-col gap-1">
