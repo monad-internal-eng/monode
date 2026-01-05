@@ -8,9 +8,9 @@ import type {
 } from '@/types/contract'
 
 const BLOCKVISION_API_BASE = 'https://api.blockvision.org/v2/monad'
-const CACHE_TIME_SECONDS = 3600
+const CACHE_TIME_SECONDS = 86400 // 1 day
 
-export const revalidate = 3600
+export const revalidate = 86400 // 1 day
 
 /**
  * Fetches contract detail from BlockVision API.
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
     }
 
     // Limit batch size to prevent abuse
-    const MAX_BATCH_SIZE = 50
+    const MAX_BATCH_SIZE = 15
     const addressesToFetch = addresses.slice(0, MAX_BATCH_SIZE)
 
     // Fetch all contract details in parallel
