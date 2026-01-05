@@ -15,11 +15,9 @@ export const revalidate = 3600
 /**
  * Fetches contract detail from BlockVision API.
  */
-async function fetchContractDetail(
-  address: string,
-  apiKey: string,
-): Promise<ContractLabel> {
+async function fetchContractDetail(address: string): Promise<ContractLabel> {
   try {
+    const apiKey = serverEnv.BLOCKVISION_API_KEY
     const response = await fetch(
       `${BLOCKVISION_API_BASE}/contract/detail?address=${address}`,
       {
@@ -83,11 +81,9 @@ export async function POST(request: Request) {
     const MAX_BATCH_SIZE = 50
     const addressesToFetch = addresses.slice(0, MAX_BATCH_SIZE)
 
-    const apiKey = serverEnv.BLOCKVISION_API_KEY
-
     // Fetch all contract details in parallel
     const results = await Promise.all(
-      addressesToFetch.map((addr) => fetchContractDetail(addr, apiKey)),
+      addressesToFetch.map((addr) => fetchContractDetail(addr)),
     )
 
     // Build response map

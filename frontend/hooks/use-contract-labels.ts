@@ -95,11 +95,6 @@ export function useContractLabels(
     // Fetch remaining addresses from API
     if (addressesToFetch.length === 0) return
 
-    // Mark as resolving before async call
-    for (const addr of addressesToFetch) {
-      resolvedAddressesRef.current.add(addr)
-    }
-
     const fetchLabels = async () => {
       setIsLoading(true)
       try {
@@ -125,6 +120,11 @@ export function useContractLabels(
           }
           return updated
         })
+
+        // Mark as resolving after async call completes
+        for (const addr of addressesToFetch) {
+          resolvedAddressesRef.current.add(addr)
+        }
       } catch (error) {
         console.error('Failed to fetch contract labels:', error)
       } finally {
