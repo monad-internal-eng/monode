@@ -29,6 +29,14 @@ export function SwapRow({ swap, gridClass }: SwapRowProps) {
         gridClass,
       )}
     >
+      <ExternalLink
+        href={`${EXPLORER_URL}/tx/${swap.txHash}`}
+        className="text-sm font-mono text-zinc-400 hover:text-white transition-colors truncate"
+        title={swap.txHash}
+      >
+        {shortenHex(swap.txHash)}
+      </ExternalLink>
+
       <div className="flex items-center gap-2">
         <span className="text-sm font-mono text-white tabular-nums">
           {formatTokenAmount(swap.amountIn, swap.tokenIn, swap.tokenInAddress)}

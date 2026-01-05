@@ -10,7 +10,7 @@ interface SwapsProps {
   isLoading: boolean
 }
 
-const TABLE_GRID = 'grid grid-cols-5 gap-6 px-4'
+const TABLE_GRID = 'grid grid-cols-6 gap-6 px-4'
 
 export function Swaps({ data, isLoading }: SwapsProps) {
   return (
@@ -21,6 +21,7 @@ export function Swaps({ data, isLoading }: SwapsProps) {
           TABLE_GRID,
         )}
       >
+        <span>Transaction Hash</span>
         <span>From Token</span>
         <span>To Token</span>
         <span>Provider</span>

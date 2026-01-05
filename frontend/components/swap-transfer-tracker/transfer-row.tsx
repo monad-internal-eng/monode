@@ -29,6 +29,14 @@ export function TransferRow({ transfer, gridClass }: TransferRowProps) {
       )}
     >
       <ExternalLink
+        href={`${EXPLORER_URL}/tx/${transfer.txHash}`}
+        className="text-sm font-mono text-zinc-400 hover:text-white transition-colors truncate"
+        title={transfer.txHash}
+      >
+        {shortenHex(transfer.txHash)}
+      </ExternalLink>
+
+      <ExternalLink
         href={`${EXPLORER_URL}/address/${transfer.from}`}
         className="text-sm font-mono text-zinc-400 hover:text-white transition-colors truncate"
         title={transfer.from}
