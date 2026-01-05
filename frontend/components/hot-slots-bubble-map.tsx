@@ -82,7 +82,7 @@ export default function HotSlotsBubbleMap() {
           </div>
         </div>
       )}
-      bottomDescription="Slots may be accessed simultaneously across parallel transactions."
+      bottomDescription="Storage slot access frequencies during transaction execution."
     />
   )
 }
