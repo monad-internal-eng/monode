@@ -1,7 +1,8 @@
 'use client'
 
-import { Pause, Play } from 'lucide-react'
+import { Info, Pause, Play } from 'lucide-react'
 import { useState } from 'react'
+import { ExternalLink } from '@/components/ui/external-link'
 import { SectionHeader } from '@/components/ui/section-header'
 import { BLOCK_STATE_LEGEND } from '@/constants/block-state'
 import { useExecutionEventBlocks } from '@/hooks/use-execution-event-blocks'
@@ -30,8 +31,20 @@ export default function BlockStateTracker() {
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
       <SectionHeader
-        title="Monad Block Tracker"
-        description="Blocks advance through consensus states in real time as execution events stream directly from the daemon."
+        title="Monad Blocks - Speculative Finality"
+        description={
+          <>
+            Blocks advancing through speculative finality states according to
+            Monad BFT. More information{' '}
+            <ExternalLink
+              href="https://docs.monad.xyz/monad-arch/consensus/block-states"
+              className="text-text-secondary hover:text-white transition-colors underline"
+            >
+              here
+            </ExternalLink>
+            .
+          </>
+        }
       >
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           <button
@@ -83,10 +96,10 @@ export default function BlockStateTracker() {
         <Blockchain blocks={blocks} isFollowingChain={!isPaused} />
       </button>
 
-      <p className="text-sm text-zinc-500">
-        Updates reflect execution events, not RPC polling. <u>Hover to pause</u>
-        .
-      </p>
+      <div className="flex items-center gap-2 text-sm text-zinc-500">
+        <Info className="w-4 h-4" />
+        <span>Hover to pause</span>
+      </div>
     </div>
   )
 }

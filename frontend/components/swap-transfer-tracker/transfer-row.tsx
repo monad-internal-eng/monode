@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { ExternalLink } from '@/components/ui/external-link'
 import { EXPLORER_URL } from '@/constants/common'
 import { formatTokenAmount } from '@/lib/amount'
 import { formatTimeDisplay } from '@/lib/timestamp'
@@ -27,25 +28,21 @@ export function TransferRow({ transfer, gridClass }: TransferRowProps) {
         gridClass,
       )}
     >
-      <a
+      <ExternalLink
         href={`${EXPLORER_URL}/address/${transfer.from}`}
-        target="_blank"
-        rel="noopener noreferrer"
         className="text-sm font-mono text-zinc-400 hover:text-white transition-colors truncate"
         title={transfer.from}
       >
         {shortenHex(transfer.from)}
-      </a>
+      </ExternalLink>
 
-      <a
+      <ExternalLink
         href={`${EXPLORER_URL}/address/${transfer.to}`}
-        target="_blank"
-        rel="noopener noreferrer"
         className="text-sm font-mono text-zinc-400 hover:text-white transition-colors truncate"
         title={transfer.to}
       >
         {shortenHex(transfer.to)}
-      </a>
+      </ExternalLink>
 
       <span className="text-sm font-mono text-white tabular-nums">
         {formatTokenAmount(transfer.value, tokenSymbol)}

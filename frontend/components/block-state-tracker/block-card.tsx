@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { Check } from 'lucide-react'
-import Link from 'next/link'
+import { ExternalLink } from '@/components/ui/external-link'
 import { BLOCK_STATE_CONFIG } from '@/constants/block-state'
 import { formatTimeDisplay } from '@/lib/timestamp'
 import { cn } from '@/lib/utils'
@@ -115,15 +115,13 @@ export function BlockCard({
         </div>
       )}
 
-      <Link
+      <ExternalLink
         href={`https://monadvision.com/block/${block.number}`}
-        target="_blank"
-        rel="noopener noreferrer"
         className="font-mono text-xl sm:text-2xl font-medium text-white hover:underline underline-offset-2 cursor-pointer"
         title={`View block ${formattedBlockNumber} on MonadVision`}
       >
         {formattedBlockNumber}
-      </Link>
+      </ExternalLink>
 
       <StateTracker currentState={block.state} />
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { ExternalLink } from '@/components/ui/external-link'
 import { EXPLORER_URL } from '@/constants/common'
 import { getSwapProviderConfig } from '@/constants/swap-provider-config'
 import { formatTokenAmount } from '@/lib/amount'
@@ -56,15 +57,13 @@ export function SwapRow({ swap, gridClass }: SwapRowProps) {
       )}
       {!config && <span />}
 
-      <a
+      <ExternalLink
         href={`${EXPLORER_URL}/address/${swap.sender}`}
-        target="_blank"
-        rel="noopener noreferrer"
         className="text-sm font-mono text-zinc-400 hover:text-white transition-colors truncate"
         title={swap.sender}
       >
         {shortenHex(swap.sender)}
-      </a>
+      </ExternalLink>
 
       <span className="text-sm font-mono text-zinc-400 tabular-nums">
         {formatTimeDisplay(swap.timestamp)}
