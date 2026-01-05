@@ -1,6 +1,17 @@
+import { Info } from 'lucide-react'
+
 const BlockTimeLegend = () => {
   return (
     <div className="flex flex-row justify-between items-center text-xs sm:text-sm text-[#a0a0b0]">
+      <div className="flex flex-row gap-2 max-w-1/3 text-zinc-500">
+        <Info className="w-4 h-[1lh]" />
+        <div className="flex flex-col gap-1">
+          <span className="text-sm">Height = execution time</span>
+          <span className="text-sm">
+            Purple glow = concurrent transactions observed
+          </span>
+        </div>
+      </div>
       <div className="flex flex-wrap gap-6">
         <div className="flex items-center gap-2">
           <div className="w-4 h-10 bg-[#454150] rounded-t-sm" />
@@ -22,9 +33,6 @@ const BlockTimeLegend = () => {
           <p>Parallel Execution</p>
         </div>
       </div>
-      <p className="max-w-1/3 text-right">
-        Height = execution time. Purple glow = concurrent transactions observed.
-      </p>
     </div>
   )
 }
