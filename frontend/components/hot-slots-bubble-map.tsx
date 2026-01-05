@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { BubbleMap } from '@/components/ui/bubble-map'
 import { ExplorerLink } from '@/components/ui/bubble-map/explorer-link'
+import { useContractLabels } from '@/hooks/use-contract-labels'
 import { useEvents } from '@/hooks/use-events'
 import { shortenHex } from '@/lib/utils'
 import { formatIntNumber } from '@/utils/ui'
@@ -31,6 +32,12 @@ export default function HotSlotsBubbleMap() {
       .sort((a, b) => b.hits - a.hits)
   }, [storageAccesses])
 
+  const addresses = useMemo(
+    () => [...new Set(slots.map((s) => s.address))],
+    [slots],
+  )
+  const { getLabel } = useContractLabels(addresses)
+
   return (
     <BubbleMap
       title="Hot Slots Map"
@@ -46,42 +53,45 @@ export default function HotSlotsBubbleMap() {
           </span>
         </>
       )}
-      renderTooltip={(slot) => (
-        <div className="flex flex-col gap-1">
-          <div className="flex flex-col gap-2">
-            {/* TODO: Add contract detail as name */}
-            <span className="text-sm text-[#9C6EF8] uppercase tracking-wider">
-              Link
-            </span>
-            <div className="flex flex-col gap-1">
-              <p className="text-2xs font-mono text-[#8888a0] break-all">
-                Contract:{' '}
-                <span className="text-white text-xs">
-                  {shortenHex(slot.address)}
-                </span>
-              </p>
-              <p className="text-2xs font-mono text-[#8888a0] break-all">
-                Slot:{' '}
-                <span className="text-white text-xs">
-                  {shortenHex(slot.slot)}
-                </span>
-              </p>
+      renderTooltip={(slot) => {
+        const label = getLabel(slot.address)
+        const displayName = label?.displayName ?? shortenHex(slot.address)
+        return (
+          <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-2">
+              <span className="text-sm text-[#9C6EF8] uppercase tracking-wider">
+                {displayName}
+              </span>
+              <div className="flex flex-col gap-1">
+                <p className="text-2xs font-mono text-[#8888a0] break-all">
+                  Contract:{' '}
+                  <span className="text-white text-xs">
+                    {shortenHex(slot.address)}
+                  </span>
+                </p>
+                <p className="text-2xs font-mono text-[#8888a0] break-all">
+                  Slot:{' '}
+                  <span className="text-white text-xs">
+                    {shortenHex(slot.slot)}
+                  </span>
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-0">
+              <div className="border-t border-[#2C2735] my-2" />
+              <div className="flex flex-row justify-between">
+                <p className="text-white font-medium">
+                  {formatIntNumber(slot.hits)}{' '}
+                  <span className="text-[#8888a0]">hits</span>
+                </p>
+                <ExplorerLink
+                  href={`https://monadvision.com/address/${slot.address}`}
+                />
+              </div>
             </div>
           </div>
-          <div className="flex flex-col gap-0">
-            <div className="border-t border-[#2C2735] my-2" />
-            <div className="flex flex-row justify-between">
-              <p className="text-white font-medium">
-                {formatIntNumber(slot.hits)}{' '}
-                <span className="text-[#8888a0]">hits</span>
-              </p>
-              <ExplorerLink
-                href={`https://monadvision.com/address/${slot.address}`}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+        )
+      }}
       bottomDescription="Storage slot access frequencies during transaction execution."
     />
   )
