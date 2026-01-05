@@ -6,7 +6,7 @@ import { useEvents } from './use-events'
 
 /**
  * Custom hook to track block execution events and manage block state
- * @param maxBlock - Maximum number of blocks to keep in the state
+ * @param maxBlock - Maximum number of blocks to keep in the state, if 0 then unlimited
  * @returns Object containing blocks state and calculated metrics
  */
 export function useBlockTracker(maxBlock: number = 20) {
@@ -58,7 +58,7 @@ export function useBlockTracker(maxBlock: number = 20) {
             }
 
             // Keep only the latest maxBlock blocks
-            if (newBlocks.length > maxBlock) {
+            if (newBlocks.length > maxBlock && maxBlock > 0) {
               newBlocks = newBlocks.slice(-maxBlock)
             }
 

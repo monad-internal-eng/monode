@@ -28,20 +28,14 @@ const BlockTime = ({ block, maxBlockExecutionTime }: BlockTimeProps) => {
   const numberOfTransactions = (block.transactions ?? []).length
 
   return (
-    <motion.div
-      key={block.id}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.05 }}
-      className="flex flex-col items-center gap-4 min-w-20"
-    >
+    <div className="flex flex-col items-center gap-4 min-w-20">
       {/* Block Bar Container */}
       <div className="relative w-full h-32 flex flex-col justify-end p-1.5">
         {/* Block Time Container (represents total block execution time) */}
         <motion.div
           initial={{ height: 0 }}
           animate={{ height: `${barHeightPercentage}%` }}
-          transition={{ duration: 0.8, delay: 0.05 }}
+          transition={{ duration: 0.2 }}
           className={cn(
             'w-full rounded-t-md relative bg-[#454150]',
             'hover:shadow-lg transition-all duration-200 cursor-pointer',
@@ -53,8 +47,7 @@ const BlockTime = ({ block, maxBlockExecutionTime }: BlockTimeProps) => {
             initial={{ height: 0 }}
             animate={{ height: `${fillPercentage}%` }}
             transition={{
-              duration: 1.2,
-              delay: 0.05,
+              duration: 0.4,
             }}
             className={cn(
               'absolute bottom-0 left-0 w-full rounded-t-md bg-[#696274]',
@@ -85,7 +78,7 @@ const BlockTime = ({ block, maxBlockExecutionTime }: BlockTimeProps) => {
       <div className="text-sm font-medium text-[#454150]">
         {formatBlockNumber(block.number)}
       </div>
-    </motion.div>
+    </div>
   )
 }
 

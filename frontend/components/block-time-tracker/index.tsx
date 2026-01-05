@@ -1,14 +1,15 @@
 'use client'
 
-import { Clock, TrendingUp } from 'lucide-react'
-import { useMemo } from 'react'
+import { Clock, Info, Pause, Play, TrendingUp } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { SectionHeader } from '@/components/ui/section-header'
 import { useBlockTracker } from '@/hooks/use-block-tracker'
 import { fromNsToMsPrecise } from '@/lib/block-metrics'
-import BlockTime from './block-time'
+import { cn } from '@/lib/utils'
 import BlockTimeLegend from './block-time-legend'
+import { BlockTimeTimeline } from './block-time-timeline'
 
-const MAX_BLOCKS_TO_SHOW = 20
+const MAX_BLOCKS_TO_SHOW = 0 // 0 for unlimited
 
 // =============================================================================
 // Main Component
@@ -23,6 +24,9 @@ const MAX_BLOCKS_TO_SHOW = 20
 export default function BlockTimeExecutionTracker() {
   const { finalizedBlocks, maxBlockExecutionTime } =
     useBlockTracker(MAX_BLOCKS_TO_SHOW)
+  const [isFollowingChain, setIsFollowingChain] = useState(true)
+  const [isHovering, setIsHovering] = useState(false)
+  const isPaused = !isFollowingChain || isHovering
 
   const avgBlockExecutionTime = useMemo(() => {
     if (finalizedBlocks.length === 0) {
@@ -95,24 +99,53 @@ export default function BlockTimeExecutionTracker() {
       <SectionHeader
         title="Block Execution Timeline"
         description="Each bar represents a block. Height shows total execution time."
-      />
+      >
+        <button
+          type="button"
+          onClick={() => setIsFollowingChain(!isFollowingChain)}
+          className={cn(
+            'flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium cursor-pointer transition-all duration-200',
+            isFollowingChain
+              ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700'
+              : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white',
+          )}
+        >
+          {isFollowingChain ? (
+            <Pause className="w-4 h-4" />
+          ) : (
+            <Play className="w-4 h-4" />
+          )}
+          {isFollowingChain ? 'Pause' : 'Resume'}
+        </button>
+      </SectionHeader>
       <div className="w-full flex flex-col gap-5 bg-[#17151E] rounded-xl border border-[#201E29] p-4 sm:p-6 lg:p-8">
         {/* Scrollable Blocks Container */}
-        <div className="flex gap-2 sm:gap-4 p-4 sm:p-6 lg:p-8 overflow-x-auto max-w-full scrollbar-none flex-1">
-          {finalizedBlocks.map((block) => (
-            <BlockTime
-              key={block.id}
-              block={block}
-              maxBlockExecutionTime={maxBlockExecutionTime}
-            />
-          ))}
-        </div>
+        <button
+          type="button"
+          className="flex-1"
+          onMouseEnter={() => {
+            setIsHovering(true)
+            console.log('hovering')
+          }}
+          onMouseLeave={() => setIsHovering(false)}
+        >
+          <BlockTimeTimeline
+            blocks={finalizedBlocks}
+            isFollowingChain={!isPaused}
+            maxBlockExecutionTime={maxBlockExecutionTime}
+          />
+        </button>
 
         {/* Seperator */}
         <div className="w-full h-0.5 bg-[#2C2735]" />
 
         {/* Legend */}
         <BlockTimeLegend />
+      </div>
+
+      <div className="flex items-center gap-2 text-sm text-zinc-500">
+        <Info className="w-4 h-4" />
+        <span>Hover to pause</span>
       </div>
     </div>
   )
