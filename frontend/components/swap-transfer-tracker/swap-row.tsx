@@ -1,14 +1,13 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ArrowRight } from 'lucide-react'
-import { TokenBadge } from '@/components/ui/token-badge'
 import { EXPLORER_URL } from '@/constants/common'
 import { getSwapProviderConfig } from '@/constants/swap-provider-config'
 import { formatTokenAmount } from '@/lib/amount'
 import { formatTimeDisplay } from '@/lib/timestamp'
-import { shortenHex } from '@/lib/utils'
+import { cn, shortenHex } from '@/lib/utils'
 import type { SwapData } from '@/types/swap'
+import { TokenBadge } from './token-badge'
 
 interface SwapRowProps {
   swap: SwapData
@@ -24,18 +23,20 @@ export function SwapRow({ swap, gridClass }: SwapRowProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 4 }}
       transition={{ duration: 0.15 }}
-      className={`${gridClass} py-3 items-center border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors`}
+      className={cn(
+        'py-3 items-center border-b border-zinc-800/50 hover:bg-tracker-row-hover transition-colors',
+        gridClass,
+      )}
     >
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-white tabular-nums">
+        <span className="text-sm font-mono text-white tabular-nums">
           {formatTokenAmount(swap.amountIn, swap.tokenIn, swap.tokenInAddress)}
         </span>
         <TokenBadge symbol={swap.tokenIn} />
-        <ArrowRight className="w-3 h-3 text-zinc-600 shrink-0" />
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-white tabular-nums">
+        <span className="text-sm font-mono text-white tabular-nums">
           {formatTokenAmount(
             swap.amountOut,
             swap.tokenOut,
@@ -47,7 +48,7 @@ export function SwapRow({ swap, gridClass }: SwapRowProps) {
 
       {config && (
         <span
-          className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+          className="w-fit inline-flex items-center px-2 py-0.5 rounded text-xs font-mono"
           style={{ backgroundColor: `${config.color}20`, color: config.color }}
         >
           {config.name}
@@ -65,7 +66,7 @@ export function SwapRow({ swap, gridClass }: SwapRowProps) {
         {shortenHex(swap.sender)}
       </a>
 
-      <span className="text-sm text-zinc-500 tabular-nums">
+      <span className="text-sm font-mono text-zinc-400 tabular-nums">
         {formatTimeDisplay(swap.timestamp)}
       </span>
     </motion.div>

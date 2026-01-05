@@ -82,6 +82,7 @@ export function BlockCard({
   className,
 }: BlockCardProps) {
   const config = BLOCK_STATE_CONFIG[block.state]
+  const formattedBlockNumber = formatBlockNumber(block.number)
 
   return (
     <motion.div
@@ -114,9 +115,9 @@ export function BlockCard({
         target="_blank"
         rel="noopener noreferrer"
         className="font-mono text-xl sm:text-2xl font-medium text-white hover:underline underline-offset-2 cursor-pointer"
-        title={`View block #${block.number} on MonadVision`}
+        title={`View block ${formattedBlockNumber} on MonadVision`}
       >
-        {formatBlockNumber(block.number)}
+        {formattedBlockNumber}
       </Link>
 
       <StateTracker currentState={block.state} />

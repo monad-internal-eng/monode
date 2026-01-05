@@ -108,6 +108,12 @@
   --color-history-row-hover: #27272a;
   --color-box-separator: #27272a;
 
+  /* Tracker component colors */
+  --color-tracker-bg: #191721;
+  --color-tracker-row-hover: #2b233d;
+  --color-tracker-badge-bg: #2a233a;
+  --color-tracker-active: #836ef9;
+
   /* Typography */
   --font-sans: var(--font-britti-sans), system-ui, sans-serif;
   --font-britti-sans: var(--font-britti-sans), system-ui, sans-serif;

@@ -5,6 +5,7 @@ import { BubbleMap } from '@/components/ui/bubble-map'
 import { ExplorerLink } from '@/components/ui/bubble-map/explorer-link'
 import { useEvents } from '@/hooks/use-events'
 import { shortenHex } from '@/lib/utils'
+import { formatIntNumber } from '@/utils/ui'
 
 interface HotSlot {
   id: string
@@ -41,7 +42,7 @@ export default function HotSlotsBubbleMap() {
             {shortenHex(slot.slot)}
           </span>
           <span className="text-sm font-bold font-mono mt-0.5">
-            {slot.hits}
+            {formatIntNumber(slot.hits)}
           </span>
         </>
       )}
@@ -71,7 +72,8 @@ export default function HotSlotsBubbleMap() {
             <div className="border-t border-[#2C2735] my-2" />
             <div className="flex flex-row justify-between">
               <p className="text-white font-medium">
-                {slot.hits} <span className="text-[#8888a0]">hits</span>
+                {formatIntNumber(slot.hits)}{' '}
+                <span className="text-[#8888a0]">hits</span>
               </p>
               <ExplorerLink
                 href={`https://monadvision.com/address/${slot.address}`}

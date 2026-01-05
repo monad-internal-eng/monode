@@ -3,6 +3,7 @@ import { useMemo } from 'react'
 import { calculateBarMetrics, fromNsToMsPrecise } from '@/lib/block-metrics'
 import { cn } from '@/lib/utils'
 import type { Block } from '@/types/block'
+import { formatBlockNumber } from '@/utils/ui'
 
 interface BlockTimeProps {
   block: Block
@@ -81,7 +82,9 @@ const BlockTime = ({ block, maxBlockExecutionTime }: BlockTimeProps) => {
       <div className="w-full h-px bg-[#2C2735]" />
 
       {/* Block number Label */}
-      <div className="text-sm font-medium text-[#454150]">#{block.number}</div>
+      <div className="text-sm font-medium text-[#454150]">
+        {formatBlockNumber(block.number)}
+      </div>
     </motion.div>
   )
 }
