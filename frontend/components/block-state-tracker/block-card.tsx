@@ -45,13 +45,18 @@ function StateTracker({ currentState }: { currentState: BlockState }) {
                 repeatDelay: 0.5,
               }}
             >
-              {isDone ? (
-                <Check className="w-2.5 h-2.5 text-zinc-500" />
+              {isDone || isCurrent ? (
+                <Check
+                  className={cn(
+                    'w-2.5 h-2.5',
+                    isDone && 'text-zinc-500',
+                    isCurrent && 'text-white',
+                  )}
+                />
               ) : (
                 <span
                   className={cn(
                     'text-[10px] font-medium',
-                    isCurrent && 'text-white',
                     isPending && 'text-zinc-600',
                   )}
                 >
