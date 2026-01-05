@@ -69,7 +69,7 @@ export default function HotAccountsBubbleMap() {
           </div>
         </div>
       )}
-      bottomDescription="Access frequency observed directly from execution events."
+      bottomDescription="Account access frequencies during transaction execution."
     />
   )
 }
