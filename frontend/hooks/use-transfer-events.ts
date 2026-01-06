@@ -92,7 +92,9 @@ function parseWmonTransfer(event: SerializableEventData): TransferData | null {
  */
 export function useTransferEvents() {
   const [allTransfers, setAllTransfers] = useState<TransferData[]>([])
-  const [cumulativeTransferred, setCumulativeTransferred] = useState<bigint>(BigInt(0))
+  const [cumulativeTransferred, setCumulativeTransferred] = useState<bigint>(
+    BigInt(0),
+  )
 
   const filters = useMemo(
     () => [
@@ -131,7 +133,7 @@ export function useTransferEvents() {
     if (!transferData) return
 
     setAllTransfers((prev) => [transferData, ...prev].slice(0, MAX_TRANSFERS))
-    
+
     // Update cumulative total
     setCumulativeTransferred((prev) => prev + BigInt(transferData.value))
   }, [])
