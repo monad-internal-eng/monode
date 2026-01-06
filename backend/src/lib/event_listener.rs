@@ -247,6 +247,7 @@ pub fn run_event_listener(
         let mut event_count: u64 = 0;
         info!("Entering event processing loop...");
 
+        let mut last_dead_log_instant = std::time::Instant::now();
         // Event processing loop
         loop {
             match event_reader.next_descriptor() {
@@ -268,9 +269,10 @@ pub fn run_event_listener(
                                 let now = Local::now();
                                 let last_event_time =
                                     DateTime::from_timestamp_nanos(last_ts as i64);
-                                if now.signed_duration_since(last_event_time).num_seconds() > 5 {
-                                    warn!("Event ring appears dead, exiting listener thread");
-                                    return;
+                                let seconds_since_last_event = now.signed_duration_since(last_event_time).num_seconds();
+                                if seconds_since_last_event > 5 && last_dead_log_instant.elapsed().as_secs() > 5 {
+                                    warn!("Event ring appears dead - {} seconds since last event", seconds_since_last_event);
+                                    last_dead_log_instant = std::time::Instant::now();
                                 }
                             }
                             std::thread::sleep(Duration::from_micros(100));

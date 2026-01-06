@@ -93,7 +93,7 @@ async fn client_write_task(
     loop {
         let result = event_broadcast_receiver.recv().await;
         if result.is_err() {
-            error!("Broadcast channel error for {}: {}", addr, result.err().unwrap());
+            error!("Event broadcast receiver error for {}: {}", addr, result.err().unwrap());
             break;
         }
         let event = result.unwrap();
@@ -179,8 +179,8 @@ async fn run_event_forwarder_task(
 ) {
     let mut account_accesses = TopKTracker::new(10_000);
     let mut storage_accesses = TopKTracker::new(10_000);
-    let mut stats_interval = tokio::time::interval(std::time::Duration::from_secs(1));
-    let mut stats_reset_interval = tokio::time::interval(std::time::Duration::from_mins(10));
+    let mut stats_interval = tokio::time::interval(std::time::Duration::from_millis(500));
+    let mut stats_reset_interval = tokio::time::interval(std::time::Duration::from_mins(5));
 
     // Track current transaction hash per txn_idx
     let mut current_txn_hashes: std::collections::HashMap<usize, [u8; 32]> = std::collections::HashMap::new();
@@ -189,7 +189,7 @@ async fn run_event_forwarder_task(
         tokio::select! {
             event_data = event_receiver.recv() => {
                 if event_data.is_none() {
-                    warn!("Event receiver closed");
+                    error!("Event receiver closed");
                     return;
                 }
                 let mut event_data = event_data.unwrap();
