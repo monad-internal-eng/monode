@@ -8,7 +8,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { useBlockchainScrollTest } from '@/hooks/use-blockchain-scroll-test'
+import { useBlockchainScroll } from '@/hooks/use-blockchain-scroll'
 import { calculateBarMetrics, fromNsToMsPrecise } from '@/lib/block-metrics'
 import type { Block } from '@/types/block'
 import { formatBlockNumber } from '@/utils/ui'
@@ -152,7 +152,7 @@ export function BlockTimeTimeline({
   const [containerWidth, setContainerWidth] = useState(0)
   const [dimensions, setDimensions] = useState(getResponsiveDimensions())
 
-  const { gridRef, sortedBlocks } = useBlockchainScrollTest({
+  const { gridRef, sortedBlocks } = useBlockchainScroll({
     blocks,
     isFollowingChain,
   })
