@@ -6,10 +6,10 @@ import { useEvents } from './use-events'
 
 /**
  * Custom hook to track block execution events and manage block state
- * @param maxBlock - Maximum number of blocks to keep in the state, if 0 then unlimited
+ * @param maxBlock - Maximum number of blocks to keep in the state, if -1 then unlimited and 0 means no blocks
  * @returns Object containing blocks state and calculated metrics
  */
-export function useBlockTracker(maxBlock: number = 20) {
+export function useBlockTracker(maxBlock: number = -1) {
   const [blocks, setBlocks] = useState<Block[]>([])
 
   // Handle real-time events from the backend
@@ -17,6 +17,9 @@ export function useBlockTracker(maxBlock: number = 20) {
     (event: SerializableEventData) => {
       switch (event.payload.type) {
         case 'BlockStart': {
+          if (maxBlock === 0) {
+            return
+          }
           const payload = event.payload
           const blockNumber = event.block_number || payload.block_number
           if (blockNumber === undefined) {
@@ -58,7 +61,7 @@ export function useBlockTracker(maxBlock: number = 20) {
             }
 
             // Keep only the latest maxBlock blocks
-            if (newBlocks.length > maxBlock && maxBlock > 0) {
+            if (newBlocks.length > maxBlock && maxBlock > -1) {
               newBlocks = newBlocks.slice(-maxBlock)
             }
 

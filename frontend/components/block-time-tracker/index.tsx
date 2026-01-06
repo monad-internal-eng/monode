@@ -9,8 +9,6 @@ import { cn } from '@/lib/utils'
 import BlockTimeLegend from './block-time-legend'
 import { BlockTimeTimeline } from './block-time-timeline'
 
-const MAX_BLOCKS_TO_SHOW = 0 // 0 for unlimited
-
 // =============================================================================
 // Main Component
 // =============================================================================
@@ -22,8 +20,7 @@ const MAX_BLOCKS_TO_SHOW = 0 // 0 for unlimited
  * and calculates execution timing metrics for visualization.
  */
 export default function BlockTimeExecutionTracker() {
-  const { finalizedBlocks, maxBlockExecutionTime } =
-    useBlockTracker(MAX_BLOCKS_TO_SHOW)
+  const { finalizedBlocks, maxBlockExecutionTime } = useBlockTracker()
   const [isFollowingChain, setIsFollowingChain] = useState(true)
   const [isHovering, setIsHovering] = useState(false)
   const isPaused = !isFollowingChain || isHovering
