@@ -7,7 +7,7 @@ import SwapTransferTracker from '@/components/swap-transfer-tracker'
 export default function Home() {
   return (
     <div className="min-h-screen text-white font-sans">
-      <main className="py-6 px-4 max-w-7xl mx-auto sm:py-8 sm:px-6 md:py-12">
+      <main className="py-6 px-4 max-w-7xl mx-auto sm:py-8 sm:px-6 md:py-12 flex flex-col gap-8 md:gap-12">
         <div className="mb-8 md:mb-12">
           <h1 className="font-britti-sans text-3xl sm:text-4xl md:text-[48px] font-medium leading-none tracking-[-0.04em] text-white">
             Execution Events SDK Showcase
@@ -18,20 +18,16 @@ export default function Home() {
           </p>
         </div>
 
+        <div className="w-full h-px bg-[#52525B]" />
+
         <BlockStateTracker />
 
-        <div className="w-full h-px my-8 bg-linear-to-r from-transparent via-[#2a2a4a] to-transparent" />
-
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col md:flex-row gap-8 md:gap-4">
           <HotAccountsBubbleMap />
           <HotSlotsBubbleMap />
         </div>
 
-        <div className="w-full h-px my-8 bg-linear-to-r from-transparent via-[#2a2a4a] to-transparent" />
-
         <BlockTimeExecutionTracker />
-
-        <div className="w-full h-px my-8 bg-linear-to-r from-transparent via-[#2a2a4a] to-transparent" />
 
         <SwapTransferTracker />
       </main>
