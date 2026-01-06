@@ -640,3 +640,23 @@
   background: linear-gradient(180deg, #1a1721 0%, #16131b 100%);
   border-color: #2c2735;
 }
+
+/* Purple underline accent */
+.underline-glow {
+  position: relative;
+}
+
+.underline-glow::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    hsl(260 90% 70%) 0%,
+    hsl(260 90% 70% / 0.3) 100%
+  );
+  box-shadow: 0 0 30px hsl(260 90% 70% / 0.3);
+}
