@@ -116,7 +116,7 @@ function BlockCell({
                   Parallel Execution
                 </p>
                 <p className="text-[#9C6EF8] text-sm font-medium">
-                  {parallelPercentage}%
+                  {parallelPercentage.toFixed(0)}%
                 </p>
               </div>
             </div>
