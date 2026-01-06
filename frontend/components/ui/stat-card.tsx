@@ -24,7 +24,7 @@ export function StatCard({
   iconBgClassName = 'bg-tracker-active/10',
 }: StatCardProps) {
   return (
-    <div className="bg-[#17151E] rounded-xl border border-[#201E29] p-5 w-full flex flex-col gap-4">
+    <div className="dark-component-colors rounded-xl border p-5 w-full flex flex-col gap-4">
       <div className="flex flex-row justify-between">
         <div className="flex flex-col gap-1">
           <p className="text-sm sm:text-base text-[#8888a0]">{label}</p>
