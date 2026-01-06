@@ -634,3 +634,9 @@
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* Component colors */
+.dark-component-colors {
+  background: linear-gradient(180deg, #1a1721 0%, #16131b 100%);
+  border-color: #2c2735;
+}

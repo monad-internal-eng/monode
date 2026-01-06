@@ -49,7 +49,7 @@ export default function BlockTimeExecutionTracker() {
           description="Execution time observed directly from execution events."
         />
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="bg-[#17151E] rounded-xl border border-[#201E29] p-5 w-full flex flex-col gap-4">
+          <div className="dark-component-colors rounded-xl border p-5 w-full flex flex-col gap-4">
             <div className="flex flex-row justify-between">
               <div className="flex flex-col gap-1">
                 <p className="text-sm sm:text-base text-[#8888a0]">
@@ -70,7 +70,7 @@ export default function BlockTimeExecutionTracker() {
               Measured during execution, not inferred post-finalization.
             </p>
           </div>
-          <div className="bg-[#17151E] rounded-xl border border-[#201E29] p-5 w-full flex flex-col gap-4">
+          <div className="dark-component-colors rounded-xl border p-5 w-full flex flex-col gap-4">
             <div className="flex flex-row justify-between">
               <div className="flex flex-col gap-1">
                 <p className="text-sm sm:text-base text-[#8888a0]">
@@ -118,7 +118,7 @@ export default function BlockTimeExecutionTracker() {
             {isFollowingChain ? 'Pause' : 'Resume'}
           </button>
         </SectionHeader>
-        <div className="w-full flex flex-col gap-5 bg-[#17151E] rounded-xl border border-[#201E29] p-4 sm:p-6 lg:p-8">
+        <div className="w-full flex flex-col gap-5 dark-component-colors rounded-xl border p-4 sm:p-6 lg:p-8">
           {/* Scrollable Blocks Container */}
           <button
             type="button"

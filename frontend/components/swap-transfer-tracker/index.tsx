@@ -55,7 +55,7 @@ export default function SwapTransferTracker() {
         description="Live economic activity observed directly from execution events."
       />
 
-      <div className="flex flex-col bg-tracker-bg rounded-xl border border-zinc-800 overflow-hidden">
+      <div className="flex flex-col dark-component-colors rounded-xl border overflow-hidden">
         <Tabs defaultValue="transfers" className="w-full">
           <div className="flex flex-col">
             <TabsList className="w-fit h-auto py-1 px-4 gap-2 bg-transparent rounded-none">
