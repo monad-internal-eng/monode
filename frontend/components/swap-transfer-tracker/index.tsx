@@ -46,7 +46,11 @@ function LiveBadge({ isConnected }: { isConnected: boolean }) {
 
 export default function SwapTransferTracker() {
   const { allSwaps, isConnected: isSwapConnected } = useSwapEvents()
-  const { allTransfers, isConnected: isTransferConnected } = useTransferEvents()
+  const {
+    allTransfers,
+    isConnected: isTransferConnected,
+    cumulativeTransferred,
+  } = useTransferEvents()
 
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
@@ -77,7 +81,11 @@ export default function SwapTransferTracker() {
             value="transfers"
             className="mt-0 overflow-x-auto scrollbar-none"
           >
-            <Transfers data={allTransfers} isLoading={!isTransferConnected} />
+            <Transfers
+              transfers={allTransfers}
+              isLoading={!isTransferConnected}
+              cumulativeTransferred={cumulativeTransferred}
+            />
           </TabsContent>
 
           <TabsContent

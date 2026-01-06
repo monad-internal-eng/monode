@@ -3,6 +3,7 @@
 import { Clock, Info, Pause, Play, TrendingUp } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { SectionHeader } from '@/components/ui/section-header'
+import { StatCard } from '@/components/ui/stat-card'
 import { useBlockTracker } from '@/hooks/use-block-tracker'
 import { fromNsToMsPrecise } from '@/lib/block-metrics'
 import { cn } from '@/lib/utils'
@@ -49,48 +50,24 @@ export default function BlockTimeExecutionTracker() {
           description="Execution time observed directly from execution events."
         />
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="dark-component-colors rounded-xl border p-5 w-full flex flex-col gap-4">
-            <div className="flex flex-row justify-between">
-              <div className="flex flex-col gap-1">
-                <p className="text-sm sm:text-base text-[#8888a0]">
-                  Average Execution Time
-                </p>
-                <p className="text-lg sm:text-xl font-medium text-[#8888a0]">
-                  <span className="text-3xl sm:text-5xl text-white font-bold">
-                    {avgBlockExecutionTime.toFixed(0)}
-                  </span>{' '}
-                  ms
-                </p>
-              </div>
-              <div className="bg-[#1D2727] p-2 sm:p-2 rounded-lg h-fit w-fit">
-                <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-[#25C373]" />
-              </div>
-            </div>
-            <p className="text-sm sm:text-base text-[#8888a0]">
-              Measured during execution, not inferred post-finalization.
-            </p>
-          </div>
-          <div className="dark-component-colors rounded-xl border p-5 w-full flex flex-col gap-4">
-            <div className="flex flex-row justify-between">
-              <div className="flex flex-col gap-1">
-                <p className="text-sm sm:text-base text-[#8888a0]">
-                  Max Execution Time
-                </p>
-                <p className="text-lg sm:text-xl font-medium text-[#8888a0]">
-                  <span className="text-3xl sm:text-5xl text-white font-bold">
-                    {maxBlockExecutionTime.toFixed(0)}
-                  </span>{' '}
-                  ms
-                </p>
-              </div>
-              <div className="bg-[#2F2423] p-2 sm:p-2 rounded-lg h-fit w-fit">
-                <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-[#F39E26]" />
-              </div>
-            </div>
-            <p className="text-sm sm:text-base text-[#8888a0]">
-              Peak execution time observed in the current session.
-            </p>
-          </div>
+          <StatCard
+            label="Average Execution Time"
+            value={avgBlockExecutionTime.toFixed(0)}
+            unit="ms"
+            description="Measured during execution, not inferred post-finalization."
+            icon={Clock}
+            iconClassName="text-[#25C373]"
+            iconBgClassName="bg-[#1D2727]"
+          />
+          <StatCard
+            label="Max Execution Time"
+            value={maxBlockExecutionTime.toFixed(0)}
+            unit="ms"
+            description="Peak execution time observed in the current session."
+            icon={TrendingUp}
+            iconClassName="text-[#F39E26]"
+            iconBgClassName="bg-[#2F2423]"
+          />
         </div>
       </div>
 
