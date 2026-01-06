@@ -97,7 +97,7 @@ export default function BlockStateTracker() {
       </button>
 
       <div className="flex items-center gap-2 text-sm text-zinc-500">
-        <Info className="w-4 h-4" />
+        <Info className="w-4 h-[1lh]" />
         <span>Hover to pause</span>
       </div>
     </div>
