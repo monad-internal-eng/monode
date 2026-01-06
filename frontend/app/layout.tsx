@@ -32,7 +32,7 @@ export default function RootLayout({
         className={cn(
           brittiSans.variable,
           robotoMono.variable,
-          'antialiased bg-[#0f0f1a]',
+          'antialiased bg-[#0E0C12]',
         )}
       >
         <Providers>{children}</Providers>

@@ -101,7 +101,7 @@ export function BlockCard({
       }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className={cn(
-        'relative flex flex-col gap-y-4 text-left rounded-xl select-none bg-zinc-900/80 border border-zinc-800 hover:border-zinc-700 w-48 h-52 sm:w-56 sm:h-54 p-4 transition-all duration-300',
+        'relative flex flex-col gap-y-4 text-left rounded-xl select-none dark-component-colors border hover:border-[#2A2733] w-48 h-52 sm:w-56 sm:h-54 p-4 transition-all duration-300',
         className,
       )}
     >

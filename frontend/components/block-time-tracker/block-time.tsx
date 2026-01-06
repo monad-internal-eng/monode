@@ -1,5 +1,10 @@
 import { motion } from 'framer-motion'
 import { useMemo } from 'react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { calculateBarMetrics, fromNsToMsPrecise } from '@/lib/block-metrics'
 import { cn } from '@/lib/utils'
 import type { Block } from '@/types/block'
@@ -26,48 +31,107 @@ const BlockTime = ({ block, maxBlockExecutionTime }: BlockTimeProps) => {
   ).toFixed(3)
   const formattedTotalTransactionTime = totalTransactionTime.toFixed(3)
   const numberOfTransactions = (block.transactions ?? []).length
+  const parallelPercentage = isHighlyParallel
+    ? (Number(formattedTotalTransactionTime) * 100) /
+      Number(formattedBlockExecutionTime)
+    : 0 // Compute actual percentage of difference tx time and execution between block
 
   return (
-    <motion.div
-      key={block.id}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.05 }}
-      className="flex flex-col items-center gap-4 min-w-20"
-    >
+    <div className="flex flex-col items-center gap-4 min-w-20">
       {/* Block Bar Container */}
       <div className="relative w-full h-32 flex flex-col justify-end p-1.5">
         {/* Block Time Container (represents total block execution time) */}
-        <motion.div
-          initial={{ height: 0 }}
-          animate={{ height: `${barHeightPercentage}%` }}
-          transition={{ duration: 0.8, delay: 0.05 }}
-          className={cn(
-            'w-full rounded-t-md relative bg-[#454150]',
-            'hover:shadow-lg transition-all duration-200 cursor-pointer',
-          )}
-          title={`Block ${block.number}: ${formattedBlockExecutionTime}ms execution time, ${formattedTotalTransactionTime}ms total tx time, ${numberOfTransactions} transactions`}
-        >
-          {/* Transaction Time Fill */}
-          <motion.div
-            initial={{ height: 0 }}
-            animate={{ height: `${fillPercentage}%` }}
-            transition={{
-              duration: 1.2,
-              delay: 0.05,
-            }}
-            className={cn(
-              'absolute bottom-0 left-0 w-full rounded-t-md bg-[#696274]',
-              isHighlyParallel && 'bg-[#7B66A2]',
-            )}
-            style={{
-              boxShadow: isHighlyParallel
-                ? '0 0 10px #7B66A2, 0 0 20px #7B66A2'
-                : undefined,
-            }}
-            title={`${formattedTotalTransactionTime}ms total transaction execution time`}
-          />
-        </motion.div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <motion.div
+              initial={{ height: 0 }}
+              animate={{ height: `${barHeightPercentage}%` }}
+              transition={{ duration: 0.2 }}
+              className={cn(
+                'w-full rounded-t-md relative bg-[#454150]',
+                'hover:shadow-lg transition-all duration-200 cursor-pointer',
+              )}
+              title={`Block ${block.number}: ${formattedBlockExecutionTime}ms execution time, ${formattedTotalTransactionTime}ms total tx time, ${numberOfTransactions} transactions`}
+            >
+              {/* Transaction Time Fill */}
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: `${fillPercentage}%` }}
+                transition={{
+                  duration: 0.4,
+                }}
+                className={cn(
+                  'absolute bottom-0 left-0 w-full rounded-t-md bg-[#696274]',
+                  isHighlyParallel && 'bg-[#7B66A2]',
+                )}
+                style={{
+                  boxShadow: isHighlyParallel
+                    ? '0 0 10px #7B66A2, 0 0 20px #7B66A2'
+                    : undefined,
+                }}
+                title={`${formattedTotalTransactionTime}ms total transaction execution time`}
+              />
+            </motion.div>
+          </TooltipTrigger>
+          <TooltipContent
+            sideOffset={5}
+            className="bg-[#0e0e1a] border border-[#2a2a4a] rounded-lg p-2 sm:p-3 shadow-xl text-xs sm:text-sm w-[350px]"
+          >
+            <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-2">
+                <span className="text-sm text-white uppercase tracking-wider">
+                  Block {formatBlockNumber(block.number)}
+                </span>
+                <div className="flex flex-col gap-1">
+                  <div className="flex flex-row items-center justify-between">
+                    <p className="text-xs font-mono text-[#8888a0] break-all">
+                      Block Execution Time
+                    </p>
+                    <p className="text-white text-sm font-medium">
+                      {formattedBlockExecutionTime}ms
+                    </p>
+                  </div>
+                  <div className="flex flex-row items-center justify-between">
+                    <p className="text-xs font-mono text-[#8888a0] break-all">
+                      Transaction Execution Time
+                    </p>
+                    <p className="text-white text-sm font-medium">
+                      {formattedTotalTransactionTime}ms
+                    </p>
+                  </div>
+
+                  <div className="flex flex-row items-center justify-between">
+                    <p className="text-xs font-mono text-[#8888a0] break-all">
+                      Transactions
+                    </p>
+                    <p className="text-white text-sm font-medium">
+                      {numberOfTransactions}
+                    </p>
+                  </div>
+                  <div className="flex flex-row items-center justify-between">
+                    <p className="text-xs font-mono text-[#8888a0] break-all">
+                      Parallel Execution
+                    </p>
+                    <p className="text-[#9C6EF8] text-sm font-medium">
+                      {parallelPercentage.toFixed(0)}%
+                    </p>
+                  </div>
+                </div>
+              </div>
+              {isHighlyParallel && (
+                <div className="flex flex-col gap-0">
+                  <div className="border-t border-[#2C2735] my-2" />
+                  <div className="flex flex-row items-center gap-2">
+                    <div className="bg-[#9C6EF8] w-2 h-2 rounded-full" />
+                    <p className="text-[#9C6EF8] font-medium">
+                      High parallel execution detected
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </TooltipContent>
+        </Tooltip>
       </div>
 
       {/* Block Stats */}
@@ -85,7 +149,7 @@ const BlockTime = ({ block, maxBlockExecutionTime }: BlockTimeProps) => {
       <div className="text-sm font-medium text-[#454150]">
         {formatBlockNumber(block.number)}
       </div>
-    </motion.div>
+    </div>
   )
 }
 
