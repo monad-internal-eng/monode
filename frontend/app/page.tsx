@@ -13,14 +13,14 @@ export default function Home() {
 
         <BlockStateTracker />
 
-        <div className="flex flex-col md:flex-row gap-8 md:gap-4">
-          <HotAccountsBubbleMap />
-          <HotSlotsBubbleMap />
-        </div>
-
         <BlockTimeExecutionTracker />
 
         <SwapTransferTracker />
+
+        <section className="flex flex-col md:flex-row gap-8 md:gap-4">
+          <HotAccountsBubbleMap />
+          <HotSlotsBubbleMap />
+        </section>
       </main>
     </div>
   )
