@@ -180,6 +180,7 @@ async fn run_event_forwarder_task(
     let mut account_accesses = TopKTracker::new(10_000);
     let mut storage_accesses = TopKTracker::new(10_000);
     let mut stats_interval = tokio::time::interval(std::time::Duration::from_secs(1));
+    let mut stats_reset_interval = tokio::time::interval(std::time::Duration::from_mins(10));
 
     // Track current transaction hash per txn_idx
     let mut current_txn_hashes: std::collections::HashMap<usize, [u8; 32]> = std::collections::HashMap::new();
@@ -241,6 +242,10 @@ async fn run_event_forwarder_task(
                     storage: storage_accesses.top_k(10),
                 };
                 let _ = event_broadcast_sender.send(EventDataOrAccesses::TopAccesses(top_accesses_data));
+            },
+            _ = stats_reset_interval.tick() => {
+                account_accesses.reset();
+                storage_accesses.reset();
             }
         }
     }

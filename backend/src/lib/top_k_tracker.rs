@@ -73,4 +73,8 @@ impl<T: Hash + Eq + Clone> TopKTracker<T> {
         items.truncate(n);
         items
     }
+
+    pub fn reset(&mut self) {
+        self.counts.clear();
+    }
 }
