@@ -1,17 +1,10 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { type CellComponentProps, Grid } from 'react-window'
 import { Spinner } from '@/components/ui/spinner'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { useBlockchainScroll } from '@/hooks/use-blockchain-scroll'
-import { calculateBarMetrics, fromNsToMsPrecise } from '@/lib/block-metrics'
 import type { Block } from '@/types/block'
-import { formatBlockNumber } from '@/utils/ui'
 import BlockTime from './block-time'
 
 const BLOCK_DIMENSIONS = {
@@ -49,92 +42,11 @@ function BlockCell({
   maxBlockExecutionTime,
 }: CellComponentProps<BlockCellData>) {
   const block = blocks[columnIndex]
-  const { totalTransactionTime, isHighlyParallel } = useMemo(
-    () => calculateBarMetrics(block, maxBlockExecutionTime),
-    [block, maxBlockExecutionTime],
-  )
-  const formattedBlockExecutionTime = fromNsToMsPrecise(
-    block.executionTime ?? BigInt(0),
-  ).toFixed(3)
-  const formattedTotalTransactionTime = totalTransactionTime.toFixed(3)
-  const numberOfTransactions = (block.transactions ?? []).length
-  const parallelPercentage = isHighlyParallel
-    ? (Number(formattedTotalTransactionTime) * 100) /
-      Number(formattedBlockExecutionTime)
-    : 0 // Compute actual percentage of difference tx time and execution between block
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <div
-          style={style}
-          className="flex items-center justify-center relative"
-        >
-          <BlockTime
-            block={block}
-            maxBlockExecutionTime={maxBlockExecutionTime}
-          />
-        </div>
-      </TooltipTrigger>
-      <TooltipContent
-        sideOffset={5}
-        className="bg-[#0e0e1a] border border-[#2a2a4a] rounded-lg p-2 sm:p-3 shadow-xl text-xs sm:text-sm w-[350px]"
-      >
-        <div className="flex flex-col gap-1">
-          <div className="flex flex-col gap-2">
-            <span className="text-sm text-white uppercase tracking-wider">
-              Block {formatBlockNumber(block.number)}
-            </span>
-            <div className="flex flex-col gap-1">
-              <div className="flex flex-row items-center justify-between">
-                <p className="text-xs font-mono text-[#8888a0] break-all">
-                  Block Execution Time
-                </p>
-                <p className="text-white text-sm font-medium">
-                  {formattedBlockExecutionTime}ms
-                </p>
-              </div>
-              <div className="flex flex-row items-center justify-between">
-                <p className="text-xs font-mono text-[#8888a0] break-all">
-                  Transaction Execution Time
-                </p>
-                <p className="text-white text-sm font-medium">
-                  {formattedTotalTransactionTime}ms
-                </p>
-              </div>
-
-              <div className="flex flex-row items-center justify-between">
-                <p className="text-xs font-mono text-[#8888a0] break-all">
-                  Transactions
-                </p>
-                <p className="text-white text-sm font-medium">
-                  {numberOfTransactions}
-                </p>
-              </div>
-              <div className="flex flex-row items-center justify-between">
-                <p className="text-xs font-mono text-[#8888a0] break-all">
-                  Parallel Execution
-                </p>
-                <p className="text-[#9C6EF8] text-sm font-medium">
-                  {parallelPercentage.toFixed(0)}%
-                </p>
-              </div>
-            </div>
-          </div>
-          {isHighlyParallel && (
-            <div className="flex flex-col gap-0">
-              <div className="border-t border-[#2C2735] my-2" />
-              <div className="flex flex-row items-center gap-2">
-                <div className="bg-[#9C6EF8] w-2 h-2 rounded-full" />
-                <p className="text-[#9C6EF8] font-medium">
-                  High parallel execution detected
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      </TooltipContent>
-    </Tooltip>
+    <div style={style} className="flex items-center justify-center relative">
+      <BlockTime block={block} maxBlockExecutionTime={maxBlockExecutionTime} />
+    </div>
   )
 }
 
