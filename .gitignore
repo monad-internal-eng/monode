@@ -37,10 +37,8 @@ build/
 frontend/.cache-synpress/
 frontend/playwright-results/
 frontend/test-results/
-de_data.csv
 
-claim_*.csv
-claim_data.csv
+backend.log
 
 # next.js
 frontend/.next/

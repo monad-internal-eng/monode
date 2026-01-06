@@ -179,8 +179,7 @@ async fn run_event_forwarder_task(
 ) {
     let mut account_accesses = TopKTracker::new(10_000);
     let mut storage_accesses = TopKTracker::new(10_000);
-    let mut stats_interval = tokio::time::interval(std::time::Duration::from_millis(500));
-    let mut stats_reset_interval = tokio::time::interval(std::time::Duration::from_mins(5));
+    let mut accesses_reset_interval = tokio::time::interval(std::time::Duration::from_mins(5));
 
     // Track current transaction hash per txn_idx
     let mut current_txn_hashes: std::collections::HashMap<usize, [u8; 32]> = std::collections::HashMap::new();
@@ -234,16 +233,25 @@ async fn run_event_forwarder_task(
                     }
                 }
 
-                let _ = event_broadcast_sender.send(EventDataOrAccesses::Event(event_data));
-            },
-            _ = stats_interval.tick() => {
-                let top_accesses_data = TopAccessesData {
-                    account: account_accesses.top_k(10),
-                    storage: storage_accesses.top_k(10),
+                // Send accesses update on BlockEnd events (after all access events are processed)
+                let send_accesses_update = if let EventName::BlockEnd = event_data.event_name {
+                    true
+                } else {
+                    false
                 };
-                let _ = event_broadcast_sender.send(EventDataOrAccesses::TopAccesses(top_accesses_data));
+
+                let _ = event_broadcast_sender.send(EventDataOrAccesses::Event(event_data));
+
+                if send_accesses_update {
+                    let top_accesses_data = TopAccessesData {
+                        account: account_accesses.top_k(10),
+                        storage: storage_accesses.top_k(10),
+                    };
+                    let _ = event_broadcast_sender.send(EventDataOrAccesses::TopAccesses(top_accesses_data));
+                }
+
             },
-            _ = stats_reset_interval.tick() => {
+            _ = accesses_reset_interval.tick() => {
                 account_accesses.reset();
                 storage_accesses.reset();
             }
@@ -305,7 +313,7 @@ async fn handle_connection(
 }
 
 pub async fn run_websocket_server(
-    addr: SocketAddr,
+    server_addr: SocketAddr,
     event_receiver: tokio::sync::mpsc::Receiver<EventData>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Create a broadcast channel for distributing events to all clients
@@ -319,16 +327,50 @@ pub async fn run_websocket_server(
     ));
 
     // Bind the TCP listener
-    let listener = TcpListener::bind(&addr).await?;
-    info!("WebSocket server listening on: {}", addr);
+    let listener = TcpListener::bind(&server_addr).await?;
+    info!("WebSocket server listening on: {}", server_addr);
+
+    // Track connected IPs locally to prevent multiple connections from the same IP
+    let (disconnect_sender, mut disconnect_receiver) = tokio::sync::mpsc::channel::<SocketAddr>(2048);
+    let mut connected_ips = std::collections::HashSet::new();
 
     // Accept incoming connections
-    while let Ok((stream, addr)) = listener.accept().await {
-        let event_broadcast_receiver = event_broadcast_sender.subscribe();
-        tokio::spawn(handle_connection(stream, addr, event_broadcast_receiver));
+    loop {
+        tokio::select! {
+            accept_result = listener.accept() => {
+                match accept_result {
+                    Ok((stream, client_addr)) => {
+                        // Check if a connection from this IP already exists
+                        if connected_ips.contains(&client_addr.ip()) {
+                            warn!("Client {} already connected, ignoring", client_addr.ip());
+                            continue;
+                        }
+                        // Add the IP to the set of connected IPs
+                        connected_ips.insert(client_addr.ip());
+                        
+                        let event_broadcast_receiver = event_broadcast_sender.subscribe();
+                        let disconnect_sender = disconnect_sender.clone();
+                        tokio::spawn(async move {
+                            handle_connection(stream, client_addr, event_broadcast_receiver).await;
+                            // Send disconnect message to the receiver to remove the IP from the set
+                            let _ = disconnect_sender.send(client_addr).await;
+                        });
+                        continue;
+                    }
+                    Err(e) => {
+                        error!("Error accepting connection: {}", e);
+                        broadcast_task.abort();
+                        break;
+                    }
+                }
+            }
+            disconnect_result = disconnect_receiver.recv() => {
+                if let Some(client_addr) = disconnect_result {
+                    connected_ips.remove(&client_addr.ip());
+                }
+            }
+        }
     }
-
-    broadcast_task.abort();
 
     Ok(())
 }
