@@ -20,7 +20,7 @@ export function Transfers({
   cumulativeTransferred,
 }: TransfersProps) {
   return (
-    <div className="flex flex-col min-w-179.5 md:min-w-0">
+    <div className="flex flex-col min-w-4xl lg:min-w-0">
       <CumulativeTransferCounter
         cumulativeTransferred={cumulativeTransferred}
       />

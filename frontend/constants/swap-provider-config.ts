@@ -1,7 +1,13 @@
 import { keccak256, parseAbi, toBytes } from 'viem'
 import tokenList from '@/data/token-list.json'
 
-export type SwapProvider = 'kuru' | 'monorail' | 'uniswap-v4' | 'pancakeswap-v3'
+export type SwapProvider =
+  | 'kuru'
+  | 'monorail'
+  | 'uniswap-v4'
+  | 'pancakeswap-v3'
+  | 'kyberswap'
+  | 'openocean'
 
 export const EVENT_ABIS = {
   monorail: parseAbi([
@@ -15,6 +21,12 @@ export const EVENT_ABIS = {
   ]),
   kuru: parseAbi([
     'event KuruFlowSwap(address indexed user, address indexed referrer, address tokenIn, address tokenOut, bool isFeeInInput, uint256 amountIn, uint256 amountOut, uint256 referrerFeeBps, uint256 totalFeeBps)',
+  ]),
+  kyberswap: parseAbi([
+    'event Swapped(address sender, address srcToken, address dstToken, address dstReceiver, uint256 spentAmount, uint256 returnAmount)',
+  ]),
+  openocean: parseAbi([
+    'event Swapped(address indexed sender, address indexed srcToken, address indexed dstToken, address dstReceiver, uint256 amount, uint256 spentAmount, uint256 returnAmount, uint256 minReturnAmount, uint256 guaranteedAmount, address referrer)',
   ]),
 } as const
 
@@ -59,6 +71,10 @@ const UNISWAP_V4_SWAP_SIGNATURE =
   'Swap(bytes32,address,int128,int128,uint160,uint128,int24,uint24)'
 const PANCAKESWAP_V3_SWAP_SIGNATURE =
   'Swap(address,address,int256,int256,uint160,uint128,int24,uint128,uint128)'
+const KYBERSWAP_SWAP_SIGNATURE =
+  'Swapped(address,address,address,address,uint256,uint256)'
+const OPENOCEAN_SWAP_SIGNATURE =
+  'Swapped(address,address,address,address,uint256,uint256,uint256,uint256,uint256,address)'
 
 export const SWAP_PROVIDER_CONFIG: SwapProviderConfig[] = [
   {
@@ -91,6 +107,20 @@ export const SWAP_PROVIDER_CONFIG: SwapProviderConfig[] = [
     contractAddress: '0xb3e6778480b2E488385E8205eA05E20060B813cb',
     eventTopics: [keccak256(toBytes(KURU_SWAP_SIGNATURE))],
     color: '#836EF9',
+  },
+  {
+    name: 'KyberSwap',
+    provider: 'kyberswap',
+    contractAddress: '0x6131B5fae19EA4f9D964eAc0408E4408b66337b5',
+    eventTopics: [keccak256(toBytes(KYBERSWAP_SWAP_SIGNATURE))],
+    color: '#FF4A8D',
+  },
+  {
+    name: 'OpenOcean',
+    provider: 'openocean',
+    contractAddress: '0x6352a56caadC4F1E25CD6c75970Fa768A3304e64',
+    eventTopics: [keccak256(toBytes(OPENOCEAN_SWAP_SIGNATURE))],
+    color: '#0066FF',
   },
 ]
 
