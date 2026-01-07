@@ -321,7 +321,7 @@ pub async fn run_websocket_server(
 
     // Spawn a task to forward events from the mpsc channel to the broadcast channel
     let event_broadcast_sender_clone = event_broadcast_sender.clone();
-    let broadcast_task = tokio::spawn(run_event_forwarder_task(
+    let _ = tokio::spawn(run_event_forwarder_task(
         event_receiver,
         event_broadcast_sender_clone,
     ));
@@ -330,47 +330,16 @@ pub async fn run_websocket_server(
     let listener = TcpListener::bind(&server_addr).await?;
     info!("WebSocket server listening on: {}", server_addr);
 
-    // Track connected IPs locally to prevent multiple connections from the same IP
-    let (disconnect_sender, mut disconnect_receiver) = tokio::sync::mpsc::channel::<SocketAddr>(2048);
-    let mut connected_ips = std::collections::HashSet::new();
-
     // Accept incoming connections
     loop {
-        tokio::select! {
-            accept_result = listener.accept() => {
-                match accept_result {
-                    Ok((stream, client_addr)) => {
-                        // Check if a connection from this IP already exists
-                        if connected_ips.contains(&client_addr.ip()) {
-                            warn!("Client {} already connected, ignoring", client_addr.ip());
-                            continue;
-                        }
-                        // Add the IP to the set of connected IPs
-                        connected_ips.insert(client_addr.ip());
-                        
-                        let event_broadcast_receiver = event_broadcast_sender.subscribe();
-                        let disconnect_sender = disconnect_sender.clone();
-                        tokio::spawn(async move {
-                            handle_connection(stream, client_addr, event_broadcast_receiver).await;
-                            // Send disconnect message to the receiver to remove the IP from the set
-                            let _ = disconnect_sender.send(client_addr).await;
-                        });
-                        continue;
-                    }
-                    Err(e) => {
-                        error!("Error accepting connection: {}", e);
-                        broadcast_task.abort();
-                        break;
-                    }
-                }
+        match listener.accept().await {
+            Ok((stream, client_addr)) => {                        
+                let event_broadcast_receiver = event_broadcast_sender.subscribe();
+                tokio::spawn(handle_connection(stream, client_addr, event_broadcast_receiver));
             }
-            disconnect_result = disconnect_receiver.recv() => {
-                if let Some(client_addr) = disconnect_result {
-                    connected_ips.remove(&client_addr.ip());
-                }
+            Err(e) => {
+                error!("Error accepting connection: {}", e);
             }
         }
     }
-
-    Ok(())
 }
