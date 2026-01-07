@@ -10,6 +10,7 @@ import { calculateBarMetrics, fromNsToMsPrecise } from '@/lib/block-metrics'
 import { cn } from '@/lib/utils'
 import type { Block } from '@/types/block'
 import { formatBlockNumber } from '@/utils/ui'
+import { ExternalLink } from '../ui/external-link'
 
 interface BlockTimeProps {
   block: Block
@@ -83,13 +84,12 @@ const BlockTime = ({ block, normalizedBlockExecutionTime }: BlockTimeProps) => {
           >
             <div className="flex flex-col gap-1">
               <div className="flex flex-col gap-2">
-                <a
+                <ExternalLink
                   href={`${EXPLORER_URL}/block/${block.number}`}
-                  target="_blank"
-                  className="text-sm text-white uppercase tracking-wider"
+                  className="text-sm text-white uppercase tracking-wider hover:underline"
                 >
                   Block {formatBlockNumber(block.number)}
-                </a>
+                </ExternalLink>
                 <div className="flex flex-col gap-1">
                   <div className="flex flex-row items-center justify-between">
                     <p className="text-xs font-mono text-[#8888a0] break-all">
