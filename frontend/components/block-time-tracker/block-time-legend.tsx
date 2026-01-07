@@ -15,13 +15,15 @@ const BlockTimeLegend = () => {
       <div className="flex flex-wrap gap-2 xs:gap-6">
         <div className="flex items-center gap-2">
           <div className="w-4 h-10 bg-[#454150] rounded-t-sm" />
-          <p>Finalized</p>
+          <p className="hidden xs:block">Block Execution Time</p>
+          <p className="block xs:hidden">Block Exec. Time</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-10 bg-[#454150] rounded-t-sm relative">
             <div className="absolute bottom-0 left-0 w-full h-1/2 bg-[#696274] rounded-t-sm" />
           </div>
-          <p>Executing</p>
+          <p className="hidden xs:block">Transaction Execution Time</p>
+          <p className="block xs:hidden">Tx Exec. Time</p>
         </div>
         <div className="flex items-center gap-2">
           <div

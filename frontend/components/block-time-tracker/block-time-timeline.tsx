@@ -27,25 +27,28 @@ const getResponsiveDimensions = () => {
 interface BlockTimeTimelineProps {
   blocks: Block[]
   isFollowingChain: boolean
-  maxBlockExecutionTime: number
+  normalizedBlockExecutionTime: number
 }
 
 interface BlockCellData {
   blocks: Block[]
-  maxBlockExecutionTime: number
+  normalizedBlockExecutionTime: number
 }
 
 function BlockCell({
   columnIndex,
   style,
   blocks,
-  maxBlockExecutionTime,
+  normalizedBlockExecutionTime,
 }: CellComponentProps<BlockCellData>) {
   const block = blocks[columnIndex]
 
   return (
     <div style={style} className="flex items-center justify-center relative">
-      <BlockTime block={block} maxBlockExecutionTime={maxBlockExecutionTime} />
+      <BlockTime
+        block={block}
+        normalizedBlockExecutionTime={normalizedBlockExecutionTime}
+      />
     </div>
   )
 }
@@ -58,7 +61,7 @@ function BlockCell({
 export function BlockTimeTimeline({
   blocks,
   isFollowingChain,
-  maxBlockExecutionTime,
+  normalizedBlockExecutionTime,
 }: BlockTimeTimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
@@ -114,7 +117,7 @@ export function BlockTimeTimeline({
           defaultWidth={containerWidth}
           overscanCount={3}
           cellComponent={BlockCell}
-          cellProps={{ blocks: sortedBlocks, maxBlockExecutionTime }}
+          cellProps={{ blocks: sortedBlocks, normalizedBlockExecutionTime }}
           className="scrollbar-none"
           style={{
             overflowX: isFollowingChain ? 'hidden' : 'auto',

@@ -21,7 +21,11 @@ import { BlockTimeTimeline } from './block-time-timeline'
  * and calculates execution timing metrics for visualization.
  */
 export default function BlockTimeExecutionTracker() {
-  const { finalizedBlocks, maxBlockExecutionTime } = useBlockTracker()
+  const {
+    finalizedBlocks,
+    maxBlockExecutionTime,
+    normalizedBlockExecutionTime,
+  } = useBlockTracker()
   const [isFollowingChain, setIsFollowingChain] = useState(true)
   const [isHovering, setIsHovering] = useState(false)
   const isPaused = !isFollowingChain || isHovering
@@ -75,7 +79,7 @@ export default function BlockTimeExecutionTracker() {
       <div className="w-full flex flex-col gap-4 sm:gap-6">
         <SectionHeader
           title="Block Execution Timeline"
-          description="Each bar represents a block. Height shows total execution time."
+          description="Each bar represents a block. Height shows execution time."
         >
           <button
             type="button"
@@ -106,7 +110,7 @@ export default function BlockTimeExecutionTracker() {
             <BlockTimeTimeline
               blocks={finalizedBlocks}
               isFollowingChain={!isPaused}
-              maxBlockExecutionTime={maxBlockExecutionTime}
+              normalizedBlockExecutionTime={normalizedBlockExecutionTime}
             />
           </button>
 
