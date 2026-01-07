@@ -1,6 +1,6 @@
 'use client'
 
-import { Activity } from 'lucide-react'
+import { Activity, Hash, TrendingUp } from 'lucide-react'
 import { SectionHeader } from '@/components/ui/section-header'
 import { StatCard } from '@/components/ui/stat-card'
 import { useTps } from '@/hooks/use-tps'
@@ -30,7 +30,7 @@ export default function TpsTracker() {
           label="Peak TPS"
           value={formatIntNumber(peakTps)}
           description="Highest TPS observed since page load"
-          icon={Activity}
+          icon={TrendingUp}
           iconClassName="text-amber-400"
           iconBgClassName="bg-amber-400/10"
         />
@@ -38,7 +38,7 @@ export default function TpsTracker() {
           label="Total Transactions"
           value={formatIntNumber(totalTransactions)}
           description="Transactions since page load"
-          icon={Activity}
+          icon={Hash}
           iconClassName="text-blue-400"
           iconBgClassName="bg-blue-400/10"
         />
