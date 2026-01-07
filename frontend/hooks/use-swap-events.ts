@@ -64,6 +64,12 @@ function parseSwapEvent(
           timestamp,
         )
         break
+      case 'kyberswap':
+        swap = parseKyberSwapSwap(id, topics, dataHex, blockNumber, timestamp)
+        break
+      case 'openocean':
+        swap = parseOpenOceanSwap(id, topics, dataHex, blockNumber, timestamp)
+        break
     }
     if (swap) {
       swap.txHash = txHash ?? ''
@@ -225,11 +231,81 @@ function parseMonorailAggregated(
   }
 }
 
+function parseKyberSwapSwap(
+  id: string,
+  topics: Hex[],
+  data: Hex,
+  blockNumber: number,
+  timestamp: number,
+): SwapData {
+  const decoded = decodeEventLog({
+    abi: EVENT_ABIS.kyberswap,
+    data,
+    topics: topics as [Hex, ...Hex[]],
+  })
+
+  const { sender, srcToken, dstToken, dstReceiver, spentAmount, returnAmount } =
+    decoded.args
+  const tokenInInfo = getTokenByAddress(srcToken)
+  const tokenOutInfo = getTokenByAddress(dstToken)
+
+  return {
+    id,
+    provider: 'kyberswap',
+    blockNumber,
+    timestamp,
+    sender,
+    recipient: dstReceiver,
+    amountIn: spentAmount.toString(),
+    amountOut: returnAmount.toString(),
+    tokenIn: tokenInInfo?.symbol ?? truncateAddress(srcToken),
+    tokenOut: tokenOutInfo?.symbol ?? truncateAddress(dstToken),
+    tokenInAddress: srcToken,
+    tokenOutAddress: dstToken,
+    txHash: '',
+  }
+}
+
+function parseOpenOceanSwap(
+  id: string,
+  topics: Hex[],
+  data: Hex,
+  blockNumber: number,
+  timestamp: number,
+): SwapData {
+  const decoded = decodeEventLog({
+    abi: EVENT_ABIS.openocean,
+    data,
+    topics: topics as [Hex, ...Hex[]],
+  })
+
+  const { sender, srcToken, dstToken, dstReceiver, spentAmount, returnAmount } =
+    decoded.args
+  const tokenInInfo = getTokenByAddress(srcToken)
+  const tokenOutInfo = getTokenByAddress(dstToken)
+
+  return {
+    id,
+    provider: 'openocean',
+    blockNumber,
+    timestamp,
+    sender,
+    recipient: dstReceiver,
+    amountIn: spentAmount.toString(),
+    amountOut: returnAmount.toString(),
+    tokenIn: tokenInInfo?.symbol ?? truncateAddress(srcToken),
+    tokenOut: tokenOutInfo?.symbol ?? truncateAddress(dstToken),
+    tokenInAddress: srcToken,
+    tokenOutAddress: dstToken,
+    txHash: '',
+  }
+}
+
 /**
  * Truncate address for display when token not found in list
  */
 function truncateAddress(address: string): string {
-  return `${address.slice(0, 6)}...${address.slice(-4)}`
+  return `${address.slice(0, 5)}..`
 }
 
 /**
