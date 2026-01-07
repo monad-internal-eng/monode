@@ -93,7 +93,7 @@ async fn client_write_task(
     loop {
         let result = event_broadcast_receiver.recv().await;
         if result.is_err() {
-            error!("Broadcast channel error for {}: {}", addr, result.err().unwrap());
+            error!("Event broadcast receiver error for {}: {}", addr, result.err().unwrap());
             break;
         }
         let event = result.unwrap();
@@ -179,8 +179,7 @@ async fn run_event_forwarder_task(
 ) {
     let mut account_accesses = TopKTracker::new(10_000);
     let mut storage_accesses = TopKTracker::new(10_000);
-    let mut stats_interval = tokio::time::interval(std::time::Duration::from_secs(1));
-    let mut stats_reset_interval = tokio::time::interval(std::time::Duration::from_mins(10));
+    let mut accesses_reset_interval = tokio::time::interval(std::time::Duration::from_mins(5));
 
     // Track current transaction hash per txn_idx
     let mut current_txn_hashes: std::collections::HashMap<usize, [u8; 32]> = std::collections::HashMap::new();
@@ -189,7 +188,7 @@ async fn run_event_forwarder_task(
         tokio::select! {
             event_data = event_receiver.recv() => {
                 if event_data.is_none() {
-                    warn!("Event receiver closed");
+                    error!("Event receiver closed");
                     return;
                 }
                 let mut event_data = event_data.unwrap();
@@ -234,16 +233,25 @@ async fn run_event_forwarder_task(
                     }
                 }
 
-                let _ = event_broadcast_sender.send(EventDataOrAccesses::Event(event_data));
-            },
-            _ = stats_interval.tick() => {
-                let top_accesses_data = TopAccessesData {
-                    account: account_accesses.top_k(10),
-                    storage: storage_accesses.top_k(10),
+                // Send accesses update on BlockEnd events (after all access events are processed)
+                let send_accesses_update = if let EventName::BlockEnd = event_data.event_name {
+                    true
+                } else {
+                    false
                 };
-                let _ = event_broadcast_sender.send(EventDataOrAccesses::TopAccesses(top_accesses_data));
+
+                let _ = event_broadcast_sender.send(EventDataOrAccesses::Event(event_data));
+
+                if send_accesses_update {
+                    let top_accesses_data = TopAccessesData {
+                        account: account_accesses.top_k(10),
+                        storage: storage_accesses.top_k(10),
+                    };
+                    let _ = event_broadcast_sender.send(EventDataOrAccesses::TopAccesses(top_accesses_data));
+                }
+
             },
-            _ = stats_reset_interval.tick() => {
+            _ = accesses_reset_interval.tick() => {
                 account_accesses.reset();
                 storage_accesses.reset();
             }
@@ -305,7 +313,7 @@ async fn handle_connection(
 }
 
 pub async fn run_websocket_server(
-    addr: SocketAddr,
+    server_addr: SocketAddr,
     event_receiver: tokio::sync::mpsc::Receiver<EventData>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Create a broadcast channel for distributing events to all clients
@@ -313,22 +321,25 @@ pub async fn run_websocket_server(
 
     // Spawn a task to forward events from the mpsc channel to the broadcast channel
     let event_broadcast_sender_clone = event_broadcast_sender.clone();
-    let broadcast_task = tokio::spawn(run_event_forwarder_task(
+    let _ = tokio::spawn(run_event_forwarder_task(
         event_receiver,
         event_broadcast_sender_clone,
     ));
 
     // Bind the TCP listener
-    let listener = TcpListener::bind(&addr).await?;
-    info!("WebSocket server listening on: {}", addr);
+    let listener = TcpListener::bind(&server_addr).await?;
+    info!("WebSocket server listening on: {}", server_addr);
 
     // Accept incoming connections
-    while let Ok((stream, addr)) = listener.accept().await {
-        let event_broadcast_receiver = event_broadcast_sender.subscribe();
-        tokio::spawn(handle_connection(stream, addr, event_broadcast_receiver));
+    loop {
+        match listener.accept().await {
+            Ok((stream, client_addr)) => {                        
+                let event_broadcast_receiver = event_broadcast_sender.subscribe();
+                tokio::spawn(handle_connection(stream, client_addr, event_broadcast_receiver));
+            }
+            Err(e) => {
+                error!("Error accepting connection: {}", e);
+            }
+        }
     }
-
-    broadcast_task.abort();
-
-    Ok(())
 }
