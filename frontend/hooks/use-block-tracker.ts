@@ -279,9 +279,31 @@ export function useBlockTracker(maxBlock: number = -1) {
     )
   }, [finalizedBlocks])
 
+  const normalizedBlockExecutionTime = useMemo(() => {
+    if (finalizedBlocks.length === 0) return 1
+
+    // Get all execution times in milliseconds
+    const executionTimes = finalizedBlocks
+      .map((block) => fromNsToMsPrecise(block.executionTime ?? BigInt(0)))
+      .filter((time) => time > 0)
+      .sort((a, b) => a - b)
+
+    if (executionTimes.length === 0) return 1
+
+    // Use 95th percentile to be resistant to spikes
+    const percentileIndex = Math.floor(executionTimes.length * 0.95)
+    const percentile95 =
+      executionTimes[percentileIndex] ||
+      executionTimes[executionTimes.length - 1]
+
+    // Add 10% buffer to prevent clipping of high values near the percentile
+    return percentile95 * 1.1
+  }, [finalizedBlocks])
+
   return {
     blocks,
     finalizedBlocks,
     maxBlockExecutionTime,
+    normalizedBlockExecutionTime,
   }
 }

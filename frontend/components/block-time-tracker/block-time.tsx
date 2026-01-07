@@ -5,6 +5,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { EXPLORER_URL } from '@/constants/common'
 import { calculateBarMetrics, fromNsToMsPrecise } from '@/lib/block-metrics'
 import { cn } from '@/lib/utils'
 import type { Block } from '@/types/block'
@@ -12,18 +13,18 @@ import { formatBlockNumber } from '@/utils/ui'
 
 interface BlockTimeProps {
   block: Block
-  maxBlockExecutionTime: number
+  normalizedBlockExecutionTime: number
 }
 
-const BlockTime = ({ block, maxBlockExecutionTime }: BlockTimeProps) => {
+const BlockTime = ({ block, normalizedBlockExecutionTime }: BlockTimeProps) => {
   const {
     barHeightPercentage,
     fillPercentage,
     totalTransactionTime,
     isHighlyParallel,
   } = useMemo(
-    () => calculateBarMetrics(block, maxBlockExecutionTime),
-    [block, maxBlockExecutionTime],
+    () => calculateBarMetrics(block, normalizedBlockExecutionTime),
+    [block, normalizedBlockExecutionTime],
   )
 
   const formattedBlockExecutionTime = fromNsToMsPrecise(
@@ -33,8 +34,11 @@ const BlockTime = ({ block, maxBlockExecutionTime }: BlockTimeProps) => {
   const numberOfTransactions = (block.transactions ?? []).length
   const parallelPercentage = isHighlyParallel
     ? (Number(formattedTotalTransactionTime) * 100) /
-      Number(formattedBlockExecutionTime)
+        Number(formattedBlockExecutionTime) -
+      100
     : 0 // Compute actual percentage of difference tx time and execution between block
+  const timeSaved =
+    Number(formattedTotalTransactionTime) - Number(formattedBlockExecutionTime)
 
   return (
     <div className="flex flex-col items-center gap-4 min-w-20">
@@ -79,9 +83,13 @@ const BlockTime = ({ block, maxBlockExecutionTime }: BlockTimeProps) => {
           >
             <div className="flex flex-col gap-1">
               <div className="flex flex-col gap-2">
-                <span className="text-sm text-white uppercase tracking-wider">
+                <a
+                  href={`${EXPLORER_URL}/block/${block.number}`}
+                  target="_blank"
+                  className="text-sm text-white uppercase tracking-wider"
+                >
                   Block {formatBlockNumber(block.number)}
-                </span>
+                </a>
                 <div className="flex flex-col gap-1">
                   <div className="flex flex-row items-center justify-between">
                     <p className="text-xs font-mono text-[#8888a0] break-all">
@@ -99,7 +107,6 @@ const BlockTime = ({ block, maxBlockExecutionTime }: BlockTimeProps) => {
                       {formattedTotalTransactionTime}ms
                     </p>
                   </div>
-
                   <div className="flex flex-row items-center justify-between">
                     <p className="text-xs font-mono text-[#8888a0] break-all">
                       Transactions
@@ -110,10 +117,19 @@ const BlockTime = ({ block, maxBlockExecutionTime }: BlockTimeProps) => {
                   </div>
                   <div className="flex flex-row items-center justify-between">
                     <p className="text-xs font-mono text-[#8888a0] break-all">
-                      Parallel Execution
+                      Time Saved
+                    </p>
+                    <p className="text-white text-sm font-medium">
+                      {timeSaved < 0 ? 0 : timeSaved.toFixed(3)}
+                      ms
+                    </p>
+                  </div>
+                  <div className="flex flex-row items-center justify-between">
+                    <p className="text-xs font-mono text-[#8888a0] break-all">
+                      Parallel Efficiency
                     </p>
                     <p className="text-[#9C6EF8] text-sm font-medium">
-                      {parallelPercentage.toFixed(0)}%
+                      {parallelPercentage.toFixed(3)}%
                     </p>
                   </div>
                 </div>
