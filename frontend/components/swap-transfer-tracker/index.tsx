@@ -1,6 +1,7 @@
 'use client'
 
 import { ArrowLeftRight, Send } from 'lucide-react'
+import { LiveBadge } from '@/components/common/live-badge'
 import { SectionHeader } from '@/components/ui/section-header'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useSwapEvents } from '@/hooks/use-swap-events'
@@ -17,32 +18,6 @@ const TAB_TRIGGER_CLASS = cn(
   'after:bg-transparent data-[state=active]:after:bg-tracker-active',
   'data-[state=active]:bg-transparent data-[state=active]:shadow-none',
 )
-
-function LiveBadge({ isConnected }: { isConnected: boolean }) {
-  return (
-    <span
-      className={cn(
-        'flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium',
-        isConnected
-          ? 'bg-tracker-active/10 text-tracker-active'
-          : 'bg-zinc-500/10 text-zinc-400',
-      )}
-    >
-      <span className="relative flex size-1.5">
-        {isConnected && (
-          <span className="absolute inline-flex size-full animate-ping rounded-full bg-tracker-active opacity-75" />
-        )}
-        <span
-          className={cn(
-            'relative inline-flex size-1.5 rounded-full',
-            isConnected ? 'bg-tracker-active' : 'bg-zinc-500',
-          )}
-        />
-      </span>
-      Live
-    </span>
-  )
-}
 
 export default function SwapTransferTracker() {
   const { allSwaps, isConnected: isSwapConnected } = useSwapEvents()
