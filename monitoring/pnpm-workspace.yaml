@@ -1,0 +1,8 @@
+packages:
+  - .
+
+minimumReleaseAge: 10080
+
+onlyBuiltDependencies:
+  - esbuild
+  - msgpackr-extract
