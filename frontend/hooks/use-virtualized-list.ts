@@ -53,7 +53,7 @@ export function useVirtualizedList<T>({
       listRef.current.scrollToRow({
         index: 0,
         align: 'start',
-        behavior: 'auto',
+        behavior: 'smooth',
       })
     }
   }, [displayedData.length, isFollowing])
