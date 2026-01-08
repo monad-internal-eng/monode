@@ -6,7 +6,7 @@ import { List, type RowComponentProps } from 'react-window'
 import { useVirtualizedList } from '@/hooks/use-virtualized-list'
 import { cn } from '@/lib/utils'
 import type { SwapData } from '@/types/swap'
-import SwapRow from './swap-row'
+import { SwapRow } from './swap-row'
 
 interface SwapsProps {
   data: SwapData[]

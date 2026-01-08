@@ -27,20 +27,14 @@ export function useVirtualizedList<T>({
   const listRef = useRef<ListImperativeAPI>(null)
   const [containerHeight, setContainerHeight] = useState(384)
 
-  // Freeze data when paused - this prevents ALL re-renders while paused
+  // Freeze data when paused - this prevents re-renders while paused
   const [displayedData, setDisplayedData] = useState<T[]>(data)
-  const wasFollowingRef = useRef(isFollowing)
 
-  // Update displayed data only when following, or when resuming from pause
+  // Update displayed data only when following
   useEffect(() => {
     if (isFollowing) {
       setDisplayedData(data)
     }
-    // If we just resumed from pause, update to latest
-    if (isFollowing && !wasFollowingRef.current) {
-      setDisplayedData(data)
-    }
-    wasFollowingRef.current = isFollowing
   }, [data, isFollowing])
 
   // Store displayed data in ref for stable rowProps

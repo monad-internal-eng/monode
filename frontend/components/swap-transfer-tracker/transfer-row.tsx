@@ -13,7 +13,7 @@ interface TransferRowProps {
   gridClass: string
 }
 
-export default function TransferRow({ transfer, gridClass }: TransferRowProps) {
+export function TransferRow({ transfer, gridClass }: TransferRowProps) {
   const tokenSymbol = transfer.type === 'native' ? 'MON' : 'WMON'
 
   return (

@@ -7,7 +7,7 @@ import { useVirtualizedList } from '@/hooks/use-virtualized-list'
 import { cn } from '@/lib/utils'
 import type { TransferData } from '@/types/transfer'
 import { CumulativeTransferCounter } from './cumulative-transfer-counter'
-import TransferRow from './transfer-row'
+import { TransferRow } from './transfer-row'
 
 interface TransfersProps {
   transfers: TransferData[]

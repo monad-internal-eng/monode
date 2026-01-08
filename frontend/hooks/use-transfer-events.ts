@@ -12,8 +12,7 @@ import { parseTopicsString } from '@/lib/abi-decode'
 import type { SerializableEventData } from '@/types/events'
 import type { TransferData } from '@/types/transfer'
 
-// Uses -1 to indicate no limit on number of transfers stored
-const MAX_TRANSFERS = -1
+const MAX_TRANSFERS = Infinity
 
 /**
  * Parse native transfer event (TxnCallFrame with non-zero value)
@@ -133,12 +132,7 @@ export function useTransferEvents() {
 
     if (!transferData) return
 
-    setAllTransfers((prev) => {
-      if (MAX_TRANSFERS === -1) {
-        return [transferData, ...prev]
-      }
-      return [transferData, ...prev].slice(0, MAX_TRANSFERS)
-    })
+    setAllTransfers((prev) => [transferData, ...prev].slice(0, MAX_TRANSFERS))
 
     // Update cumulative total
     setCumulativeTransferred((prev) => prev + BigInt(transferData.value))

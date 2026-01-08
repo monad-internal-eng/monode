@@ -14,7 +14,7 @@ interface SwapRowProps {
   gridClass: string
 }
 
-export default function SwapRow({ swap, gridClass }: SwapRowProps) {
+export function SwapRow({ swap, gridClass }: SwapRowProps) {
   const config = getSwapProviderConfig(swap.provider)
 
   return (
