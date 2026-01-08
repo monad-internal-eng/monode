@@ -3,7 +3,7 @@
 import { TrendingUp } from 'lucide-react'
 import { formatUnits } from 'viem'
 import { StatCard } from '@/components/ui/stat-card'
-import { formatAmount } from '@/utils/ui'
+import { formatAmount } from '@/lib/ui'
 
 interface CumulativeTransferCounterProps {
   cumulativeTransferred: bigint
