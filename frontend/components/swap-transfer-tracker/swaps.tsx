@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { List, type RowComponentProps } from 'react-window'
-import { useVerticalScroll } from '@/hooks/use-vertical-scroll'
+import type { ReactElement } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { List, type ListImperativeAPI, type RowComponentProps } from 'react-window'
 import { cn } from '@/lib/utils'
 import type { SwapData } from '@/types/swap'
 import { SwapRow } from './swap-row'
@@ -17,41 +17,64 @@ const TABLE_GRID = 'grid grid-cols-6 gap-6 px-4'
 const ROW_HEIGHT = 45
 
 interface SwapRowData {
-  swaps: SwapData[]
+  swapsRef: React.RefObject<SwapData[]>
   gridClass: string
 }
 
+// Cell component defined outside to maintain stable reference
 function SwapCell({
   index,
   style,
-  swaps,
+  swapsRef,
   gridClass,
-}: RowComponentProps<SwapRowData>) {
-  const swap = swaps[index]
+}: RowComponentProps<SwapRowData>): ReactElement {
+  const swap = swapsRef.current?.[index]
 
   return (
     <div style={style}>
-      <SwapRow swap={swap} gridClass={gridClass} />
+      {swap && <SwapRow swap={swap} gridClass={gridClass} />}
     </div>
   )
 }
 
+// Stable rowProps object
+const STABLE_GRID_CLASS = TABLE_GRID
+
 export function Swaps({ data, isLoading, isFollowing }: SwapsProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<ListImperativeAPI>(null)
   const [containerHeight, setContainerHeight] = useState(384)
 
-  // Reverse swaps so newest items are at the bottom
-  const reversedSwaps = useMemo(() => [...data].reverse(), [data])
+  // Freeze data when paused - this prevents ALL re-renders while paused
+  const [displayedData, setDisplayedData] = useState<SwapData[]>(data)
+  const wasFollowingRef = useRef(isFollowing)
 
-  const { listRef } = useVerticalScroll({
-    items: reversedSwaps,
-    isFollowing,
-  })
+  // Update displayed data only when following, or when resuming from pause
+  useEffect(() => {
+    if (isFollowing) {
+      setDisplayedData(data)
+    }
+    // If we just resumed from pause, update to latest
+    if (isFollowing && !wasFollowingRef.current) {
+      setDisplayedData(data)
+    }
+    wasFollowingRef.current = isFollowing
+  }, [data, isFollowing])
 
-  const rowProps = useMemo(
-    () => ({ swaps: reversedSwaps, gridClass: TABLE_GRID }),
-    [reversedSwaps],
-  )
+  // Store displayed data in ref for stable rowProps
+  const swapsRef = useRef<SwapData[]>(displayedData)
+  swapsRef.current = displayedData
+
+  // Auto-scroll to top when following and new data arrives
+  useEffect(() => {
+    if (isFollowing && displayedData.length > 0 && listRef.current) {
+      listRef.current.scrollToRow({ index: 0, align: 'start', behavior: 'auto' })
+    }
+  }, [displayedData.length, isFollowing])
+
+  // Stable rowProps - swapsRef never changes reference, only its .current
+  const rowPropsRef = useRef({ swapsRef, gridClass: STABLE_GRID_CLASS })
+  const rowProps = rowPropsRef.current
 
   useEffect(() => {
     const node = containerRef.current
@@ -67,7 +90,7 @@ export function Swaps({ data, isLoading, isFollowing }: SwapsProps) {
     return () => resizeObserver.disconnect()
   }, [])
 
-  // Prevent scroll with non-passive event listener when following
+  // Prevent scroll when following
   useEffect(() => {
     const node = containerRef.current
     if (!node || !isFollowing) return
@@ -97,7 +120,7 @@ export function Swaps({ data, isLoading, isFollowing }: SwapsProps) {
       </div>
 
       <div ref={containerRef} className="h-96">
-        {data.length === 0 ? (
+        {displayedData.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-sm text-zinc-400">
               {isLoading ? 'Waiting for events...' : 'No swaps yet'}
@@ -107,7 +130,7 @@ export function Swaps({ data, isLoading, isFollowing }: SwapsProps) {
           <List
             listRef={listRef}
             rowComponent={SwapCell}
-            rowCount={reversedSwaps.length}
+            rowCount={displayedData.length}
             rowHeight={ROW_HEIGHT}
             defaultHeight={containerHeight}
             rowProps={rowProps}

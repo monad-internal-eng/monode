@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { List, type RowComponentProps } from 'react-window'
-import { useVerticalScroll } from '@/hooks/use-vertical-scroll'
+import type { ReactElement } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { List, type ListImperativeAPI, type RowComponentProps } from 'react-window'
 import { cn } from '@/lib/utils'
 import type { TransferData } from '@/types/transfer'
 import { CumulativeTransferCounter } from './cumulative-transfer-counter'
@@ -19,24 +19,28 @@ const TABLE_GRID = 'grid grid-cols-6 gap-6 px-4'
 const ROW_HEIGHT = 45
 
 interface TransferRowData {
-  transfers: TransferData[]
+  transfersRef: React.RefObject<TransferData[]>
   gridClass: string
 }
 
+// Cell component defined outside to maintain stable reference
 function TransferCell({
   index,
   style,
-  transfers,
+  transfersRef,
   gridClass,
-}: RowComponentProps<TransferRowData>) {
-  const transfer = transfers[index]
+}: RowComponentProps<TransferRowData>): ReactElement {
+  const transfer = transfersRef.current?.[index]
 
   return (
     <div style={style}>
-      <TransferRow transfer={transfer} gridClass={gridClass} />
+      {transfer && <TransferRow transfer={transfer} gridClass={gridClass} />}
     </div>
   )
 }
+
+// Stable rowProps object
+const STABLE_GRID_CLASS = TABLE_GRID
 
 export function Transfers({
   transfers,
@@ -45,20 +49,39 @@ export function Transfers({
   isFollowing,
 }: TransfersProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<ListImperativeAPI>(null)
   const [containerHeight, setContainerHeight] = useState(384)
 
-  // Reverse transfers so newest items are at the bottom
-  const reversedTransfers = useMemo(() => [...transfers].reverse(), [transfers])
+  // Freeze data when paused - this prevents ALL re-renders while paused
+  const [displayedData, setDisplayedData] = useState<TransferData[]>(transfers)
+  const wasFollowingRef = useRef(isFollowing)
 
-  const { listRef } = useVerticalScroll({
-    items: reversedTransfers,
-    isFollowing,
-  })
+  // Update displayed data only when following, or when resuming from pause
+  useEffect(() => {
+    if (isFollowing) {
+      setDisplayedData(transfers)
+    }
+    // If we just resumed from pause, update to latest
+    if (isFollowing && !wasFollowingRef.current) {
+      setDisplayedData(transfers)
+    }
+    wasFollowingRef.current = isFollowing
+  }, [transfers, isFollowing])
 
-  const rowProps = useMemo(
-    () => ({ transfers: reversedTransfers, gridClass: TABLE_GRID }),
-    [reversedTransfers],
-  )
+  // Store displayed data in ref for stable rowProps
+  const transfersRef = useRef<TransferData[]>(displayedData)
+  transfersRef.current = displayedData
+
+  // Auto-scroll to top when following and new data arrives
+  useEffect(() => {
+    if (isFollowing && displayedData.length > 0 && listRef.current) {
+      listRef.current.scrollToRow({ index: 0, align: 'start', behavior: 'auto' })
+    }
+  }, [displayedData.length, isFollowing])
+
+  // Stable rowProps - transfersRef never changes reference, only its .current
+  const rowPropsRef = useRef({ transfersRef, gridClass: STABLE_GRID_CLASS })
+  const rowProps = rowPropsRef.current
 
   useEffect(() => {
     const node = containerRef.current
@@ -74,7 +97,7 @@ export function Transfers({
     return () => resizeObserver.disconnect()
   }, [])
 
-  // Prevent scroll with non-passive event listener when following
+  // Prevent scroll when following
   useEffect(() => {
     const node = containerRef.current
     if (!node || !isFollowing) return
@@ -108,7 +131,7 @@ export function Transfers({
       </div>
 
       <div ref={containerRef} className="h-96">
-        {transfers.length === 0 ? (
+        {displayedData.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-sm text-zinc-400">
               {isLoading ? 'Waiting for events...' : 'No transfers yet'}
@@ -118,7 +141,7 @@ export function Transfers({
           <List
             listRef={listRef}
             rowComponent={TransferCell}
-            rowCount={reversedTransfers.length}
+            rowCount={displayedData.length}
             rowHeight={ROW_HEIGHT}
             defaultHeight={containerHeight}
             rowProps={rowProps}

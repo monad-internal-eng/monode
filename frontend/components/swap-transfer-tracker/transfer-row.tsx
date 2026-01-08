@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { memo } from 'react'
 import { ExternalLink } from '@/components/ui/external-link'
 import { EXPLORER_URL } from '@/constants/common'
 import { formatTokenAmount } from '@/lib/amount'
@@ -14,15 +14,14 @@ interface TransferRowProps {
   gridClass: string
 }
 
-export function TransferRow({ transfer, gridClass }: TransferRowProps) {
+// Memoized to prevent re-renders when parent re-renders
+// Note: motion.div removed because it conflicts with react-window virtualization
+// (rows mount/unmount frequently as they scroll in/out of view)
+export const TransferRow = memo(function TransferRow({ transfer, gridClass }: TransferRowProps) {
   const tokenSymbol = transfer.type === 'native' ? 'MON' : 'WMON'
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -4 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 4 }}
-      transition={{ duration: 0.15 }}
+    <div
       className={cn(
         'py-3 items-center border-b border-zinc-800/50 hover:bg-tracker-row-hover transition-colors',
         gridClass,
@@ -61,6 +60,6 @@ export function TransferRow({ transfer, gridClass }: TransferRowProps) {
       <span className="text-sm font-mono text-zinc-400 tabular-nums">
         {formatTimeDisplay(transfer.timestamp)}
       </span>
-    </motion.div>
+    </div>
   )
-}
+})
