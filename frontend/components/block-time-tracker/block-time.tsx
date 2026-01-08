@@ -7,9 +7,9 @@ import {
 } from '@/components/ui/tooltip'
 import { EXPLORER_URL } from '@/constants/common'
 import { calculateBarMetrics, fromNsToMsPrecise } from '@/lib/block-metrics'
+import { formatBlockNumber } from '@/lib/ui'
 import { cn } from '@/lib/utils'
 import type { Block } from '@/types/block'
-import { formatBlockNumber } from '@/utils/ui'
 import { ExternalLink } from '../ui/external-link'
 
 interface BlockTimeProps {

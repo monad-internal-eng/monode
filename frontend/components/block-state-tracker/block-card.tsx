@@ -5,9 +5,9 @@ import { Check } from 'lucide-react'
 import { ExternalLink } from '@/components/ui/external-link'
 import { BLOCK_STATE_CONFIG } from '@/constants/block-state'
 import { formatTimeDisplay } from '@/lib/timestamp'
+import { formatBlockNumber } from '@/lib/ui'
 import { cn } from '@/lib/utils'
 import type { Block, BlockState } from '@/types/block'
-import { formatBlockNumber } from '@/utils/ui'
 
 interface BlockCardProps {
   block: Block

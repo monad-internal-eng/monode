@@ -8,9 +8,9 @@ import {
   WMON_ADDRESS,
 } from '@/constants/transfer-config'
 import { useEvents } from '@/hooks/use-events'
+import { parseTopicsString } from '@/lib/abi-decode'
 import type { SerializableEventData } from '@/types/events'
 import type { TransferData } from '@/types/transfer'
-import { parseTopicsString } from '@/utils/abi-decode'
 
 // Uses -1 to indicate no limit on number of transfers stored
 const MAX_TRANSFERS = -1
