@@ -11,7 +11,7 @@ export default function TpsTracker() {
         description="Live throughput and transaction count from execution events."
       />
       <div className="dark-component-colors rounded-xl border p-4 sm:p-5 overflow-x-auto scrollbar-none">
-        <div className="h-48 sm:h-52 min-w-2xl md:min-w-0">
+        <div className="w-full h-64 sm:h-52">
           <TpsChart />
         </div>
       </div>

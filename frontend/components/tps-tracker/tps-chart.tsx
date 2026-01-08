@@ -73,12 +73,12 @@ export function TpsChart() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-start justify-between px-1 pb-4">
+      <div className="flex flex-col gap-3 pb-4 md:flex-row md:items-start md:justify-between">
         <div className="flex flex-col gap-0.5">
           <span className="text-base font-medium text-zinc-400">Live TPS</span>
           <span className="text-sm text-zinc-600">Last 5 minutes</span>
         </div>
-        <div className="flex gap-5 sm:gap-7">
+        <div className="flex justify-between gap-3 sm:gap-7 md:justify-end">
           <StatItem
             label="Live TPS"
             value={formatIntNumber(currentTps)}
@@ -99,9 +99,12 @@ export function TpsChart() {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden">
         {hasData ? (
-          <ChartContainer config={chartConfig} className="size-full">
+          <ChartContainer
+            config={chartConfig}
+            className="h-full min-w-2xl w-full"
+          >
             <LineChart
               data={history}
               margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
@@ -127,7 +130,7 @@ export function TpsChart() {
                 tickMargin={8}
                 tick={{ fill: 'var(--chart-axis)', fontSize: 12 }}
                 tickFormatter={formatIntNumber}
-                width={48}
+                width={32}
                 allowDataOverflow={true}
               />
               <ChartTooltip
