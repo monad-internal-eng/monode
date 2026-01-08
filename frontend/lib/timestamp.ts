@@ -1,4 +1,9 @@
+/**
+ * Utility functions for formatting timestamps from nanoseconds to readable format
+ */
+
 export function formatTimestamp(timestampNs: string): string {
+  // Convert string nanoseconds to milliseconds
   const timestampMs = Number(timestampNs) / 1_000_000
   return new Date(timestampMs).toISOString()
 }
@@ -11,6 +16,7 @@ export function formatTimeDisplay(timestamp: number | string) {
     minute: '2-digit',
     second: '2-digit',
   })
+  // Format as "12:39:31 p.m." with lowercase period-separated am/pm
   return time.replace(
     /\s?(AM|PM)$/i,
     (_, period) => ` ${period.toLowerCase().split('').join('.')}.`,
@@ -29,6 +35,7 @@ export function formatDateDisplay(timestamp: string) {
 
 export function formatRelativeTime(timestamp: number): string {
   const diffSeconds = Math.floor((Date.now() - timestamp) / 1000)
+  if (diffSeconds <= 0) return 'now'
   if (diffSeconds < 60) return `${diffSeconds}s ago`
   const mins = Math.floor(diffSeconds / 60)
   const secs = diffSeconds % 60

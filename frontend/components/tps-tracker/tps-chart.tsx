@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/tooltip'
 import { useTps } from '@/hooks/use-tps'
 import { formatRelativeTime, formatTimeHMS } from '@/lib/timestamp'
+import { cn } from '@/lib/utils'
 import { formatIntNumber } from '@/utils/ui'
 
 const chartConfig = {
@@ -55,7 +56,10 @@ function StatItem({
         )}
       </div>
       <span
-        className={`text-2xl sm:text-3xl font-bold tabular-nums leading-none ${colorClass}`}
+        className={cn(
+          'text-2xl sm:text-3xl font-bold tabular-nums leading-none',
+          colorClass,
+        )}
       >
         {value}
       </span>
@@ -103,8 +107,8 @@ export function TpsChart() {
               margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
             >
               <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="rgba(63, 63, 70, 0.5)"
+                strokeDasharray="4 4"
+                stroke="var(--chart-grid)"
                 vertical={false}
               />
               <XAxis
@@ -113,7 +117,7 @@ export function TpsChart() {
                 axisLine={false}
                 tickMargin={8}
                 minTickGap={80}
-                tick={{ fill: '#71717a', fontSize: 12 }}
+                tick={{ fill: 'var(--chart-axis)', fontSize: 12 }}
                 tickFormatter={formatRelativeTime}
               />
               <YAxis
@@ -121,13 +125,16 @@ export function TpsChart() {
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                tick={{ fill: '#71717a', fontSize: 12 }}
+                tick={{ fill: 'var(--chart-axis)', fontSize: 12 }}
                 tickFormatter={formatIntNumber}
                 width={48}
                 allowDataOverflow={true}
               />
               <ChartTooltip
-                cursor={{ stroke: '#52525b', strokeDasharray: '4 4' }}
+                cursor={{
+                  stroke: 'var(--chart-cursor)',
+                  strokeDasharray: '4 4',
+                }}
                 content={
                   <ChartTooltipContent
                     className="bg-zinc-900 border-zinc-700"

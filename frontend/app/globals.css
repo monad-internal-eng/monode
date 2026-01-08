@@ -40,6 +40,10 @@
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
 
+  --color-chart-axis: var(--chart-axis);
+  --color-chart-grid: var(--chart-grid);
+  --color-chart-cursor: var(--chart-cursor);
+
   /* Sidebar colors */
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -289,6 +293,13 @@
   --chart-5-light: hsla(27, 87%, 67%, 1);
   --chart-5-dark: hsla(160, 60%, 45%, 1);
 
+  --chart-axis-light: var(--color-zinc-500);
+  --chart-axis-dark: var(--color-zinc-500);
+  --chart-grid-light: rgba(228, 228, 231, 0.25);
+  --chart-grid-dark: rgba(63, 63, 70, 0.25);
+  --chart-cursor-light: var(--color-zinc-400);
+  --chart-cursor-dark: var(--color-zinc-600);
+
   /* Sidebar colors */
   --sidebar-background-light: var(--color-zinc-50);
   --sidebar-background-dark: var(--color-zinc-900);
@@ -469,6 +480,10 @@
   --chart-4: var(--chart-4-light);
   --chart-5: var(--chart-5-light);
 
+  --chart-axis: var(--chart-axis-light);
+  --chart-grid: var(--chart-grid-light);
+  --chart-cursor: var(--chart-cursor-light);
+
   /* Sidebar colors */
   --sidebar: var(--sidebar-background-light);
   --sidebar-foreground: var(--sidebar-foreground-light);
@@ -546,6 +561,10 @@
   --chart-3: var(--chart-3-dark);
   --chart-4: var(--chart-4-dark);
   --chart-5: var(--chart-5-dark);
+
+  --chart-axis: var(--chart-axis-dark);
+  --chart-grid: var(--chart-grid-dark);
+  --chart-cursor: var(--chart-cursor-dark);
 
   /* Sidebar colors */
   --sidebar: var(--sidebar-background-dark);

@@ -64,14 +64,16 @@ export function useTps(): TpsData {
         // Keep only the last 5 minutes of data
         const cutoffTime = now - TPS_HISTORY_DURATION_MS
         const filteredHistory = prev.history.filter(
-          (point) => point.timestamp > cutoffTime
+          (point) => point.timestamp > cutoffTime,
         )
 
         return {
           currentTps: count,
           peakTps: Math.max(prev.peakTps, count),
           totalTransactions: prev.totalTransactions + count,
-          history: [...filteredHistory, newDataPoint].slice(-MAX_HISTORY_LENGTH),
+          history: [...filteredHistory, newDataPoint].slice(
+            -MAX_HISTORY_LENGTH,
+          ),
         }
       })
     }, TPS_INTERVAL_MS)
