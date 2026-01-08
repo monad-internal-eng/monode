@@ -1,6 +1,5 @@
 'use client'
 
-import { memo } from 'react'
 import { ExternalLink } from '@/components/ui/external-link'
 import { EXPLORER_URL } from '@/constants/common'
 import { formatTimeDisplay } from '@/lib/timestamp'
@@ -14,13 +13,7 @@ interface TransferRowProps {
   gridClass: string
 }
 
-// Memoized to prevent re-renders when parent re-renders
-// Note: motion.div removed because it conflicts with react-window virtualization
-// (rows mount/unmount frequently as they scroll in/out of view)
-export const TransferRow = memo(function TransferRow({
-  transfer,
-  gridClass,
-}: TransferRowProps) {
+export default function TransferRow({ transfer, gridClass }: TransferRowProps) {
   const tokenSymbol = transfer.type === 'native' ? 'MON' : 'WMON'
 
   return (
@@ -65,4 +58,4 @@ export const TransferRow = memo(function TransferRow({
       </span>
     </div>
   )
-})
+}

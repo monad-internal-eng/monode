@@ -1,6 +1,5 @@
 'use client'
 
-import { memo } from 'react'
 import { ExternalLink } from '@/components/ui/external-link'
 import { EXPLORER_URL } from '@/constants/common'
 import { getSwapProviderConfig } from '@/constants/swap-provider-config'
@@ -15,13 +14,7 @@ interface SwapRowProps {
   gridClass: string
 }
 
-// Memoized to prevent re-renders when parent re-renders
-// Note: motion.div removed because it conflicts with react-window virtualization
-// (rows mount/unmount frequently as they scroll in/out of view)
-export const SwapRow = memo(function SwapRow({
-  swap,
-  gridClass,
-}: SwapRowProps) {
+export default function SwapRow({ swap, gridClass }: SwapRowProps) {
   const config = getSwapProviderConfig(swap.provider)
 
   return (
@@ -80,4 +73,4 @@ export const SwapRow = memo(function SwapRow({
       </span>
     </div>
   )
-})
+}
