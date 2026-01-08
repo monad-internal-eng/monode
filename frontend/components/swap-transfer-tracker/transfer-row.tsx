@@ -17,7 +17,10 @@ interface TransferRowProps {
 // Memoized to prevent re-renders when parent re-renders
 // Note: motion.div removed because it conflicts with react-window virtualization
 // (rows mount/unmount frequently as they scroll in/out of view)
-export const TransferRow = memo(function TransferRow({ transfer, gridClass }: TransferRowProps) {
+export const TransferRow = memo(function TransferRow({
+  transfer,
+  gridClass,
+}: TransferRowProps) {
   const tokenSymbol = transfer.type === 'native' ? 'MON' : 'WMON'
 
   return (

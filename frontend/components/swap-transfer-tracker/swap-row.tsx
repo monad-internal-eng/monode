@@ -18,7 +18,10 @@ interface SwapRowProps {
 // Memoized to prevent re-renders when parent re-renders
 // Note: motion.div removed because it conflicts with react-window virtualization
 // (rows mount/unmount frequently as they scroll in/out of view)
-export const SwapRow = memo(function SwapRow({ swap, gridClass }: SwapRowProps) {
+export const SwapRow = memo(function SwapRow({
+  swap,
+  gridClass,
+}: SwapRowProps) {
   const config = getSwapProviderConfig(swap.provider)
 
   return (
