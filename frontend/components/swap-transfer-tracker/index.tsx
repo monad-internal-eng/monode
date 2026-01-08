@@ -27,9 +27,7 @@ export default function SwapTransferTracker() {
     isConnected: isTransferConnected,
     cumulativeTransferred,
   } = useTransferEvents()
-  const [isFollowingChain, setIsFollowingChain] = useState(true)
-  const [isHovering, setIsHovering] = useState(false)
-  const isPaused = !isFollowingChain || isHovering
+  const [isFollowingData, setIsFollowingData] = useState(true)
 
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
@@ -39,20 +37,20 @@ export default function SwapTransferTracker() {
       >
         <button
           type="button"
-          onClick={() => setIsFollowingChain(!isFollowingChain)}
+          onClick={() => setIsFollowingData(!isFollowingData)}
           className={cn(
             'flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium cursor-pointer transition-all duration-200 w-fit',
-            isFollowingChain
+            isFollowingData
               ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700'
               : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white',
           )}
         >
-          {isFollowingChain ? (
+          {isFollowingData ? (
             <Pause className="w-4 h-4" />
           ) : (
             <Play className="w-4 h-4" />
           )}
-          {isFollowingChain ? 'Pause' : 'Resume'}
+          {isFollowingData ? 'Pause' : 'Resume'}
         </button>
       </SectionHeader>
 
@@ -75,37 +73,23 @@ export default function SwapTransferTracker() {
           </div>
 
           <TabsContent value="transfers" className="mt-0">
-            <button
-              type="button"
-              className="flex-1 p-0 m-0 w-full"
-              onMouseEnter={() => setIsHovering(true)}
-              onMouseLeave={() => setIsHovering(false)}
-            >
-              <Transfers
-                transfers={allTransfers}
-                isLoading={!isTransferConnected}
-                cumulativeTransferred={cumulativeTransferred}
-                isFollowing={!isPaused}
-              />
-            </button>
+            <Transfers
+              transfers={allTransfers}
+              isLoading={!isTransferConnected}
+              cumulativeTransferred={cumulativeTransferred}
+              isFollowingData={isFollowingData}
+            />
           </TabsContent>
 
           <TabsContent
             value="swaps"
             className="mt-0 overflow-x-auto scrollbar-none"
           >
-            <button
-              type="button"
-              className="flex-1 p-0 m-0 w-full"
-              onMouseEnter={() => setIsHovering(true)}
-              onMouseLeave={() => setIsHovering(false)}
-            >
-              <Swaps
-                data={allSwaps}
-                isLoading={!isSwapConnected}
-                isFollowing={!isPaused}
-              />
-            </button>
+            <Swaps
+              data={allSwaps}
+              isLoading={!isSwapConnected}
+              isFollowingData={isFollowingData}
+            />
           </TabsContent>
         </Tabs>
       </div>

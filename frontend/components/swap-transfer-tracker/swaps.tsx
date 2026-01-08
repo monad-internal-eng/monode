@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReactElement } from 'react'
+import { useState } from 'react'
 import { List, type RowComponentProps } from 'react-window'
 import { useVirtualizedList } from '@/hooks/use-virtualized-list'
 import { cn } from '@/lib/utils'
@@ -10,7 +11,7 @@ import SwapRow from './swap-row'
 interface SwapsProps {
   data: SwapData[]
   isLoading: boolean
-  isFollowing: boolean
+  isFollowingData: boolean
 }
 
 const TABLE_GRID = 'grid grid-cols-6 gap-6 px-4'
@@ -37,7 +38,10 @@ function SwapCell({
   )
 }
 
-export function Swaps({ data, isLoading, isFollowing }: SwapsProps) {
+export function Swaps({ data, isLoading, isFollowingData }: SwapsProps) {
+  const [isHovering, setIsHovering] = useState(false)
+  const isFollowing = isFollowingData && !isHovering
+
   const { containerRef, listRef, containerHeight, displayedData, rowProps } =
     useVirtualizedList({
       data,
@@ -61,7 +65,12 @@ export function Swaps({ data, isLoading, isFollowing }: SwapsProps) {
         <span>Time</span>
       </div>
 
-      <div ref={containerRef} className="h-96">
+      <div
+        ref={containerRef}
+        className="h-96"
+        onPointerEnter={() => setIsHovering(true)}
+        onPointerLeave={() => setIsHovering(false)}
+      >
         {displayedData.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-sm text-zinc-400">
