@@ -1,6 +1,8 @@
 'use client'
 
-import { AnimatePresence } from 'framer-motion'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { List, type RowComponentProps } from 'react-window'
+import { useVerticalScroll } from '@/hooks/use-vertical-scroll'
 import { cn } from '@/lib/utils'
 import type { SwapData } from '@/types/swap'
 import { SwapRow } from './swap-row'
@@ -8,11 +10,76 @@ import { SwapRow } from './swap-row'
 interface SwapsProps {
   data: SwapData[]
   isLoading: boolean
+  isFollowing: boolean
 }
 
 const TABLE_GRID = 'grid grid-cols-6 gap-6 px-4'
+const ROW_HEIGHT = 45
 
-export function Swaps({ data, isLoading }: SwapsProps) {
+interface SwapRowData {
+  swaps: SwapData[]
+  gridClass: string
+}
+
+function SwapCell({
+  index,
+  style,
+  swaps,
+  gridClass,
+}: RowComponentProps<SwapRowData>) {
+  const swap = swaps[index]
+
+  return (
+    <div style={style}>
+      <SwapRow swap={swap} gridClass={gridClass} />
+    </div>
+  )
+}
+
+export function Swaps({ data, isLoading, isFollowing }: SwapsProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerHeight, setContainerHeight] = useState(384)
+
+  // Reverse swaps so newest items are at the bottom
+  const reversedSwaps = useMemo(() => [...data].reverse(), [data])
+
+  const { listRef } = useVerticalScroll({
+    items: reversedSwaps,
+    isFollowing,
+  })
+
+  const rowProps = useMemo(
+    () => ({ swaps: reversedSwaps, gridClass: TABLE_GRID }),
+    [reversedSwaps],
+  )
+
+  useEffect(() => {
+    const node = containerRef.current
+    if (!node) return
+
+    const updateHeight = () => {
+      setContainerHeight(node.clientHeight)
+    }
+    updateHeight()
+
+    const resizeObserver = new ResizeObserver(updateHeight)
+    resizeObserver.observe(node)
+    return () => resizeObserver.disconnect()
+  }, [])
+
+  // Prevent scroll with non-passive event listener when following
+  useEffect(() => {
+    const node = containerRef.current
+    if (!node || !isFollowing) return
+
+    const preventScroll = (e: WheelEvent) => {
+      e.preventDefault()
+    }
+
+    node.addEventListener('wheel', preventScroll, { passive: false })
+    return () => node.removeEventListener('wheel', preventScroll)
+  }, [isFollowing])
+
   return (
     <div className="flex flex-col min-w-4xl lg:min-w-0">
       <div
@@ -29,7 +96,7 @@ export function Swaps({ data, isLoading }: SwapsProps) {
         <span>Time</span>
       </div>
 
-      <div className="h-96 overflow-y-auto scrollbar-none">
+      <div ref={containerRef} className="h-96">
         {data.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-sm text-zinc-400">
@@ -37,11 +104,19 @@ export function Swaps({ data, isLoading }: SwapsProps) {
             </p>
           </div>
         ) : (
-          <AnimatePresence mode="popLayout">
-            {data.map((swap) => (
-              <SwapRow key={swap.id} swap={swap} gridClass={TABLE_GRID} />
-            ))}
-          </AnimatePresence>
+          <List
+            listRef={listRef}
+            rowComponent={SwapCell}
+            rowCount={reversedSwaps.length}
+            rowHeight={ROW_HEIGHT}
+            defaultHeight={containerHeight}
+            rowProps={rowProps}
+            style={{
+              overflowX: 'hidden',
+              overflowY: isFollowing ? 'hidden' : 'auto',
+            }}
+            className="scrollbar-none"
+          />
         )}
       </div>
     </div>

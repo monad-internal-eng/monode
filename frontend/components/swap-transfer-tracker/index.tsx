@@ -1,6 +1,7 @@
 'use client'
 
-import { ArrowLeftRight, Send } from 'lucide-react'
+import { ArrowLeftRight, Pause, Play, Send } from 'lucide-react'
+import { useState } from 'react'
 import { LiveBadge } from '@/components/common/live-badge'
 import { SectionHeader } from '@/components/ui/section-header'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -26,13 +27,34 @@ export default function SwapTransferTracker() {
     isConnected: isTransferConnected,
     cumulativeTransferred,
   } = useTransferEvents()
+  const [isFollowingChain, setIsFollowingChain] = useState(true)
+  const [isHovering, setIsHovering] = useState(false)
+  const isPaused = !isFollowingChain || isHovering
 
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
       <SectionHeader
         title="Swap & Transfer Tracker"
         description="Live economic activity observed directly from execution events."
-      />
+      >
+        <button
+          type="button"
+          onClick={() => setIsFollowingChain(!isFollowingChain)}
+          className={cn(
+            'flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium cursor-pointer transition-all duration-200 w-fit',
+            isFollowingChain
+              ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700'
+              : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white',
+          )}
+        >
+          {isFollowingChain ? (
+            <Pause className="w-4 h-4" />
+          ) : (
+            <Play className="w-4 h-4" />
+          )}
+          {isFollowingChain ? 'Pause' : 'Resume'}
+        </button>
+      </SectionHeader>
 
       <div className="flex flex-col dark-component-colors rounded-xl border overflow-hidden">
         <Tabs defaultValue="transfers" className="w-full">
@@ -52,22 +74,38 @@ export default function SwapTransferTracker() {
             <div className="mt-1 w-full h-px bg-zinc-800" />
           </div>
 
-          <TabsContent
-            value="transfers"
-            className="mt-0 overflow-x-auto scrollbar-none"
-          >
-            <Transfers
-              transfers={allTransfers}
-              isLoading={!isTransferConnected}
-              cumulativeTransferred={cumulativeTransferred}
-            />
+          <TabsContent value="transfers" className="mt-0">
+            <button
+              type="button"
+              className="flex-1 p-0 m-0 w-full"
+              onMouseEnter={() => setIsHovering(true)}
+              onMouseLeave={() => setIsHovering(false)}
+            >
+              <Transfers
+                transfers={allTransfers}
+                isLoading={!isTransferConnected}
+                cumulativeTransferred={cumulativeTransferred}
+                isFollowing={!isPaused}
+              />
+            </button>
           </TabsContent>
 
           <TabsContent
             value="swaps"
             className="mt-0 overflow-x-auto scrollbar-none"
           >
-            <Swaps data={allSwaps} isLoading={!isSwapConnected} />
+            <button
+              type="button"
+              className="flex-1 p-0 m-0 w-full"
+              onMouseEnter={() => setIsHovering(true)}
+              onMouseLeave={() => setIsHovering(false)}
+            >
+              <Swaps
+                data={allSwaps}
+                isLoading={!isSwapConnected}
+                isFollowing={!isPaused}
+              />
+            </button>
           </TabsContent>
         </Tabs>
       </div>
