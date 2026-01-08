@@ -1,3 +1,6 @@
+import { formatUnits } from 'viem'
+import { getTokenDecimals } from '@/constants/swap-provider-config'
+
 export function formatBlockNumber(num: number): string {
   const str = num.toString()
   if (str.length <= 9) {
@@ -24,4 +27,18 @@ export function formatAmount(amount: number) {
   if (amount < 1_000_000) return `${(amount / 1000).toFixed(2)}K`
   if (amount < 1_000_000_000) return `${(amount / 1_000_000).toFixed(2)}M`
   return `${(amount / 1_000_000_000).toFixed(2)}B`
+}
+
+export function formatTokenAmount(
+  amount: string,
+  tokenSymbol: string,
+  tokenAddress?: string,
+): string {
+  // Use address for decimals lookup if available, fallback to symbol
+  const decimals = getTokenDecimals(tokenAddress ?? tokenSymbol)
+  const absAmount = amount.startsWith('-') ? amount.slice(1) : amount
+  const formatted = formatUnits(BigInt(absAmount), decimals)
+  const num = Number(formatted)
+
+  return formatAmount(num)
 }

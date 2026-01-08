@@ -9,9 +9,9 @@ import {
   type SwapProvider,
 } from '@/constants/swap-provider-config'
 import { useEvents } from '@/hooks/use-events'
+import { parseTopicsString } from '@/lib/abi-decode'
 import type { SerializableEventData } from '@/types/events'
 import type { SwapData } from '@/types/swap'
-import { parseTopicsString } from '@/utils/abi-decode'
 
 const MAX_SWAPS = 50
 

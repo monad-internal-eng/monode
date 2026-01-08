@@ -15,8 +15,8 @@ import {
 } from '@/components/ui/tooltip'
 import { useTps } from '@/hooks/use-tps'
 import { formatRelativeTime, formatTimeHMS } from '@/lib/timestamp'
+import { formatIntNumber } from '@/lib/ui'
 import { cn } from '@/lib/utils'
-import { formatIntNumber } from '@/utils/ui'
 
 const chartConfig = {
   tps: {

@@ -5,8 +5,8 @@ import { BubbleMap } from '@/components/ui/bubble-map'
 import { ExplorerLink } from '@/components/ui/bubble-map/explorer-link'
 import { useContractLabels } from '@/hooks/use-contract-labels'
 import { useEvents } from '@/hooks/use-events'
+import { formatIntNumber } from '@/lib/ui'
 import { shortenHex } from '@/lib/utils'
-import { formatIntNumber } from '@/utils/ui'
 
 interface HotSlot {
   id: string
