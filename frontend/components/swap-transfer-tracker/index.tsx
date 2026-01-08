@@ -1,6 +1,7 @@
 'use client'
 
-import { ArrowLeftRight, Send } from 'lucide-react'
+import { ArrowLeftRight, Info, Pause, Play, Send } from 'lucide-react'
+import { useState } from 'react'
 import { LiveBadge } from '@/components/common/live-badge'
 import { SectionHeader } from '@/components/ui/section-header'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -26,13 +27,32 @@ export default function SwapTransferTracker() {
     isConnected: isTransferConnected,
     cumulativeTransferred,
   } = useTransferEvents()
+  const [isFollowingData, setIsFollowingData] = useState(true)
 
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
       <SectionHeader
         title="Swap & Transfer Tracker"
         description="Live economic activity observed directly from execution events."
-      />
+      >
+        <button
+          type="button"
+          onClick={() => setIsFollowingData(!isFollowingData)}
+          className={cn(
+            'flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium cursor-pointer transition-all duration-200 w-fit',
+            isFollowingData
+              ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700'
+              : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white',
+          )}
+        >
+          {isFollowingData ? (
+            <Pause className="w-4 h-4" />
+          ) : (
+            <Play className="w-4 h-4" />
+          )}
+          {isFollowingData ? 'Pause' : 'Resume'}
+        </button>
+      </SectionHeader>
 
       <div className="flex flex-col dark-component-colors rounded-xl border overflow-hidden">
         <Tabs defaultValue="transfers" className="w-full">
@@ -52,14 +72,12 @@ export default function SwapTransferTracker() {
             <div className="mt-1 w-full h-px bg-zinc-800" />
           </div>
 
-          <TabsContent
-            value="transfers"
-            className="mt-0 overflow-x-auto scrollbar-none"
-          >
+          <TabsContent value="transfers" className="mt-0">
             <Transfers
               transfers={allTransfers}
               isLoading={!isTransferConnected}
               cumulativeTransferred={cumulativeTransferred}
+              isFollowingData={isFollowingData}
             />
           </TabsContent>
 
@@ -67,9 +85,17 @@ export default function SwapTransferTracker() {
             value="swaps"
             className="mt-0 overflow-x-auto scrollbar-none"
           >
-            <Swaps data={allSwaps} isLoading={!isSwapConnected} />
+            <Swaps
+              data={allSwaps}
+              isLoading={!isSwapConnected}
+              isFollowingData={isFollowingData}
+            />
           </TabsContent>
         </Tabs>
+      </div>
+      <div className="flex items-center gap-2 text-sm text-zinc-500">
+        <Info className="w-4 h-[1lh]" />
+        <span>Hover to pause</span>
       </div>
     </div>
   )

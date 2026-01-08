@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { ExternalLink } from '@/components/ui/external-link'
 import { EXPLORER_URL } from '@/constants/common'
 import { getSwapProviderConfig } from '@/constants/swap-provider-config'
@@ -19,11 +18,7 @@ export function SwapRow({ swap, gridClass }: SwapRowProps) {
   const config = getSwapProviderConfig(swap.provider)
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -4 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 4 }}
-      transition={{ duration: 0.15 }}
+    <div
       className={cn(
         'py-3 items-center border-b border-zinc-800/50 hover:bg-tracker-row-hover transition-colors',
         gridClass,
@@ -76,6 +71,6 @@ export function SwapRow({ swap, gridClass }: SwapRowProps) {
       <span className="text-sm font-mono text-zinc-400 tabular-nums">
         {formatTimeDisplay(swap.timestamp)}
       </span>
-    </motion.div>
+    </div>
   )
 }

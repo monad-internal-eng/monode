@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { ExternalLink } from '@/components/ui/external-link'
 import { EXPLORER_URL } from '@/constants/common'
 import { formatTimeDisplay } from '@/lib/timestamp'
@@ -18,11 +17,7 @@ export function TransferRow({ transfer, gridClass }: TransferRowProps) {
   const tokenSymbol = transfer.type === 'native' ? 'MON' : 'WMON'
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -4 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 4 }}
-      transition={{ duration: 0.15 }}
+    <div
       className={cn(
         'py-3 items-center border-b border-zinc-800/50 hover:bg-tracker-row-hover transition-colors',
         gridClass,
@@ -61,6 +56,6 @@ export function TransferRow({ transfer, gridClass }: TransferRowProps) {
       <span className="text-sm font-mono text-zinc-400 tabular-nums">
         {formatTimeDisplay(transfer.timestamp)}
       </span>
-    </motion.div>
+    </div>
   )
 }

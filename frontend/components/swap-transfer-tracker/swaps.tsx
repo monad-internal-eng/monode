@@ -1,6 +1,9 @@
 'use client'
 
-import { AnimatePresence } from 'framer-motion'
+import type { ReactElement } from 'react'
+import { useState } from 'react'
+import { List, type RowComponentProps } from 'react-window'
+import { useVirtualizedList } from '@/hooks/use-virtualized-list'
 import { cn } from '@/lib/utils'
 import type { SwapData } from '@/types/swap'
 import { SwapRow } from './swap-row'
@@ -8,11 +11,44 @@ import { SwapRow } from './swap-row'
 interface SwapsProps {
   data: SwapData[]
   isLoading: boolean
+  isFollowingData: boolean
 }
 
 const TABLE_GRID = 'grid grid-cols-6 gap-6 px-4'
+const ROW_HEIGHT = 45
 
-export function Swaps({ data, isLoading }: SwapsProps) {
+interface SwapRowData {
+  dataRef: React.RefObject<SwapData[]>
+  gridClass: string
+}
+
+// Cell component defined outside to maintain stable reference
+function SwapCell({
+  index,
+  style,
+  dataRef,
+  gridClass,
+}: RowComponentProps<SwapRowData>): ReactElement {
+  const swap = dataRef.current?.[index]
+
+  return (
+    <div style={style}>
+      {swap && <SwapRow swap={swap} gridClass={gridClass} />}
+    </div>
+  )
+}
+
+export function Swaps({ data, isLoading, isFollowingData }: SwapsProps) {
+  const [isHovering, setIsHovering] = useState(false)
+  const isFollowing = isFollowingData && !isHovering
+
+  const { containerRef, listRef, containerHeight, displayedData, rowProps } =
+    useVirtualizedList({
+      data,
+      isFollowing,
+      gridClass: TABLE_GRID,
+    })
+
   return (
     <div className="flex flex-col min-w-4xl lg:min-w-0">
       <div
@@ -29,19 +65,32 @@ export function Swaps({ data, isLoading }: SwapsProps) {
         <span>Time</span>
       </div>
 
-      <div className="h-96 overflow-y-auto scrollbar-none">
-        {data.length === 0 ? (
+      <div
+        ref={containerRef}
+        className="h-96"
+        onPointerEnter={() => setIsHovering(true)}
+        onPointerLeave={() => setIsHovering(false)}
+      >
+        {displayedData.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-sm text-zinc-400">
               {isLoading ? 'Waiting for events...' : 'No swaps yet'}
             </p>
           </div>
         ) : (
-          <AnimatePresence mode="popLayout">
-            {data.map((swap) => (
-              <SwapRow key={swap.id} swap={swap} gridClass={TABLE_GRID} />
-            ))}
-          </AnimatePresence>
+          <List
+            listRef={listRef}
+            rowComponent={SwapCell}
+            rowCount={displayedData.length}
+            rowHeight={ROW_HEIGHT}
+            defaultHeight={containerHeight}
+            rowProps={rowProps}
+            style={{
+              overflowX: 'hidden',
+              overflowY: isFollowing ? 'hidden' : 'auto',
+            }}
+            className="scrollbar-none"
+          />
         )}
       </div>
     </div>
