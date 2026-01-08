@@ -1,8 +1,8 @@
 'use client'
 
 import type { ReactElement } from 'react'
-import { useEffect, useRef, useState } from 'react'
-import { List, type ListImperativeAPI, type RowComponentProps } from 'react-window'
+import { List, type RowComponentProps } from 'react-window'
+import { useVirtualizedList } from '@/hooks/use-virtualized-list'
 import { cn } from '@/lib/utils'
 import type { TransferData } from '@/types/transfer'
 import { CumulativeTransferCounter } from './cumulative-transfer-counter'
@@ -19,7 +19,7 @@ const TABLE_GRID = 'grid grid-cols-6 gap-6 px-4'
 const ROW_HEIGHT = 45
 
 interface TransferRowData {
-  transfersRef: React.RefObject<TransferData[]>
+  dataRef: React.RefObject<TransferData[]>
   gridClass: string
 }
 
@@ -27,10 +27,10 @@ interface TransferRowData {
 function TransferCell({
   index,
   style,
-  transfersRef,
+  dataRef,
   gridClass,
 }: RowComponentProps<TransferRowData>): ReactElement {
-  const transfer = transfersRef.current?.[index]
+  const transfer = dataRef.current?.[index]
 
   return (
     <div style={style}>
@@ -39,76 +39,18 @@ function TransferCell({
   )
 }
 
-// Stable rowProps object
-const STABLE_GRID_CLASS = TABLE_GRID
-
 export function Transfers({
   transfers,
   isLoading,
   cumulativeTransferred,
   isFollowing,
 }: TransfersProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const listRef = useRef<ListImperativeAPI>(null)
-  const [containerHeight, setContainerHeight] = useState(384)
-
-  // Freeze data when paused - this prevents ALL re-renders while paused
-  const [displayedData, setDisplayedData] = useState<TransferData[]>(transfers)
-  const wasFollowingRef = useRef(isFollowing)
-
-  // Update displayed data only when following, or when resuming from pause
-  useEffect(() => {
-    if (isFollowing) {
-      setDisplayedData(transfers)
-    }
-    // If we just resumed from pause, update to latest
-    if (isFollowing && !wasFollowingRef.current) {
-      setDisplayedData(transfers)
-    }
-    wasFollowingRef.current = isFollowing
-  }, [transfers, isFollowing])
-
-  // Store displayed data in ref for stable rowProps
-  const transfersRef = useRef<TransferData[]>(displayedData)
-  transfersRef.current = displayedData
-
-  // Auto-scroll to top when following and new data arrives
-  useEffect(() => {
-    if (isFollowing && displayedData.length > 0 && listRef.current) {
-      listRef.current.scrollToRow({ index: 0, align: 'start', behavior: 'auto' })
-    }
-  }, [displayedData.length, isFollowing])
-
-  // Stable rowProps - transfersRef never changes reference, only its .current
-  const rowPropsRef = useRef({ transfersRef, gridClass: STABLE_GRID_CLASS })
-  const rowProps = rowPropsRef.current
-
-  useEffect(() => {
-    const node = containerRef.current
-    if (!node) return
-
-    const updateHeight = () => {
-      setContainerHeight(node.clientHeight)
-    }
-    updateHeight()
-
-    const resizeObserver = new ResizeObserver(updateHeight)
-    resizeObserver.observe(node)
-    return () => resizeObserver.disconnect()
-  }, [])
-
-  // Prevent scroll when following
-  useEffect(() => {
-    const node = containerRef.current
-    if (!node || !isFollowing) return
-
-    const preventScroll = (e: WheelEvent) => {
-      e.preventDefault()
-    }
-
-    node.addEventListener('wheel', preventScroll, { passive: false })
-    return () => node.removeEventListener('wheel', preventScroll)
-  }, [isFollowing])
+  const { containerRef, listRef, containerHeight, displayedData, rowProps } =
+    useVirtualizedList({
+      data: transfers,
+      isFollowing,
+      gridClass: TABLE_GRID,
+    })
 
   return (
     <div className="flex flex-col min-w-4xl lg:min-w-0">

@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeftRight, Pause, Play, Send } from 'lucide-react'
+import { ArrowLeftRight, Info, Pause, Play, Send } from 'lucide-react'
 import { useState } from 'react'
 import { LiveBadge } from '@/components/common/live-badge'
 import { SectionHeader } from '@/components/ui/section-header'
@@ -108,6 +108,10 @@ export default function SwapTransferTracker() {
             </button>
           </TabsContent>
         </Tabs>
+      </div>
+      <div className="flex items-center gap-2 text-sm text-zinc-500">
+        <Info className="w-4 h-[1lh]" />
+        <span>Hover to pause</span>
       </div>
     </div>
   )
