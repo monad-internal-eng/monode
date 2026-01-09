@@ -61,7 +61,7 @@ impl<T: Hash + Eq + Clone> TopKTracker<T> {
         }
     }
 
-    /// Get the top N items by count
+    /// Get the top K items by count
     pub fn top_k(&self, k: usize) -> Vec<AccessEntry<T>> {
         let mut items: Vec<_> = self.counts.iter().map(|(key, value)| AccessEntry {
             key: key.clone(),
@@ -71,7 +71,7 @@ impl<T: Hash + Eq + Clone> TopKTracker<T> {
         // Sort by count descending
         items.sort_by(|a, b| b.count.cmp(&a.count));
 
-        // Take top N
+        // Take top K
         items.truncate(k);
         items
     }
