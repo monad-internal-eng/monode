@@ -122,7 +122,7 @@ export function EventsProvider({ children }: EventsProviderProps) {
             if (message.Events && message.Events.length > 0) {
               const newEvents = message.Events
               setEvents((prevEvents) =>
-                [...prevEvents, ...newEvents].slice(0, MAX_EVENTS_STORED),
+                [...prevEvents, ...newEvents].slice(-MAX_EVENTS_STORED),
               )
 
               // Notify all subscribers
