@@ -25,7 +25,7 @@ export default function BlockTimeExecutionTracker() {
     finalizedBlocks,
     maxBlockExecutionTime,
     normalizedBlockExecutionTime,
-  } = useBlockTracker(200)
+  } = useBlockTracker(1000)
   const [isFollowingChain, setIsFollowingChain] = useState(true)
   const [isHovering, setIsHovering] = useState(false)
   const isPaused = !isFollowingChain || isHovering
