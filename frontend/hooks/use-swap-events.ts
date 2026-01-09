@@ -13,7 +13,7 @@ import { parseTopicsString } from '@/lib/abi-decode'
 import type { SerializableEventData } from '@/types/events'
 import type { SwapData } from '@/types/swap'
 
-const MAX_SWAPS = 1000
+const MAX_SWAPS = 2000
 
 /**
  * Parse raw log data into normalized SwapData based on the provider

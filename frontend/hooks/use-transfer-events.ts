@@ -12,7 +12,7 @@ import { parseTopicsString } from '@/lib/abi-decode'
 import type { SerializableEventData } from '@/types/events'
 import type { TransferData } from '@/types/transfer'
 
-const MAX_TRANSFERS = 1000
+const MAX_TRANSFERS = 5000
 
 /**
  * Parse native transfer event (TxnCallFrame with non-zero value)
