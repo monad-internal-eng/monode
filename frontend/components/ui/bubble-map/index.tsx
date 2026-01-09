@@ -59,10 +59,10 @@ export function BubbleMap<T extends BubbleItem>({
   }
 
   return (
-    <div className="w-full flex flex-col gap-4 sm:gap-6">
+    <div className="w-full flex flex-1 flex-col gap-4 sm:gap-6">
       <SectionHeader title={title} description={description} />
 
-      <div className="relative min-h-[250px] sm:min-h-[350px] w-full dark-component-colors rounded-xl border p-3 sm:p-5 lg:p-7 flex flex-col gap-10 items-center justify-center">
+      <div className="relative min-h-[250px] sm:min-h-[350px] w-full dark-component-colors rounded-xl border p-3 sm:p-5 lg:p-7 flex flex-grow flex-col gap-10 items-center justify-between">
         {items.length === 0 ? (
           <Spinner text="Waiting for data..." />
         ) : (

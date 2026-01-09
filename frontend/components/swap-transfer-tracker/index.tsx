@@ -54,22 +54,30 @@ export default function SwapTransferTracker() {
         </button>
       </SectionHeader>
 
+      {/* Info copy - only for mobile */}
+      <div className="flex items-center gap-2 text-sm text-zinc-500 md:hidden">
+        <Info className="w-4 h-lh" />
+        <span>Tap Pause to freeze and scroll through data</span>
+      </div>
+
       <div className="flex flex-col dark-component-colors rounded-xl border overflow-hidden">
         <Tabs defaultValue="transfers" className="w-full">
           <div className="flex flex-col">
-            <TabsList className="w-fit h-auto py-1 px-4 gap-2 bg-transparent rounded-none">
-              <TabsTrigger value="transfers" className={TAB_TRIGGER_CLASS}>
-                <Send className="size-4" />
-                <span className="text-sm font-medium">Transfers</span>
-                <LiveBadge isConnected={isTransferConnected} />
-              </TabsTrigger>
-              <TabsTrigger value="swaps" className={TAB_TRIGGER_CLASS}>
-                <ArrowLeftRight className="size-4" />
-                <span className="text-sm font-medium">Swaps</span>
-                <LiveBadge isConnected={isSwapConnected} />
-              </TabsTrigger>
-            </TabsList>
-            <div className="mt-1 w-full h-px bg-zinc-800" />
+            <div className="overflow-x-auto scrollbar-none">
+              <TabsList className="w-fit h-auto py-1 px-4 gap-2 bg-transparent rounded-none">
+                <TabsTrigger value="transfers" className={TAB_TRIGGER_CLASS}>
+                  <Send className="size-4" />
+                  <span className="text-sm font-medium">Transfers</span>
+                  <LiveBadge isConnected={isTransferConnected} />
+                </TabsTrigger>
+                <TabsTrigger value="swaps" className={TAB_TRIGGER_CLASS}>
+                  <ArrowLeftRight className="size-4" />
+                  <span className="text-sm font-medium">Swaps</span>
+                  <LiveBadge isConnected={isSwapConnected} />
+                </TabsTrigger>
+              </TabsList>
+            </div>
+            <div className="w-full h-px bg-zinc-800" />
           </div>
 
           <TabsContent value="transfers" className="mt-0">
@@ -81,10 +89,7 @@ export default function SwapTransferTracker() {
             />
           </TabsContent>
 
-          <TabsContent
-            value="swaps"
-            className="mt-0 overflow-x-auto scrollbar-none"
-          >
+          <TabsContent value="swaps" className="mt-0">
             <Swaps
               data={allSwaps}
               isLoading={!isSwapConnected}
@@ -93,8 +98,10 @@ export default function SwapTransferTracker() {
           </TabsContent>
         </Tabs>
       </div>
-      <div className="flex items-center gap-2 text-sm text-zinc-500">
-        <Info className="w-4 h-[1lh]" />
+
+      {/* Info copy - only for desktop */}
+      <div className="hidden md:flex items-center gap-2 text-sm text-zinc-500">
+        <Info className="w-4 h-lh" />
         <span>Hover to pause</span>
       </div>
     </div>
