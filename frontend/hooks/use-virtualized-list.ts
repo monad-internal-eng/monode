@@ -10,6 +10,7 @@ interface UseVirtualizedListOptions<T> {
 }
 
 interface UseVirtualizedListReturn<T> {
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>
   containerRef: React.RefObject<HTMLDivElement | null>
   listRef: React.RefObject<ListImperativeAPI | null>
   containerHeight: number
@@ -23,6 +24,7 @@ export function useVirtualizedList<T>({
   isFollowing,
   gridClass,
 }: UseVirtualizedListOptions<T>): UseVirtualizedListReturn<T> {
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<ListImperativeAPI>(null)
   const [containerHeight, setContainerHeight] = useState(384)
@@ -51,6 +53,13 @@ export function useVirtualizedList<T>({
       })
     }
   }, [displayedData.length, isFollowing])
+
+  // Reset horizontal scroll when resuming (isFollowing becomes true)
+  useEffect(() => {
+    if (isFollowing && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollLeft = 0
+    }
+  }, [isFollowing])
 
   // Stable rowProps - dataRef never changes reference, only its .current
   const rowPropsRef = useRef({ dataRef, gridClass })
@@ -85,6 +94,7 @@ export function useVirtualizedList<T>({
   }, [isFollowing])
 
   return {
+    scrollContainerRef,
     containerRef,
     listRef,
     containerHeight,

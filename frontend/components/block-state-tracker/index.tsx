@@ -1,11 +1,11 @@
 'use client'
 
 import { Info, Pause, Play } from 'lucide-react'
-import { useState } from 'react'
 import { ExternalLink } from '@/components/ui/external-link'
 import { SectionHeader } from '@/components/ui/section-header'
 import { BLOCK_STATE_LEGEND } from '@/constants/block-state'
 import { useExecutionEventBlocks } from '@/hooks/use-execution-event-blocks'
+import { useMouseHover } from '@/hooks/use-mouse-hover'
 import { cn } from '@/lib/utils'
 import { Blockchain } from './blockchain'
 import { SlowMotionControl } from './slow-motion-control'
@@ -25,7 +25,7 @@ export default function BlockStateTracker() {
     setIsFollowingChain,
   } = useExecutionEventBlocks()
 
-  const [isHovering, setIsHovering] = useState(false)
+  const { isHovering, hoverProps } = useMouseHover()
   const isPaused = !isFollowingChain || isHovering
 
   return (
@@ -87,17 +87,19 @@ export default function BlockStateTracker() {
         ))}
       </div>
 
-      <button
-        type="button"
-        className="overflow-visible"
-        onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
-      >
+      {/* Info copy - only for mobile */}
+      <div className="flex items-center gap-2 text-sm text-zinc-500 md:hidden">
+        <Info className="w-4 h-lh" />
+        <span>Tap Pause to freeze and scroll through blocks</span>
+      </div>
+
+      <button type="button" className="overflow-visible" {...hoverProps}>
         <Blockchain blocks={blocks} isFollowingChain={!isPaused} />
       </button>
 
-      <div className="flex items-center gap-2 text-sm text-zinc-500">
-        <Info className="w-4 h-[1lh]" />
+      {/* Info copy - only for desktop */}
+      <div className="hidden md:flex items-center gap-2 text-sm text-zinc-500">
+        <Info className="w-4 h-lh" />
         <span>Hover to pause</span>
       </div>
     </div>
