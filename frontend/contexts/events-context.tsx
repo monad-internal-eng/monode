@@ -63,6 +63,7 @@ interface EventsProviderProps {
 const EventsContext = createContext<EventsContextValue | null>(null)
 
 const RECONNECT_DELAY = 3000
+const MAX_EVENTS_STORED = 10000
 
 /**
  * A context provider for the events context.
@@ -120,7 +121,9 @@ export function EventsProvider({ children }: EventsProviderProps) {
 
             if (message.Events && message.Events.length > 0) {
               const newEvents = message.Events
-              setEvents((prevEvents) => [...prevEvents, ...newEvents])
+              setEvents((prevEvents) =>
+                [...prevEvents, ...newEvents].slice(-MAX_EVENTS_STORED),
+              )
 
               // Notify all subscribers
               newEvents.forEach((evt) => {

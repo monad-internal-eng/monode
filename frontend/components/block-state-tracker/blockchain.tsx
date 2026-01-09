@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { type CellComponentProps, Grid } from 'react-window'
 import { Spinner } from '@/components/ui/spinner'
 import { useBlockchainScroll } from '@/hooks/use-blockchain-scroll'
@@ -80,9 +80,18 @@ export function Blockchain({ blocks, isFollowingChain }: BlockchainProps) {
     return () => resizeObserver.disconnect()
   }, [])
 
-  const preventScroll = useCallback((e: React.WheelEvent) => {
-    e.preventDefault()
-  }, [])
+  // Prevent scroll with non-passive event listener
+  useEffect(() => {
+    const node = containerRef.current
+    if (!node || !isFollowingChain) return
+
+    const preventScroll = (e: WheelEvent) => {
+      e.preventDefault()
+    }
+
+    node.addEventListener('wheel', preventScroll, { passive: false })
+    return () => node.removeEventListener('wheel', preventScroll)
+  }, [isFollowingChain])
 
   const latestBlockNumber =
     sortedBlocks.length > 0 ? Math.max(...sortedBlocks.map((b) => b.number)) : 0
@@ -91,7 +100,6 @@ export function Blockchain({ blocks, isFollowingChain }: BlockchainProps) {
     <div
       ref={containerRef}
       className="flex-1 overflow-visible min-h-60 sm:min-h-64"
-      onWheel={isFollowingChain ? preventScroll : undefined}
     >
       {sortedBlocks.length === 0 ? (
         <div className="flex items-center justify-center w-full h-56 sm:h-60">
