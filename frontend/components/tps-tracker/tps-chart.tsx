@@ -73,12 +73,12 @@ export function TpsChart() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex flex-col gap-3 pb-4 md:flex-row md:items-start md:justify-between">
+      <div className="flex flex-col gap-3 pb-4 xs:flex-row xs:items-start xs:justify-between">
         <div className="flex flex-col gap-0.5">
           <span className="text-base font-medium text-zinc-400">Live TPS</span>
           <span className="text-sm text-zinc-600">Last 5 minutes</span>
         </div>
-        <div className="flex justify-between gap-3 sm:gap-7 md:justify-end">
+        <div className="flex justify-between gap-3 sm:gap-7 xs:justify-end">
           <StatItem
             label="Live TPS"
             value={formatIntNumber(currentTps)}
