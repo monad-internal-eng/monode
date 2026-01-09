@@ -54,23 +54,25 @@ impl<T: Hash + Eq + Clone> TopKTracker<T> {
                 self.counts.remove(&key);
             }
 
-            // Add the new item
-            self.counts.insert(item, 1);
+            if self.counts.len() < self.capacity {
+                // Add the new item if new space was created
+                self.counts.insert(item, 1);
+            }
         }
     }
 
     /// Get the top N items by count
-    pub fn top_k(&self, n: usize) -> Vec<AccessEntry<T>> {
-        let mut items: Vec<_> = self.counts.iter().map(|(k, v)| AccessEntry {
-            key: k.clone(),
-            count: *v
+    pub fn top_k(&self, k: usize) -> Vec<AccessEntry<T>> {
+        let mut items: Vec<_> = self.counts.iter().map(|(key, value)| AccessEntry {
+            key: key.clone(),
+            count: *value
         }).collect();
 
         // Sort by count descending
         items.sort_by(|a, b| b.count.cmp(&a.count));
 
         // Take top N
-        items.truncate(n);
+        items.truncate(k);
         items
     }
 
