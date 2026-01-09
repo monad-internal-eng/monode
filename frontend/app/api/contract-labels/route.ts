@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { serverEnv } from '@/config/env'
+import { getInvalidAddresses } from '@/lib/utils'
 import type {
   BlockVisionContractDetailResponse,
   ContractLabel,
@@ -77,19 +78,34 @@ export async function POST(request: Request) {
       )
     }
 
+    // Validate all addresses are valid Ethereum addresses
+    const invalidAddresses = getInvalidAddresses(addresses)
+    if (invalidAddresses.length > 0) {
+      return NextResponse.json(
+        {
+          error: 'Invalid address format',
+          invalidAddresses,
+        },
+        { status: 400 },
+      )
+    }
+
+    // Normalize to lowercase for consistent cache keys
+    const normalizedAddresses = addresses.map((addr) => addr.toLowerCase())
+
     // Limit batch size to prevent abuse
     const MAX_BATCH_SIZE = 15
-    const addressesToFetch = addresses.slice(0, MAX_BATCH_SIZE)
+    const addressesToFetch = normalizedAddresses.slice(0, MAX_BATCH_SIZE)
 
     // Fetch all contract details in parallel
     const results = await Promise.all(
-      addressesToFetch.map((addr) => fetchContractDetail(addr)),
+      addressesToFetch.map((address) => fetchContractDetail(address)),
     )
 
     // Build response map
     const labels: Record<string, ContractLabel> = {}
     for (const result of results) {
-      labels[result.address.toLowerCase()] = result
+      labels[result.address] = result
     }
 
     const response: ContractLabelsResponse = { labels }
