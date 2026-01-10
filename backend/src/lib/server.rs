@@ -113,6 +113,40 @@ async fn wait_for_subscription(
     }
 }
 
+// Helper function to process events into buffers
+fn process_event(
+    event: EventDataOrMetrics,
+    filter: &EventFilter,
+    events_buf: &mut Vec<SerializableEventData>,
+    accesses_buf: &mut Vec<TopAccessesData>,
+    tps_buf: &mut Vec<usize>,
+) {
+    match event {
+        EventDataOrMetrics::Event(event_data) => {
+            let serializable = SerializableEventData::from(&event_data);
+            if filter.matches_event(&serializable) {
+                events_buf.push(serializable);
+            }
+        }
+        EventDataOrMetrics::TopAccesses(top_accesses_data) => {
+            accesses_buf.push(top_accesses_data);
+        }
+        EventDataOrMetrics::TPS(tps) => {
+            tps_buf.push(tps);
+        }
+    }
+}
+
+// Helper function to serialize and send a message over WebSocket
+async fn send_message(
+    ws_sender: &mut SplitSink<WebSocketStream<TcpStream>, Message>,
+    server_msg: ServerMessage,
+) -> anyhow::Result<()> {
+    let json_message = serde_json::to_string(&server_msg)?;
+    ws_sender.send(Message::Text(json_message)).await?;
+    Ok(())
+}
+
 async fn client_write_task(
     mut event_broadcast_receiver: broadcast::Receiver<EventDataOrMetrics>,
     filter: EventFilter,
@@ -124,70 +158,44 @@ async fn client_write_task(
     let mut tps_buf: Vec<usize> = Vec::new();
 
     loop {
-        let result = event_broadcast_receiver.recv().await;
-        if result.is_err() {
-            error!("Event broadcast receiver error for {}: {}", addr, result.err().unwrap());
-            break;
-        }
-        let event = result.unwrap();
-        match event {
-            EventDataOrMetrics::Event(event_data) => {
-                let serializable = SerializableEventData::from(&event_data);
-                if filter.matches_event(&serializable) {
-                    events_buf.push(serializable);
-                }
-            }
-            EventDataOrMetrics::TopAccesses(top_accesses_data) => {
-                accesses_buf.push(top_accesses_data);
-            }
-            EventDataOrMetrics::TPS(tps) => {
-                tps_buf.push(tps);
-            }
-        }
-        while let Ok(event) = event_broadcast_receiver.try_recv() {
-            match event {
-                EventDataOrMetrics::Event(event_data) => {
-                    let serializable = SerializableEventData::from(&event_data);
-                    if filter.matches_event(&serializable) {
-                        events_buf.push(serializable);
-                    }
-                }
-                EventDataOrMetrics::TopAccesses(top_accesses_data) => {
-                    accesses_buf.push(top_accesses_data);
-                }
-                EventDataOrMetrics::TPS(tps) => {
-                    tps_buf.push(tps);
-                }
-            }
-        }
-
-        if !events_buf.is_empty() {
-            let server_msg = ServerMessage::Events(std::mem::take(&mut events_buf));
-            // Serialize batch to JSON
-            let json_message = serde_json::to_string(&server_msg).unwrap();
-
-            // Send batch
-            if let Err(e) = ws_sender.send(Message::Text(json_message)).await {
-                error!("Failed to send batch to {}: {}", addr, e);
+        // Wait for first event
+        match event_broadcast_receiver.recv().await {
+            Ok(event) => process_event(event, &filter, &mut events_buf, &mut accesses_buf, &mut tps_buf),
+            Err(e) => {
+                error!("Event broadcast receiver error for {}: {}", addr, e);
                 break;
             }
         }
+
+        // Drain all available events without blocking
+        while let Ok(event) = event_broadcast_receiver.try_recv() {
+            process_event(event, &filter, &mut events_buf, &mut accesses_buf, &mut tps_buf);
+        }
+
+        // Send all accumulated buffers
+        if !events_buf.is_empty() {
+            let server_msg = ServerMessage::Events(std::mem::take(&mut events_buf));
+            if let Err(e) = send_message(&mut ws_sender, server_msg).await {
+                error!("Failed to send events to {}: {}", addr, e);
+                break;
+            }
+        }
+
         if !accesses_buf.is_empty() {
             for accesses in std::mem::take(&mut accesses_buf) {
                 let server_msg = ServerMessage::TopAccesses(accesses);
-                let json_message = serde_json::to_string(&server_msg).unwrap();
-                if let Err(e) = ws_sender.send(Message::Text(json_message)).await {
-                    error!("Failed to send batch to {}: {}", addr, e);
+                if let Err(e) = send_message(&mut ws_sender, server_msg).await {
+                    error!("Failed to send accesses to {}: {}", addr, e);
                     break;
                 }
             }
         }
+
         if !tps_buf.is_empty() {
             for tps in std::mem::take(&mut tps_buf) {
                 let server_msg = ServerMessage::TPS(tps);
-                let json_message = serde_json::to_string(&server_msg).unwrap();
-                if let Err(e) = ws_sender.send(Message::Text(json_message)).await {
-                    error!("Failed to send batch to {}: {}", addr, e);
+                if let Err(e) = send_message(&mut ws_sender, server_msg).await {
+                    error!("Failed to send TPS to {}: {}", addr, e);
                     break;
                 }
             }
