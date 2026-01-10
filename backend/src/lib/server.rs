@@ -37,6 +37,7 @@ pub enum ServerMessage {
     TPS(usize),
 }
 
+#[derive(Default)]
 struct TPSTracker {
     block_1_txs: usize,
     block_2_txs: usize,
@@ -46,12 +47,7 @@ struct TPSTracker {
 
 impl TPSTracker {
     pub fn new() -> Self {
-        Self {
-            block_1_txs: 0,
-            block_2_txs: 0,
-            block_3_txs: 0,
-            current_tx_count: 0,
-        }
+        Self::default()
     }
 
     pub fn record_tx(&mut self) {
