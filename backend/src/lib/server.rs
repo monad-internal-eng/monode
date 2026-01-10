@@ -24,15 +24,47 @@ pub struct TopAccessesData {
 }
 
 #[derive(Debug, Clone)]
-pub enum EventDataOrAccesses {
+pub enum EventDataOrMetrics {
     Event(EventData),
     TopAccesses(TopAccessesData),
+    TPS(usize)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ServerMessage {
     Events(Vec<SerializableEventData>),
     TopAccesses(TopAccessesData),
+    TPS(usize),
+}
+
+struct TPSTracker {
+    block_1_txs: usize,
+    block_2_txs: usize,
+    block_3_txs: usize,
+    current_tx_count: usize,
+}
+
+impl TPSTracker {
+    pub fn new() -> Self {
+        Self {
+            block_1_txs: 0,
+            block_2_txs: 0,
+            block_3_txs: 0,
+            current_tx_count: 0,
+        }
+    }
+
+    pub fn record_tx(&mut self) {
+        self.current_tx_count += 1;
+    }
+
+    pub fn get_tps(&mut self) -> usize {
+        self.block_1_txs = self.block_2_txs;
+        self.block_2_txs = self.block_3_txs;
+        self.block_3_txs = self.current_tx_count;
+        self.current_tx_count = 0;
+        return self.block_1_txs + self.block_2_txs + (self.block_3_txs / 2);
+    }
 }
 
 /// Wait for the client to send a subscription message, with a timeout.
@@ -82,13 +114,14 @@ async fn wait_for_subscription(
 }
 
 async fn client_write_task(
-    mut event_broadcast_receiver: broadcast::Receiver<EventDataOrAccesses>,
+    mut event_broadcast_receiver: broadcast::Receiver<EventDataOrMetrics>,
     filter: EventFilter,
     addr: SocketAddr,
     mut ws_sender: SplitSink<WebSocketStream<TcpStream>, Message>,
 ) {
     let mut events_buf: Vec<SerializableEventData> = Vec::new();
     let mut accesses_buf: Vec<TopAccessesData> = Vec::new();
+    let mut tps_buf: Vec<usize> = Vec::new();
 
     loop {
         let result = event_broadcast_receiver.recv().await;
@@ -98,26 +131,32 @@ async fn client_write_task(
         }
         let event = result.unwrap();
         match event {
-            EventDataOrAccesses::Event(event_data) => {
+            EventDataOrMetrics::Event(event_data) => {
                 let serializable = SerializableEventData::from(&event_data);
                 if filter.matches_event(&serializable) {
                     events_buf.push(serializable);
                 }
             }
-            EventDataOrAccesses::TopAccesses(top_accesses_data) => {
+            EventDataOrMetrics::TopAccesses(top_accesses_data) => {
                 accesses_buf.push(top_accesses_data);
+            }
+            EventDataOrMetrics::TPS(tps) => {
+                tps_buf.push(tps);
             }
         }
         while let Ok(event) = event_broadcast_receiver.try_recv() {
             match event {
-                EventDataOrAccesses::Event(event_data) => {
+                EventDataOrMetrics::Event(event_data) => {
                     let serializable = SerializableEventData::from(&event_data);
                     if filter.matches_event(&serializable) {
                         events_buf.push(serializable);
                     }
                 }
-                EventDataOrAccesses::TopAccesses(top_accesses_data) => {
+                EventDataOrMetrics::TopAccesses(top_accesses_data) => {
                     accesses_buf.push(top_accesses_data);
+                }
+                EventDataOrMetrics::TPS(tps) => {
+                    tps_buf.push(tps);
                 }
             }
         }
@@ -136,6 +175,16 @@ async fn client_write_task(
         if !accesses_buf.is_empty() {
             for accesses in std::mem::take(&mut accesses_buf) {
                 let server_msg = ServerMessage::TopAccesses(accesses);
+                let json_message = serde_json::to_string(&server_msg).unwrap();
+                if let Err(e) = ws_sender.send(Message::Text(json_message)).await {
+                    error!("Failed to send batch to {}: {}", addr, e);
+                    break;
+                }
+            }
+        }
+        if !tps_buf.is_empty() {
+            for tps in std::mem::take(&mut tps_buf) {
+                let server_msg = ServerMessage::TPS(tps);
                 let json_message = serde_json::to_string(&server_msg).unwrap();
                 if let Err(e) = ws_sender.send(Message::Text(json_message)).await {
                     error!("Failed to send batch to {}: {}", addr, e);
@@ -175,14 +224,16 @@ async fn client_read_task(
 
 async fn run_event_forwarder_task(
     mut event_receiver: tokio::sync::mpsc::Receiver<EventData>,
-    event_broadcast_sender: broadcast::Sender<EventDataOrAccesses>,
+    event_broadcast_sender: broadcast::Sender<EventDataOrMetrics>,
 ) {
-    let mut account_accesses = TopKTracker::new(10_000);
-    let mut storage_accesses = TopKTracker::new(10_000);
+    let mut account_accesses = TopKTracker::new(1_000);
+    let mut storage_accesses = TopKTracker::new(1_000);
     let mut accesses_reset_interval = tokio::time::interval(std::time::Duration::from_mins(5));
 
     // Track current transaction hash per txn_idx
-    let mut current_txn_hashes: std::collections::HashMap<usize, [u8; 32]> = std::collections::HashMap::new();
+    let mut current_txn_hashes: Vec<Option<[u8; 32]>> = vec![None; 10_000];
+
+    let mut tps_tracker = TPSTracker::new();
 
     loop {
         tokio::select! {
@@ -196,41 +247,57 @@ async fn run_event_forwarder_task(
                 // Track txn_hash from TxnHeaderStart events
                 if let EventName::TxnHeaderStart = event_data.event_name {
                     if let ExecEvent::TxnHeaderStart { txn_index, txn_header_start, .. } = &event_data.payload {
-                        current_txn_hashes.insert(*txn_index, txn_header_start.txn_hash.bytes);
+                        current_txn_hashes[*txn_index] = Some(txn_header_start.txn_hash.bytes);
+                    } else {
+                        unreachable!();
                     }
                 }
 
                 // Populate txn_hash for events that have txn_idx
                 if let Some(txn_idx) = event_data.txn_idx {
-                    if let Some(hash) = current_txn_hashes.get(&txn_idx) {
+                    if let Some(Some(hash)) = current_txn_hashes.get(txn_idx) {
                         event_data.txn_hash = Some(*hash);
                     }
                 }
 
-                // Clear txn_hash tracking on TxnEnd
-                if let EventName::TxnEnd = event_data.event_name {
-                    if let Some(txn_idx) = event_data.txn_idx {
-                        current_txn_hashes.remove(&txn_idx);
+                let mut tps_event = None;
+                
+                match event_data.event_name {
+                    EventName::BlockStart => {
+                        tps_event = Some(EventDataOrMetrics::TPS(tps_tracker.get_tps()));
                     }
-                }
-
-                if let EventName::AccountAccess = event_data.event_name {
-                    if let ExecEvent::AccountAccess {
-                        account_access,
-                        ..
-                    } = &event_data.payload {
-                        let address = Address::from_slice(&account_access.address.bytes);
-                        account_accesses.record(address);
+                    EventName::TxnHeaderStart => {
+                        tps_tracker.record_tx();
                     }
-                } else if let EventName::StorageAccess = event_data.event_name {
-                    if let ExecEvent::StorageAccess {
-                        storage_access,
-                        ..
-                    } = &event_data.payload {
-                        let address = Address::from_slice(&storage_access.address.bytes);
-                        let key = B256::from_slice(&storage_access.key.bytes);
-                        storage_accesses.record((address, key));
+                    EventName::TxnEnd => {
+                        if let Some(txn_idx) = event_data.txn_idx {
+                            current_txn_hashes[txn_idx] = None;
+                        }
                     }
+                    EventName::AccountAccess => {
+                        if let ExecEvent::AccountAccess {
+                            account_access,
+                            ..
+                        } = &event_data.payload {
+                            let address = Address::from_slice(&account_access.address.bytes);
+                            account_accesses.record(address);
+                        } else {
+                            unreachable!();
+                        }
+                    }
+                    EventName::StorageAccess => {
+                        if let ExecEvent::StorageAccess {
+                            storage_access,
+                            ..
+                        } = &event_data.payload {
+                            let address = Address::from_slice(&storage_access.address.bytes);
+                            let key = B256::from_slice(&storage_access.key.bytes);
+                            storage_accesses.record((address, key));
+                        } else {
+                            unreachable!();
+                        }
+                    }
+                    _ => (),
                 }
 
                 // Send accesses update on BlockEnd events (after all access events are processed)
@@ -240,14 +307,18 @@ async fn run_event_forwarder_task(
                     false
                 };
 
-                let _ = event_broadcast_sender.send(EventDataOrAccesses::Event(event_data));
+                let _ = event_broadcast_sender.send(EventDataOrMetrics::Event(event_data));
 
                 if send_accesses_update {
                     let top_accesses_data = TopAccessesData {
                         account: account_accesses.top_k(10),
                         storage: storage_accesses.top_k(10),
                     };
-                    let _ = event_broadcast_sender.send(EventDataOrAccesses::TopAccesses(top_accesses_data));
+                    let _ = event_broadcast_sender.send(EventDataOrMetrics::TopAccesses(top_accesses_data));
+                }
+
+                if let Some(tps_event) = tps_event {
+                    let _ = event_broadcast_sender.send(tps_event);
                 }
 
             },
@@ -262,7 +333,7 @@ async fn run_event_forwarder_task(
 async fn handle_connection(
     stream: TcpStream,
     addr: SocketAddr,
-    event_broadcast_receiver: broadcast::Receiver<EventDataOrAccesses>,
+    event_broadcast_receiver: broadcast::Receiver<EventDataOrMetrics>,
 ) {
     info!("New WebSocket connection from: {}", addr);
 
@@ -317,7 +388,7 @@ pub async fn run_websocket_server(
     event_receiver: tokio::sync::mpsc::Receiver<EventData>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Create a broadcast channel for distributing events to all clients
-    let (event_broadcast_sender, _) = broadcast::channel::<EventDataOrAccesses>(1_000_000);
+    let (event_broadcast_sender, _) = broadcast::channel::<EventDataOrMetrics>(1_000_000);
 
     // Spawn a task to forward events from the mpsc channel to the broadcast channel
     let event_broadcast_sender_clone = event_broadcast_sender.clone();
