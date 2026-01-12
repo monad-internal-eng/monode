@@ -28,6 +28,7 @@ interface TopAccessesData {
 interface ServerMessage {
   Events?: SerializableEventData[]
   TopAccesses?: TopAccessesData
+  TPS?: number
 }
 
 interface EventFilter {
@@ -54,6 +55,7 @@ interface EventsContextValue {
     filters: SubscribeOptions[],
     callback: (event: SerializableEventData) => void,
   ) => () => void
+  subscribeToTps: (callback: (tps: number) => void) => () => void
 }
 
 interface EventsProviderProps {
@@ -82,6 +84,9 @@ export function EventsProvider({ children }: EventsProviderProps) {
   const subscribersRef = useRef<
     Map<string, (event: SerializableEventData) => void>
   >(new Map())
+  const tpsSubscribersRef = useRef<Map<string, (tps: number) => void>>(
+    new Map(),
+  )
   const subscribedFiltersRef = useRef<EventFilter[]>([])
 
   useEffect(() => {
@@ -117,6 +122,13 @@ export function EventsProvider({ children }: EventsProviderProps) {
             if (message.TopAccesses) {
               setAccountAccesses(message.TopAccesses.account)
               setStorageAccesses(message.TopAccesses.storage)
+            }
+
+            if (typeof message.TPS === 'number') {
+              const tps = message.TPS
+              tpsSubscribersRef.current.forEach((callback) => {
+                callback(tps)
+              })
             }
 
             if (message.Events && message.Events.length > 0) {
@@ -259,12 +271,22 @@ export function EventsProvider({ children }: EventsProviderProps) {
     [],
   )
 
+  const subscribeToTps = useCallback((callback: (tps: number) => void) => {
+    const subscriberId = Math.random().toString(36).slice(2)
+    tpsSubscribersRef.current.set(subscriberId, callback)
+
+    return () => {
+      tpsSubscribersRef.current.delete(subscriberId)
+    }
+  }, [])
+
   const value: EventsContextValue = {
     accountAccesses,
     storageAccesses,
     events,
     isConnected,
     subscribe,
+    subscribeToTps,
   }
 
   return (

@@ -3,6 +3,10 @@
 import { Info } from 'lucide-react'
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts'
 import {
+  AnimatedNumber,
+  AnimatedNumberGroup,
+} from '@/components/ui/animated-number'
+import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
@@ -13,6 +17,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useTotalTransactions } from '@/hooks/use-total-transactions'
 import { useTps } from '@/hooks/use-tps'
 import { formatRelativeTime, formatTimeHMS } from '@/lib/timestamp'
 import { formatIntNumber } from '@/lib/ui'
@@ -27,7 +32,7 @@ const chartConfig = {
 
 interface StatItemProps {
   label: string
-  value: string | number
+  value: number
   info?: string
   colorClass?: string
 }
@@ -49,26 +54,24 @@ function StatItem({
             <TooltipTrigger asChild>
               <Info className="size-3 text-zinc-600 cursor-help" />
             </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-48">
-              {info}
-            </TooltipContent>
+            <TooltipContent side="top">{info}</TooltipContent>
           </Tooltip>
         )}
       </div>
-      <span
+      <AnimatedNumber
+        value={value}
         className={cn(
-          'text-2xl sm:text-3xl font-bold tabular-nums leading-none',
+          'text-2xl sm:text-3xl font-bold leading-none',
           colorClass,
         )}
-      >
-        {value}
-      </span>
+      />
     </div>
   )
 }
 
 export function TpsChart() {
-  const { currentTps, peakTps, totalTransactions, history } = useTps()
+  const { currentTps, peakTps, history } = useTps()
+  const totalTransactions = useTotalTransactions()
   const hasData = history.length > 0
 
   return (
@@ -78,25 +81,27 @@ export function TpsChart() {
           <span className="text-base font-medium text-zinc-400">Live TPS</span>
           <span className="text-sm text-zinc-600">Last 5 minutes</span>
         </div>
-        <div className="flex justify-between gap-3 sm:gap-7 xs:justify-end">
-          <StatItem
-            label="Live TPS"
-            value={formatIntNumber(currentTps)}
-            colorClass="text-[var(--color-chart-1)]"
-          />
-          <StatItem
-            label="Peak TPS"
-            value={formatIntNumber(peakTps)}
-            info="Highest TPS since page load"
-            colorClass="text-amber-400"
-          />
-          <StatItem
-            label="Total Txns"
-            value={formatIntNumber(totalTransactions)}
-            info="Total transactions since page load"
-            colorClass="text-blue-400"
-          />
-        </div>
+        <AnimatedNumberGroup>
+          <div className="flex justify-between gap-3 sm:gap-7 xs:justify-end">
+            <StatItem
+              label="Live TPS"
+              value={currentTps}
+              colorClass="text-[var(--color-chart-1)]"
+            />
+            <StatItem
+              label="Peak TPS"
+              value={peakTps}
+              info="Highest TPS since page load"
+              colorClass="text-amber-400"
+            />
+            <StatItem
+              label="Total Txns"
+              value={totalTransactions}
+              info="Total transactions since page load"
+              colorClass="text-blue-400"
+            />
+          </div>
+        </AnimatedNumberGroup>
       </div>
 
       <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden">
@@ -130,7 +135,7 @@ export function TpsChart() {
                 tickMargin={8}
                 tick={{ fill: 'var(--chart-axis)', fontSize: 12 }}
                 tickFormatter={formatIntNumber}
-                width={32}
+                width={48}
                 allowDataOverflow={true}
               />
               <ChartTooltip
