@@ -1,9 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useEventsContext } from '@/contexts/events-context'
-import { useEvents } from '@/hooks/use-events'
-import type { SerializableEventData } from '@/types/events'
 
 /** Duration of TPS history to keep */
 const TPS_HISTORY_DURATION_MS = 5 * 60 * 1000
@@ -16,34 +14,20 @@ export interface TpsDataPoint {
 export interface TpsData {
   currentTps: number
   peakTps: number
-  totalTransactions: number
   history: TpsDataPoint[]
 }
 
 /**
- * Tracks TPS from backend metrics and total txns from execution events.
+ * Tracks TPS from backend metrics.
  */
 export function useTps(): TpsData {
   const [tpsData, setTpsData] = useState<TpsData>({
     currentTps: 0,
     peakTps: 0,
-    totalTransactions: 0,
     history: [],
   })
 
   const { subscribeToTps } = useEventsContext()
-  const totalTransactionsRef = useRef(0)
-
-  const handleTxnEvent = useCallback((event: SerializableEventData) => {
-    if (event.payload.type === 'TxnHeaderStart') {
-      totalTransactionsRef.current += 1
-    }
-  }, [])
-
-  useEvents({
-    filters: [{ eventName: 'TxnHeaderStart' }],
-    onEvent: handleTxnEvent,
-  })
 
   useEffect(() => {
     const unsubscribe = subscribeToTps((tps) => {
@@ -60,10 +44,6 @@ export function useTps(): TpsData {
         return {
           currentTps: tps,
           peakTps: Math.max(prev.peakTps, tps),
-          totalTransactions: Math.max(
-            prev.totalTransactions,
-            totalTransactionsRef.current,
-          ),
           history: nextHistory,
         }
       })

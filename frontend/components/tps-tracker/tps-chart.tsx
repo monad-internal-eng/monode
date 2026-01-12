@@ -17,6 +17,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useTotalTransactions } from '@/hooks/use-total-transactions'
 import { useTps } from '@/hooks/use-tps'
 import { formatRelativeTime, formatTimeHMS } from '@/lib/timestamp'
 import { formatIntNumber } from '@/lib/ui'
@@ -69,7 +70,8 @@ function StatItem({
 }
 
 export function TpsChart() {
-  const { currentTps, peakTps, totalTransactions, history } = useTps()
+  const { currentTps, peakTps, history } = useTps()
+  const totalTransactions = useTotalTransactions()
   const hasData = history.length > 0
 
   return (
