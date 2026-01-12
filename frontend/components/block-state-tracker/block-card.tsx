@@ -56,7 +56,7 @@ function StateTracker({ currentState }: { currentState: BlockState }) {
               ) : (
                 <span
                   className={cn(
-                    'text-[10px] font-medium',
+                    'text-2xs font-medium',
                     isPending && 'text-zinc-600',
                   )}
                 >

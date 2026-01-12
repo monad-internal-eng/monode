@@ -4,7 +4,7 @@ const BlockTimeLegend = () => {
   return (
     <div className="flex flex-col justify-between gap-6 text-xs sm:gap-4 sm:flex-row sm:text-sm text-[#a0a0b0]">
       <div className="flex flex-row gap-2 sm:max-w-1/3 text-zinc-500">
-        <Info className="w-4 h-[1lh]" />
+        <Info className="w-4 h-lh" />
         <div className="flex flex-col gap-1">
           <span className="text-sm">Height = execution time</span>
           <span className="text-sm">
