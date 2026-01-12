@@ -130,7 +130,7 @@ export function TpsChart() {
                 tickMargin={8}
                 tick={{ fill: 'var(--chart-axis)', fontSize: 12 }}
                 tickFormatter={formatIntNumber}
-                width={32}
+                width={48}
                 allowDataOverflow={true}
               />
               <ChartTooltip
