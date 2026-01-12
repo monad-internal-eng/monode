@@ -54,6 +54,9 @@ impl TPSTracker {
         self.current_tx_count += 1;
     }
 
+    /// Calculates the TPS over an effective window of 2.5 blocks.
+    /// The formula sums the transaction counts of the two most recent full blocks and half of the newest (partial) block.
+    /// This is because average block time is approximately 400ms; summing 2.5 blocks provides a close approximation of one second.
     pub fn get_tps(&mut self) -> usize {
         self.block_1_txs = self.block_2_txs;
         self.block_2_txs = self.block_3_txs;
