@@ -16,6 +16,8 @@ const BLOCK_EVENTS = [
   'BlockReject',
 ] as const
 
+const MAX_BLOCKS = 5000
+
 interface UseExecutionEventBlocksReturn {
   blocks: Block[]
   isSlowMotion: boolean
@@ -48,10 +50,11 @@ function applyEventToBlocks(
     case 'BlockStart': {
       const exists = blocks.some((b) => b.number === payload.block_number)
       if (exists) return blocks
-      return [
+      const newBlocks: Block[] = [
         ...blocks,
         { number: payload.block_number, state: 'proposed', timestamp },
       ]
+      return newBlocks.slice(-MAX_BLOCKS)
     }
 
     case 'BlockQC':
