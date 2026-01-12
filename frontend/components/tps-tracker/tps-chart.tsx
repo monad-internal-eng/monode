@@ -49,7 +49,7 @@ function StatItem({
             <TooltipTrigger asChild>
               <Info className="size-3 text-zinc-600 cursor-help" />
             </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-48">
+            <TooltipContent side="top">
               {info}
             </TooltipContent>
           </Tooltip>
