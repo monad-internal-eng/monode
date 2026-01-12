@@ -208,6 +208,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     }
                                 }
                             }
+                            Ok(ServerMessage::TPS(tps)) => {
+                                info!("Received TPS: {}", tps);
+                            }
                             Err(_) => {
                                 error!("Failed to parse events: {}", text);
                             }
