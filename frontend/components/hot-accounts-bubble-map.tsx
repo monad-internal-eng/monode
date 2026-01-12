@@ -54,19 +54,19 @@ export default function HotAccountsBubbleMap() {
         return (
           <div className="flex flex-col gap-1">
             <div className="flex flex-col gap-2">
-              <span className="text-sm text-[#9C6EF8] tracking-wider uppercase">
+              <span className="text-sm text-tooltip-text-accent tracking-wider uppercase">
                 {displayName}
               </span>
-              <p className="text-xs font-mono text-[#8888a0] break-all">
+              <p className="text-xs font-mono text-tooltip-text-secondary break-all">
                 {account.address}
               </p>
             </div>
             <div className="flex flex-col gap-0">
-              <div className="border-t border-[#2C2735] my-2" />
+              <div className="border-t border-tooltip-separator my-2" />
               <div className="flex flex-row justify-between">
                 <p className="text-white font-medium">
                   {formatIntNumber(account.hits)}{' '}
-                  <span className="text-[#8888a0]">hits</span>
+                  <span className="text-tooltip-text-secondary">hits</span>
                 </p>
                 <ExplorerLink
                   href={`https://monadvision.com/address/${account.address}`}

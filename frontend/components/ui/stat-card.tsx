@@ -27,8 +27,10 @@ export function StatCard({
     <div className="dark-component-colors rounded-xl border p-5 w-full flex flex-col gap-4 items-start">
       <div className="flex flex-row justify-between w-full">
         <div className="flex flex-col items-start gap-1">
-          <p className="text-sm sm:text-base text-[#8888a0]">{label}</p>
-          <p className="text-lg sm:text-xl font-medium text-[#8888a0]">
+          <p className="text-sm sm:text-base text-tooltip-text-secondary">
+            {label}
+          </p>
+          <p className="text-lg sm:text-xl font-medium text-tooltip-text-secondary">
             <span className="text-3xl sm:text-5xl text-white font-bold tabular-nums">
               {value}
             </span>
@@ -40,7 +42,9 @@ export function StatCard({
         </div>
       </div>
       {description && (
-        <p className="text-sm sm:text-base text-[#8888a0]">{description}</p>
+        <p className="text-sm sm:text-base text-tooltip-text-secondary">
+          {description}
+        </p>
       )}
     </div>
   )

@@ -59,17 +59,17 @@ export default function HotSlotsBubbleMap() {
         return (
           <div className="flex flex-col gap-1">
             <div className="flex flex-col gap-2">
-              <span className="text-sm text-[#9C6EF8] uppercase tracking-wider">
+              <span className="text-sm text-tooltip-text-accent uppercase tracking-wider">
                 {displayName}
               </span>
               <div className="flex flex-col gap-1">
-                <p className="text-2xs font-mono text-[#8888a0] break-all">
+                <p className="text-2xs font-mono text-tooltip-text-secondary break-all">
                   Contract:{' '}
                   <span className="text-white text-xs">
                     {shortenHex(slot.address)}
                   </span>
                 </p>
-                <p className="text-2xs font-mono text-[#8888a0] break-all">
+                <p className="text-2xs font-mono text-tooltip-text-secondary break-all">
                   Slot:{' '}
                   <span className="text-white text-xs">
                     {shortenHex(slot.slot)}
@@ -78,11 +78,11 @@ export default function HotSlotsBubbleMap() {
               </div>
             </div>
             <div className="flex flex-col gap-0">
-              <div className="border-t border-[#2C2735] my-2" />
+              <div className="border-t border-tooltip-separator my-2" />
               <div className="flex flex-row justify-between">
                 <p className="text-white font-medium">
                   {formatIntNumber(slot.hits)}{' '}
-                  <span className="text-[#8888a0]">hits</span>
+                  <span className="text-tooltip-text-secondary">hits</span>
                 </p>
                 <ExplorerLink
                   href={`https://monadvision.com/address/${slot.address}`}

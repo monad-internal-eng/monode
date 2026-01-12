@@ -86,6 +86,14 @@
   --color-toast-error: var(--toast-error);
   --color-toast-error-bg: var(--toast-error-bg);
 
+  /* Tooltip colors */
+  --color-tooltip-bg: var(--tooltip-bg);
+  --color-tooltip-border: var(--tooltip-border);
+  --color-tooltip-text: var(--tooltip-text);
+  --color-tooltip-text-secondary: var(--tooltip-text-secondary);
+  --color-tooltip-text-accent: var(--tooltip-text-accent);
+  --color-tooltip-separator: var(--tooltip-separator);
+
   /* Text colors */
   --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: var(--text-tertiary);
@@ -371,6 +379,14 @@
   --toast-error-dark: var(--color-red-500);
   --toast-error-bg-light: hsla(0, 84%, 60%, 0.15);
   --toast-error-bg-dark: hsla(0, 84%, 60%, 0.1);
+
+  /* Tooltip colors */
+  --tooltip-bg: #0e0e1a;
+  --tooltip-border: #2a2a4a;
+  --tooltip-text: #ffffff;
+  --tooltip-text-secondary: #8888a0;
+  --tooltip-text-accent: #9c6ef8;
+  --tooltip-separator: #2c2735;
 
   /* Text colors */
   --text-secondary-light: var(--color-neutral-500);

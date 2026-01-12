@@ -26,7 +26,7 @@ export default function BlockTimeExecutionTracker() {
     finalizedBlocks,
     maxBlockExecutionTime,
     normalizedBlockExecutionTime,
-  } = useBlockTracker(5000)
+  } = useBlockTracker()
   const [isFollowingChain, setIsFollowingChain] = useState(true)
   const { isHovering, hoverProps } = useMouseHover()
   const isPaused = !isFollowingChain || isHovering

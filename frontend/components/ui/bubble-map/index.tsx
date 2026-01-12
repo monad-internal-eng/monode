@@ -99,7 +99,7 @@ export function BubbleMap<T extends BubbleItem>({
                     </TooltipTrigger>
                     <TooltipContent
                       sideOffset={5}
-                      className="bg-[#0e0e1a] border border-[#2a2a4a] rounded-lg p-2 sm:p-3 shadow-xl text-xs sm:text-sm w-[250px]"
+                      className="bg-tooltip-bg border border-tooltip-border rounded-lg p-2 sm:p-3 shadow-xl text-xs sm:text-sm w-[250px]"
                     >
                       {renderTooltip(item)}
                     </TooltipContent>
@@ -112,7 +112,7 @@ export function BubbleMap<T extends BubbleItem>({
         {/* Bottom description */}
         {bottomDescription && (
           <div>
-            <p className="text-center text-sm text-[#888198]">
+            <p className="text-center text-sm text-text-secondary">
               {bottomDescription}
             </p>
           </div>

@@ -80,55 +80,55 @@ const BlockTime = ({ block, normalizedBlockExecutionTime }: BlockTimeProps) => {
           </TooltipTrigger>
           <TooltipContent
             sideOffset={5}
-            className="bg-[#0e0e1a] border border-[#2a2a4a] rounded-lg p-2 sm:p-3 shadow-xl text-xs sm:text-sm w-[350px]"
+            className="bg-tooltip-bg border border-tooltip-border text-tooltip-text rounded-lg p-2 sm:p-3 shadow-xl text-xs sm:text-sm w-[350px]"
           >
             <div className="flex flex-col gap-1">
               <div className="flex flex-col gap-2">
                 <ExternalLink
                   href={`${EXPLORER_URL}/block/${block.number}`}
-                  className="text-sm text-white uppercase tracking-wider hover:underline"
+                  className="text-sm text-tooltip-text uppercase tracking-wider hover:underline"
                 >
                   Block {formatBlockNumber(block.number)}
                 </ExternalLink>
                 <div className="flex flex-col gap-1">
                   <div className="flex flex-row items-center justify-between">
-                    <p className="text-xs font-mono text-[#8888a0] break-all">
+                    <p className="text-xs font-mono text-tooltip-text-secondary break-all">
                       Block Execution Time
                     </p>
-                    <p className="text-white text-sm font-medium">
+                    <p className="text-tooltip-text text-sm font-medium">
                       {formattedBlockExecutionTime}ms
                     </p>
                   </div>
                   <div className="flex flex-row items-center justify-between">
-                    <p className="text-xs font-mono text-[#8888a0] break-all">
+                    <p className="text-xs font-mono text-tooltip-text-secondary break-all">
                       Transaction Execution Time
                     </p>
-                    <p className="text-white text-sm font-medium">
+                    <p className="text-tooltip-text text-sm font-medium">
                       {formattedTotalTransactionTime}ms
                     </p>
                   </div>
                   <div className="flex flex-row items-center justify-between">
-                    <p className="text-xs font-mono text-[#8888a0] break-all">
+                    <p className="text-xs font-mono text-tooltip-text-secondary break-all">
                       Transactions
                     </p>
-                    <p className="text-white text-sm font-medium">
+                    <p className="text-tooltip-text text-sm font-medium">
                       {numberOfTransactions}
                     </p>
                   </div>
                   <div className="flex flex-row items-center justify-between">
-                    <p className="text-xs font-mono text-[#8888a0] break-all">
+                    <p className="text-xs font-mono text-tooltip-text-secondary break-all">
                       Time Saved
                     </p>
-                    <p className="text-white text-sm font-medium">
+                    <p className="text-tooltip-text text-sm font-medium">
                       {timeSaved < 0 ? 0 : timeSaved.toFixed(3)}
                       ms
                     </p>
                   </div>
                   <div className="flex flex-row items-center justify-between">
-                    <p className="text-xs font-mono text-[#8888a0] break-all">
+                    <p className="text-xs font-mono text-tooltip-text-secondary break-all">
                       Parallel Efficiency
                     </p>
-                    <p className="text-[#9C6EF8] text-sm font-medium">
+                    <p className="text-tooltip-text-accent text-sm font-medium">
                       {parallelPercentage.toFixed(3)}%
                     </p>
                   </div>
@@ -136,10 +136,10 @@ const BlockTime = ({ block, normalizedBlockExecutionTime }: BlockTimeProps) => {
               </div>
               {isHighlyParallel && (
                 <div className="flex flex-col gap-0">
-                  <div className="border-t border-[#2C2735] my-2" />
+                  <div className="border-t border-tooltip-separator my-2" />
                   <div className="flex flex-row items-center gap-2">
-                    <div className="bg-[#9C6EF8] w-2 h-2 rounded-full" />
-                    <p className="text-[#9C6EF8] font-medium">
+                    <div className="bg-tooltip-text-accent w-2 h-2 rounded-full" />
+                    <p className="text-tooltip-text-accent font-medium">
                       High parallel execution detected
                     </p>
                   </div>
