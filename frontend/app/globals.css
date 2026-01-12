@@ -126,6 +126,38 @@
   --color-tracker-badge-bg: #2a233a;
   --color-tracker-active: #836ef9;
 
+  /* Block state colors */
+  --color-block-proposed: #d4631f;
+  --color-block-voted: #8b68d9;
+  --color-block-finalized: #4680d6;
+  --color-block-verified: #2aad7c;
+
+  /* Swap provider and transfer colors */
+  --color-purple-primary: #836ef9;
+  --color-purple-glow: #7b66a2;
+  --color-green-primary: #00d395;
+  --color-pink-primary: #ff007a;
+  --color-cyan-primary: #1fc7d4;
+  --color-magenta-primary: #ff4a8d;
+  --color-blue-primary: #0066ff;
+
+  /* UI component colors */
+  --color-text-muted: #a0a0b0;
+  --color-text-muted-darker: #6a6a7a;
+  --color-bg-card-dark: #454150;
+  --color-bg-card-darker: #696274;
+  --color-border-accent: #52525b;
+  --color-bg-danger: #b63537;
+  --color-bg-warning: #c88328;
+  --color-shadow-accent: #17151e;
+  --color-text-caption: #4a4554;
+  --color-separator-dark: #2c2735;
+  --color-hover-accent: #2a2733;
+  --color-success-green: #25c373;
+  --color-success-bg: #1d2727;
+  --color-warning-orange: #f39e26;
+  --color-warning-bg: #2f2423;
+
   /* Typography */
   --font-sans: var(--font-britti-sans), system-ui, sans-serif;
   --font-britti-sans: var(--font-britti-sans), system-ui, sans-serif;
@@ -346,19 +378,24 @@
 
   /* Button shadows */
   --button-secondary-shadow-light:
-    0 1px 0.5px 0 var(--color-brand-monad-off-white-50) inset, 0 -1px 0.5px 0 rgba(
+    0 0.0625rem 0.03125rem 0 var(--color-brand-monad-off-white-50) inset, 0 -0.0625rem 0.03125rem 0 rgba(
       0,
       0,
       0,
       0.08
-    ) inset, 0 1px 2px 0 rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.25);
+    ) inset, 0 0.0625rem 0.125rem 0 rgba(0, 0, 0, 0.08), 0 0 0 0.0625rem rgba(
+      0,
+      0,
+      0,
+      0.25
+    );
   --button-secondary-shadow-dark:
-    0 1px 0.5px 0 rgba(255, 255, 255, 0.12) inset, 0 -1px 0.5px 0 rgba(
+    0 0.0625rem 0.03125rem 0 rgba(255, 255, 255, 0.12) inset, 0 -0.0625rem 0.03125rem 0 rgba(
       0,
       0,
       0,
       0.33
-    ) inset, 0 1px 2px 0 var(--color-brand-monad-off-black-950-black), 0 0 0 1px var(
+    ) inset, 0 0.0625rem 0.125rem 0 var(--color-brand-monad-off-black-950-black), 0 0 0 0.0625rem var(
       --color-brand-monad-off-black-950-black
     );
 
@@ -424,12 +461,12 @@
 
   /* Shadows */
   --shadow-login-button:
-    0 0 5.761px 0.735px #d4cdff, 0 1px 2px 0 rgba(0, 0, 0, 0.2), 0 1px 0.5px 0 rgba(
+    0 0 0.36rem 0.046rem #d4cdff, 0 0.0625rem 0.125rem 0 rgba(0, 0, 0, 0.2), 0 0.0625rem 0.03125rem 0 rgba(
       255,
       255,
       255,
       0.25
-    ) inset, 0 -1px 0.5px 0 rgba(255, 255, 255, 0.25) inset, 0 0 0 1px rgba(
+    ) inset, 0 -0.0625rem 0.03125rem 0 rgba(255, 255, 255, 0.25) inset, 0 0 0 0.0625rem rgba(
       79,
       71,
       235,
@@ -644,8 +681,8 @@
 /* Scrollbar */
 
 *::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 0.5rem;
+  height: 0.5rem;
 }
 
 *::-webkit-scrollbar-track {
@@ -656,7 +693,7 @@
 *::-webkit-scrollbar-thumb {
   background: var(--text-disabled);
   border-radius: 100vh;
-  border: 2px solid transparent;
+  border: 0.125rem solid transparent;
   background-clip: padding-box;
 }
 
@@ -672,8 +709,8 @@
 
 /* Component colors */
 .dark-component-colors {
-  background: linear-gradient(180deg, #1a1721 0%, #16131b 100%);
-  border-color: #2c2735;
+  background: linear-gradient(180deg, var(--color-tracker-bg) 0%, #16131b 100%);
+  border-color: var(--color-separator-dark);
 }
 
 /* Purple underline accent */
@@ -685,13 +722,13 @@
   content: "";
   position: absolute;
   left: 0;
-  bottom: -4px;
+  bottom: -0.25rem;
   width: 100%;
-  height: 2px;
+  height: 0.125rem;
   background: linear-gradient(
     90deg,
     hsl(260 90% 70%) 0%,
     hsl(260 90% 70% / 0.3) 100%
   );
-  box-shadow: 0 0 30px hsl(260 90% 70% / 0.3);
+  box-shadow: 0 0 1.875rem hsl(260 90% 70% / 0.3);
 }

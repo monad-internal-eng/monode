@@ -53,7 +53,7 @@ const BlockTime = ({ block, normalizedBlockExecutionTime }: BlockTimeProps) => {
               animate={{ height: `${barHeightPercentage}%` }}
               transition={{ duration: 0.2 }}
               className={cn(
-                'w-full rounded-t-md relative bg-[#454150]',
+                'w-full rounded-t-md relative bg-zinc-600',
                 'hover:shadow-lg transition-all duration-200 cursor-pointer',
               )}
               title={`Block ${block.number}: ${formattedBlockExecutionTime}ms execution time, ${formattedTotalTransactionTime}ms total tx time, ${numberOfTransactions} transactions`}
@@ -66,12 +66,12 @@ const BlockTime = ({ block, normalizedBlockExecutionTime }: BlockTimeProps) => {
                   duration: 0.4,
                 }}
                 className={cn(
-                  'absolute bottom-0 left-0 w-full rounded-t-md bg-[#696274]',
+                  'absolute bottom-0 left-0 w-full rounded-t-md bg-bg-card-darker',
                   isHighlyParallel && 'bg-[#7B66A2]',
                 )}
                 style={{
                   boxShadow: isHighlyParallel
-                    ? '0 0 10px #7B66A2, 0 0 20px #7B66A2'
+                    ? '0 0 0.625rem var(--color-purple-glow), 0 0 1.25rem var(--color-purple-glow)'
                     : undefined,
                 }}
                 title={`${formattedTotalTransactionTime}ms total transaction execution time`}
@@ -80,7 +80,7 @@ const BlockTime = ({ block, normalizedBlockExecutionTime }: BlockTimeProps) => {
           </TooltipTrigger>
           <TooltipContent
             sideOffset={5}
-            className="bg-tooltip-bg border border-tooltip-border text-tooltip-text rounded-lg p-2 sm:p-3 shadow-xl text-xs sm:text-sm w-[350px]"
+            className="bg-tooltip-bg border border-tooltip-border text-tooltip-text rounded-lg p-2 sm:p-3 shadow-xl text-xs sm:text-sm w-87.5"
           >
             <div className="flex flex-col gap-1">
               <div className="flex flex-col gap-2">
@@ -152,17 +152,17 @@ const BlockTime = ({ block, normalizedBlockExecutionTime }: BlockTimeProps) => {
 
       {/* Block Stats */}
       <div className="text-center space-y-1">
-        <p className="text-[#454150] font-medium text-base">
+        <p className="text-zinc-600 font-medium text-base">
           {formattedBlockExecutionTime}ms
         </p>
-        <p className="text-[#4A4554] text-sm">{numberOfTransactions} tx</p>
+        <p className="text-zinc-500 text-sm">{numberOfTransactions} tx</p>
       </div>
 
       {/* Separator */}
-      <div className="w-full h-px bg-[#2C2735]" />
+      <div className="w-full h-px bg-zinc-700" />
 
       {/* Block number Label */}
-      <div className="text-sm font-medium text-[#454150]">
+      <div className="text-sm font-medium text-zinc-600">
         {formatBlockNumber(block.number)}
       </div>
     </div>

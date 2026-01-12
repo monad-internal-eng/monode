@@ -61,8 +61,8 @@ export default function BlockTimeExecutionTracker() {
             unit="ms"
             description="Measured during execution, not inferred post-finalization."
             icon={Clock}
-            iconClassName="text-[#25C373]"
-            iconBgClassName="bg-[#1D2727]"
+            iconClassName="text-green-400"
+            iconBgClassName="bg-green-950"
           />
           <StatCard
             label="Max Execution Time"
@@ -70,8 +70,8 @@ export default function BlockTimeExecutionTracker() {
             unit="ms"
             description="Peak execution time observed in the current session."
             icon={TrendingUp}
-            iconClassName="text-[#F39E26]"
-            iconBgClassName="bg-[#2F2423]"
+            iconClassName="text-orange-400"
+            iconBgClassName="bg-orange-950"
           />
         </div>
       </div>
@@ -117,7 +117,7 @@ export default function BlockTimeExecutionTracker() {
           </button>
 
           {/* Seperator */}
-          <div className="w-full h-0.5 bg-[#2C2735]" />
+          <div className="w-full h-0.5 bg-zinc-700" />
 
           {/* Legend */}
           <BlockTimeLegend />

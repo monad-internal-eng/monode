@@ -90,7 +90,7 @@ export function BubbleMap<T extends BubbleItem>({
                         className={cn(
                           'absolute inset-0 rounded-full transition-all duration-300',
                           'flex items-center justify-center flex-col text-center p-1.5 sm:p-2',
-                          'group-hover:z-20 group-hover:shadow-[0_0_0_2px_#17151E,0_0_0_4px_#9C6EF8]',
+                          'group-hover:z-20 group-hover:shadow-[0_0_0_0.125rem_var(--color-shadow-accent),0_0_0_0.25rem_var(--color-brand-purple-hover)]',
                           getColor(item.hits),
                         )}
                       >

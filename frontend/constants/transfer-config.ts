@@ -29,11 +29,11 @@ export interface TransferTypeConfig {
 export const TRANSFER_TYPE_CONFIG: Record<string, TransferTypeConfig> = {
   native: {
     name: 'MON',
-    color: '#836EF9',
+    color: 'var(--color-purple-primary)',
   },
   wmon: {
     name: 'WMON',
-    color: '#00D395',
+    color: 'var(--color-green-primary)',
   },
 }
 
