@@ -5,14 +5,8 @@ import { useEventsContext } from '@/contexts/events-context'
 import { useEvents } from '@/hooks/use-events'
 import type { SerializableEventData } from '@/types/events'
 
-/** Bucket size for TPS charting */
-const TPS_BUCKET_MS = 1000
-
 /** Duration of TPS history to keep */
 const TPS_HISTORY_DURATION_MS = 5 * 60 * 1000
-
-/** Maximum number of points to keep in history */
-const MAX_HISTORY_LENGTH = TPS_HISTORY_DURATION_MS / TPS_BUCKET_MS
 
 export interface TpsDataPoint {
   timestamp: number
@@ -54,23 +48,14 @@ export function useTps(): TpsData {
   useEffect(() => {
     const unsubscribe = subscribeToTps((tps) => {
       const now = Date.now()
-      const bucketTimestamp = Math.floor(now / TPS_BUCKET_MS) * TPS_BUCKET_MS
 
       setTpsData((prev) => {
-        // Keep only the last 5 minutes of data
-        const cutoffTime = bucketTimestamp - TPS_HISTORY_DURATION_MS
+        const cutoffTime = now - TPS_HISTORY_DURATION_MS
         const filteredHistory = prev.history.filter((point) => {
-          return point.timestamp > cutoffTime
+          return point.timestamp >= cutoffTime
         })
 
-        const lastPoint = filteredHistory[filteredHistory.length - 1]
-        const nextHistory =
-          lastPoint?.timestamp === bucketTimestamp
-            ? [
-                ...filteredHistory.slice(0, -1),
-                { timestamp: bucketTimestamp, tps },
-              ]
-            : [...filteredHistory, { timestamp: bucketTimestamp, tps }]
+        const nextHistory = [...filteredHistory, { timestamp: now, tps }]
 
         return {
           currentTps: tps,
@@ -79,7 +64,7 @@ export function useTps(): TpsData {
             prev.totalTransactions,
             totalTransactionsRef.current,
           ),
-          history: nextHistory.slice(-MAX_HISTORY_LENGTH),
+          history: nextHistory,
         }
       })
     })
