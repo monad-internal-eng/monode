@@ -17,7 +17,7 @@ interface HotAccount {
 /**
  * A bubble map component that displays the most accessed accounts.
  */
-export default function HotAccountsBubbleMap() {
+export function HotAccountsBubbleMap() {
   const { accountAccesses } = useEvents()
 
   const accounts: HotAccount[] = useMemo(() => {

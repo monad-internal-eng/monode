@@ -1,10 +1,10 @@
-import BlockStateTracker from '@/components/block-state-tracker'
-import BlockTimeExecutionTracker from '@/components/block-time-tracker'
-import PageHeader from '@/components/common/page-header'
-import HotAccountsBubbleMap from '@/components/hot-accounts-bubble-map'
-import HotSlotsBubbleMap from '@/components/hot-slots-bubble-map'
-import SwapTransferTracker from '@/components/swap-transfer-tracker'
-import TpsTracker from '@/components/tps-tracker'
+import { BlockStateTracker } from '@/components/block-state-tracker'
+import { BlockTimeExecutionTracker } from '@/components/block-time-tracker'
+import { PageHeader } from '@/components/common/page-header'
+import { HotAccountsBubbleMap } from '@/components/hot-accounts-bubble-map'
+import { HotSlotsBubbleMap } from '@/components/hot-slots-bubble-map'
+import { SwapTransferTracker } from '@/components/swap-transfer-tracker'
+import { TpsTracker } from '@/components/tps-tracker'
 
 export default function Home() {
   return (

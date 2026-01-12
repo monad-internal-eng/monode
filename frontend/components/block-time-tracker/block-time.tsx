@@ -17,7 +17,10 @@ interface BlockTimeProps {
   normalizedBlockExecutionTime: number
 }
 
-const BlockTime = ({ block, normalizedBlockExecutionTime }: BlockTimeProps) => {
+export const BlockTime = ({
+  block,
+  normalizedBlockExecutionTime,
+}: BlockTimeProps) => {
   const {
     barHeightPercentage,
     fillPercentage,
@@ -168,5 +171,3 @@ const BlockTime = ({ block, normalizedBlockExecutionTime }: BlockTimeProps) => {
     </div>
   )
 }
-
-export default BlockTime

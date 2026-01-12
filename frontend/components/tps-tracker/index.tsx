@@ -4,7 +4,7 @@ import { Info } from 'lucide-react'
 import { SectionHeader } from '@/components/ui/section-header'
 import { TpsChart } from './tps-chart'
 
-export default function TpsTracker() {
+export function TpsTracker() {
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
       <SectionHeader

@@ -1,6 +1,6 @@
 import { Info } from 'lucide-react'
 
-const BlockTimeLegend = () => {
+export const BlockTimeLegend = () => {
   return (
     <div className="flex flex-col justify-between gap-6 text-xs sm:gap-4 sm:flex-row sm:text-sm text-zinc-400">
       <div className="flex flex-row gap-2 sm:max-w-1/3 text-zinc-500">
@@ -40,5 +40,3 @@ const BlockTimeLegend = () => {
     </div>
   )
 }
-
-export default BlockTimeLegend

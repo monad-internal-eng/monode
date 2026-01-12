@@ -20,7 +20,7 @@ const TAB_TRIGGER_CLASS = cn(
   'data-[state=active]:bg-transparent data-[state=active]:shadow-none',
 )
 
-export default function SwapTransferTracker() {
+export function SwapTransferTracker() {
   const { allSwaps, isConnected: isSwapConnected } = useSwapEvents()
   const {
     allTransfers,

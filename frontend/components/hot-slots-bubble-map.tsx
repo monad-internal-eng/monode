@@ -18,7 +18,7 @@ interface HotSlot {
 /**
  * A bubble map component that displays the most accessed storage slots.
  */
-export default function HotSlotsBubbleMap() {
+export function HotSlotsBubbleMap() {
   const { storageAccesses } = useEvents()
 
   const slots: HotSlot[] = useMemo(() => {

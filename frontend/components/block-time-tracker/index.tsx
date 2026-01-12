@@ -8,7 +8,7 @@ import { useBlockTracker } from '@/hooks/use-block-tracker'
 import { useMouseHover } from '@/hooks/use-mouse-hover'
 import { fromNsToMsPrecise } from '@/lib/block-metrics'
 import { cn } from '@/lib/utils'
-import BlockTimeLegend from './block-time-legend'
+import { BlockTimeLegend } from './block-time-legend'
 import { BlockTimeTimeline } from './block-time-timeline'
 
 // =============================================================================
@@ -21,7 +21,7 @@ import { BlockTimeTimeline } from './block-time-timeline'
  * Uses the Execution Events SDK to receive real-time block lifecycle events
  * and calculates execution timing metrics for visualization.
  */
-export default function BlockTimeExecutionTracker() {
+export function BlockTimeExecutionTracker() {
   const {
     finalizedBlocks,
     maxBlockExecutionTime,

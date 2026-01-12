@@ -14,7 +14,7 @@ import { SlowMotionControl } from './slow-motion-control'
  * Visualizes the blockchain with blocks progressing through states:
  * Proposed → Executing → Finalized → Verified
  */
-export default function BlockStateTracker() {
+export function BlockStateTracker() {
   const {
     blocks,
     isSlowMotion,
