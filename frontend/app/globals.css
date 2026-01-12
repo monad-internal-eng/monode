@@ -378,24 +378,19 @@
 
   /* Button shadows */
   --button-secondary-shadow-light:
-    0 0.0625rem 0.03125rem 0 var(--color-brand-monad-off-white-50) inset, 0 -0.0625rem 0.03125rem 0 rgba(
+    0 1px 0.5px 0 var(--color-brand-monad-off-white-50) inset, 0 -1px 0.5px 0 rgba(
       0,
       0,
       0,
       0.08
-    ) inset, 0 0.0625rem 0.125rem 0 rgba(0, 0, 0, 0.08), 0 0 0 0.0625rem rgba(
-      0,
-      0,
-      0,
-      0.25
-    );
+    ) inset, 0 1px 2px 0 rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.25);
   --button-secondary-shadow-dark:
-    0 0.0625rem 0.03125rem 0 rgba(255, 255, 255, 0.12) inset, 0 -0.0625rem 0.03125rem 0 rgba(
+    0 1px 0.5px 0 rgba(255, 255, 255, 0.12) inset, 0 -1px 0.5px 0 rgba(
       0,
       0,
       0,
       0.33
-    ) inset, 0 0.0625rem 0.125rem 0 var(--color-brand-monad-off-black-950-black), 0 0 0 0.0625rem var(
+    ) inset, 0 1px 2px 0 var(--color-brand-monad-off-black-950-black), 0 0 0 1px var(
       --color-brand-monad-off-black-950-black
     );
 
@@ -461,12 +456,12 @@
 
   /* Shadows */
   --shadow-login-button:
-    0 0 0.36rem 0.046rem #d4cdff, 0 0.0625rem 0.125rem 0 rgba(0, 0, 0, 0.2), 0 0.0625rem 0.03125rem 0 rgba(
+    0 0 5.761px 0.735px #d4cdff, 0 1px 2px 0 rgba(0, 0, 0, 0.2), 0 1px 0.5px 0 rgba(
       255,
       255,
       255,
       0.25
-    ) inset, 0 -0.0625rem 0.03125rem 0 rgba(255, 255, 255, 0.25) inset, 0 0 0 0.0625rem rgba(
+    ) inset, 0 -1px 0.5px 0 rgba(255, 255, 255, 0.25) inset, 0 0 0 1px rgba(
       79,
       71,
       235,
@@ -681,8 +676,8 @@
 /* Scrollbar */
 
 *::-webkit-scrollbar {
-  width: 0.5rem;
-  height: 0.5rem;
+  width: 8px;
+  height: 8px;
 }
 
 *::-webkit-scrollbar-track {
@@ -693,7 +688,7 @@
 *::-webkit-scrollbar-thumb {
   background: var(--text-disabled);
   border-radius: 100vh;
-  border: 0.125rem solid transparent;
+  border: 2px solid transparent;
   background-clip: padding-box;
 }
 
@@ -722,13 +717,13 @@
   content: "";
   position: absolute;
   left: 0;
-  bottom: -0.25rem;
+  bottom: -4px;
   width: 100%;
-  height: 0.125rem;
+  height: 2px;
   background: linear-gradient(
     90deg,
     hsl(260 90% 70%) 0%,
     hsl(260 90% 70% / 0.3) 100%
   );
-  box-shadow: 0 0 1.875rem hsl(260 90% 70% / 0.3);
+  box-shadow: 0 0 30px hsl(260 90% 70% / 0.3);
 }
