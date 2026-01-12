@@ -8,7 +8,7 @@ import { useBlockTracker } from '@/hooks/use-block-tracker'
 import { useMouseHover } from '@/hooks/use-mouse-hover'
 import { fromNsToMsPrecise } from '@/lib/block-metrics'
 import { cn } from '@/lib/utils'
-import BlockTimeLegend from './block-time-legend'
+import { BlockTimeLegend } from './block-time-legend'
 import { BlockTimeTimeline } from './block-time-timeline'
 
 // =============================================================================
@@ -21,7 +21,7 @@ import { BlockTimeTimeline } from './block-time-timeline'
  * Uses the Execution Events SDK to receive real-time block lifecycle events
  * and calculates execution timing metrics for visualization.
  */
-export default function BlockTimeExecutionTracker() {
+export function BlockTimeExecutionTracker() {
   const {
     finalizedBlocks,
     maxBlockExecutionTime,
@@ -61,8 +61,8 @@ export default function BlockTimeExecutionTracker() {
             unit="ms"
             description="Measured during execution, not inferred post-finalization."
             icon={Clock}
-            iconClassName="text-[#25C373]"
-            iconBgClassName="bg-[#1D2727]"
+            iconClassName="text-green-400"
+            iconBgClassName="bg-green-950"
           />
           <StatCard
             label="Max Execution Time"
@@ -70,8 +70,8 @@ export default function BlockTimeExecutionTracker() {
             unit="ms"
             description="Peak execution time observed in the current session."
             icon={TrendingUp}
-            iconClassName="text-[#F39E26]"
-            iconBgClassName="bg-[#2F2423]"
+            iconClassName="text-orange-400"
+            iconBgClassName="bg-orange-950"
           />
         </div>
       </div>
@@ -117,7 +117,7 @@ export default function BlockTimeExecutionTracker() {
           </button>
 
           {/* Seperator */}
-          <div className="w-full h-0.5 bg-[#2C2735]" />
+          <div className="w-full h-0.5 bg-zinc-700" />
 
           {/* Legend */}
           <BlockTimeLegend />

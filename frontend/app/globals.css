@@ -86,6 +86,14 @@
   --color-toast-error: var(--toast-error);
   --color-toast-error-bg: var(--toast-error-bg);
 
+  /* Tooltip colors */
+  --color-tooltip-bg: var(--tooltip-bg);
+  --color-tooltip-border: var(--tooltip-border);
+  --color-tooltip-text: var(--tooltip-text);
+  --color-tooltip-text-secondary: var(--tooltip-text-secondary);
+  --color-tooltip-text-accent: var(--tooltip-text-accent);
+  --color-tooltip-separator: var(--tooltip-separator);
+
   /* Text colors */
   --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: var(--text-tertiary);
@@ -117,6 +125,38 @@
   --color-tracker-row-hover: #2b233d;
   --color-tracker-badge-bg: #2a233a;
   --color-tracker-active: #836ef9;
+
+  /* Block state colors */
+  --color-block-proposed: #d4631f;
+  --color-block-voted: #8b68d9;
+  --color-block-finalized: #4680d6;
+  --color-block-verified: #2aad7c;
+
+  /* Swap provider and transfer colors */
+  --color-purple-primary: #836ef9;
+  --color-purple-glow: #7b66a2;
+  --color-green-primary: #00d395;
+  --color-pink-primary: #ff007a;
+  --color-cyan-primary: #1fc7d4;
+  --color-magenta-primary: #ff4a8d;
+  --color-blue-primary: #0066ff;
+
+  /* UI component colors */
+  --color-text-muted: #a0a0b0;
+  --color-text-muted-darker: #6a6a7a;
+  --color-bg-card-dark: #454150;
+  --color-bg-card-darker: #696274;
+  --color-border-accent: #52525b;
+  --color-bg-danger: #b63537;
+  --color-bg-warning: #c88328;
+  --color-shadow-accent: #17151e;
+  --color-text-caption: #4a4554;
+  --color-separator-dark: #2c2735;
+  --color-hover-accent: #2a2733;
+  --color-success-green: #25c373;
+  --color-success-bg: #1d2727;
+  --color-warning-orange: #f39e26;
+  --color-warning-bg: #2f2423;
 
   /* Typography */
   --font-sans: var(--font-britti-sans), system-ui, sans-serif;
@@ -371,6 +411,14 @@
   --toast-error-dark: var(--color-red-500);
   --toast-error-bg-light: hsla(0, 84%, 60%, 0.15);
   --toast-error-bg-dark: hsla(0, 84%, 60%, 0.1);
+
+  /* Tooltip colors */
+  --tooltip-bg: #0e0e1a;
+  --tooltip-border: #2a2a4a;
+  --tooltip-text: #ffffff;
+  --tooltip-text-secondary: #8888a0;
+  --tooltip-text-accent: #9c6ef8;
+  --tooltip-separator: #2c2735;
 
   /* Text colors */
   --text-secondary-light: var(--color-neutral-500);
@@ -656,8 +704,8 @@
 
 /* Component colors */
 .dark-component-colors {
-  background: linear-gradient(180deg, #1a1721 0%, #16131b 100%);
-  border-color: #2c2735;
+  background: linear-gradient(180deg, var(--color-tracker-bg) 0%, #16131b 100%);
+  border-color: var(--color-separator-dark);
 }
 
 /* Purple underline accent */

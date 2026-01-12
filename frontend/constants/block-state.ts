@@ -4,17 +4,17 @@ export const SLOW_MOTION_DURATION_SECONDS = 30
 export const SLOW_MOTION_EVENT_INTERVAL_MS = 75
 
 /**
- * Color tokens for block states (hex values for inline styles).
+ * Color tokens for block states (CSS variables for consistency).
  * - Proposed: Amber/orange - awaiting execution
  * - Voted: Purple - received votes
  * - Finalized: Blue - on chain
  * - Verified: Green - on chain, state verified
  */
 export const STATE_COLORS: Record<BlockState, string> = {
-  proposed: '#d4631f',
-  voted: '#8b68d9',
-  finalized: '#4680d6',
-  verified: '#2aad7c',
+  proposed: 'var(--color-block-proposed)',
+  voted: 'var(--color-block-voted)',
+  finalized: 'var(--color-block-finalized)',
+  verified: 'var(--color-block-verified)',
 }
 
 /**

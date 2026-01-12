@@ -82,7 +82,7 @@ export const SWAP_PROVIDER_CONFIG: SwapProviderConfig[] = [
     provider: 'monorail',
     contractAddress: '0xA68A7F0601effDc65C64d9C47cA1b18D96B4352c',
     eventTopics: [keccak256(toBytes(MONORAIL_SWAP_SIGNATURE))],
-    color: '#00D395',
+    color: 'var(--color-green-primary)',
   },
   {
     name: 'Uniswap V4',
@@ -92,35 +92,35 @@ export const SWAP_PROVIDER_CONFIG: SwapProviderConfig[] = [
       keccak256(toBytes(UNISWAP_V4_SWAP_SIGNATURE)),
       '0xadaf30776f551bccdfb307c3fd8cdec198ca9a852434c8022ee32d1ccedd8219', // MON/AUSD poolId
     ],
-    color: '#FF007A',
+    color: 'var(--color-pink-primary)',
   },
   {
     name: 'PancakeSwap V3',
     provider: 'pancakeswap-v3',
     contractAddress: '0xd5b70d70cbe6c42bcd1aaa662a21673a83f4615b',
     eventTopics: [keccak256(toBytes(PANCAKESWAP_V3_SWAP_SIGNATURE))],
-    color: '#1FC7D4',
+    color: 'var(--color-cyan-primary)',
   },
   {
     name: 'Kuru',
     provider: 'kuru',
     contractAddress: '0xb3e6778480b2E488385E8205eA05E20060B813cb',
     eventTopics: [keccak256(toBytes(KURU_SWAP_SIGNATURE))],
-    color: '#836EF9',
+    color: 'var(--color-purple-primary)',
   },
   {
     name: 'KyberSwap',
     provider: 'kyberswap',
     contractAddress: '0x6131B5fae19EA4f9D964eAc0408E4408b66337b5',
     eventTopics: [keccak256(toBytes(KYBERSWAP_SWAP_SIGNATURE))],
-    color: '#FF4A8D',
+    color: 'var(--color-magenta-primary)',
   },
   {
     name: 'OpenOcean',
     provider: 'openocean',
     contractAddress: '0x6352a56caadC4F1E25CD6c75970Fa768A3304e64',
     eventTopics: [keccak256(toBytes(OPENOCEAN_SWAP_SIGNATURE))],
-    color: '#0066FF',
+    color: 'var(--color-blue-primary)',
   },
 ]
 

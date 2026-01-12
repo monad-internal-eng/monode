@@ -1,10 +1,8 @@
-'use client'
-
 import { Info } from 'lucide-react'
 import { SectionHeader } from '@/components/ui/section-header'
 import { TpsChart } from './tps-chart'
 
-export default function TpsTracker() {
+export function NetworkActivityTracker() {
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
       <SectionHeader
@@ -17,7 +15,7 @@ export default function TpsTracker() {
         </div>
       </div>
       <div className="flex items-center gap-2 text-sm text-zinc-500 md:hidden">
-        <Info className="w-4 h-[1lh]" />
+        <Info className="w-4 h-lh" />
         <span>Scroll horizontally to see the latest data</span>
       </div>
     </div>

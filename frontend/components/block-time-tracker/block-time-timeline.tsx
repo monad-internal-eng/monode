@@ -5,7 +5,7 @@ import { type CellComponentProps, Grid } from 'react-window'
 import { Spinner } from '@/components/ui/spinner'
 import { useBlockchainScroll } from '@/hooks/use-blockchain-scroll'
 import type { Block } from '@/types/block'
-import BlockTime from './block-time'
+import { BlockTime } from './block-time'
 
 const BLOCK_DIMENSIONS = {
   small: { itemWidth: 120, gridHeight: 280 },

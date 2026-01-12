@@ -12,7 +12,7 @@ export function LiveIndicator({ isConnected, className }: LiveIndicatorProps) {
   return (
     <span
       className={cn(
-        'flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium',
+        'flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-medium',
         isConnected
           ? 'bg-green-500/10 text-green-400'
           : 'bg-zinc-500/10 text-zinc-400',

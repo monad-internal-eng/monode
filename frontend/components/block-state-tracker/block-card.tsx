@@ -56,7 +56,7 @@ function StateTracker({ currentState }: { currentState: BlockState }) {
               ) : (
                 <span
                   className={cn(
-                    'text-[10px] font-medium',
+                    'text-2xs font-medium',
                     isPending && 'text-zinc-600',
                   )}
                 >
@@ -101,7 +101,7 @@ export function BlockCard({
       }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className={cn(
-        'relative flex flex-col gap-y-4 text-left rounded-xl select-none dark-component-colors border hover:border-[#2A2733] w-48 h-52 sm:w-56 sm:h-54 p-4 transition-all duration-300',
+        'relative flex flex-col gap-y-4 text-left rounded-xl select-none dark-component-colors border hover:border-zinc-700 w-48 h-52 sm:w-56 sm:h-54 p-4 transition-all duration-300',
         className,
       )}
     >

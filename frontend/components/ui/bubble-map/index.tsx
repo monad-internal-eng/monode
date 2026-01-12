@@ -62,7 +62,7 @@ export function BubbleMap<T extends BubbleItem>({
     <div className="w-full flex flex-1 flex-col gap-4 sm:gap-6">
       <SectionHeader title={title} description={description} />
 
-      <div className="relative min-h-[250px] sm:min-h-[350px] w-full dark-component-colors rounded-xl border p-3 sm:p-5 lg:p-7 flex flex-grow flex-col gap-10 items-center justify-between">
+      <div className="relative min-h-[250px] sm:min-h-[350px] w-full dark-component-colors rounded-xl border p-3 sm:p-5 lg:p-7 flex grow flex-col gap-10 items-center justify-between">
         {items.length === 0 ? (
           <Spinner text="Waiting for data..." />
         ) : (
@@ -90,7 +90,7 @@ export function BubbleMap<T extends BubbleItem>({
                         className={cn(
                           'absolute inset-0 rounded-full transition-all duration-300',
                           'flex items-center justify-center flex-col text-center p-1.5 sm:p-2',
-                          'group-hover:z-20 group-hover:shadow-[0_0_0_2px_#17151E,0_0_0_4px_#9C6EF8]',
+                          'group-hover:z-20 group-hover:shadow-[0_0_0_0.125rem_var(--color-shadow-accent),0_0_0_0.25rem_var(--color-brand-purple-hover)]',
                           getColor(item.hits),
                         )}
                       >
@@ -99,7 +99,7 @@ export function BubbleMap<T extends BubbleItem>({
                     </TooltipTrigger>
                     <TooltipContent
                       sideOffset={5}
-                      className="bg-[#0e0e1a] border border-[#2a2a4a] rounded-lg p-2 sm:p-3 shadow-xl text-xs sm:text-sm w-[250px]"
+                      className="bg-tooltip-bg border border-tooltip-border rounded-lg p-2 sm:p-3 shadow-xl text-xs sm:text-sm w-[250px]"
                     >
                       {renderTooltip(item)}
                     </TooltipContent>
@@ -112,7 +112,7 @@ export function BubbleMap<T extends BubbleItem>({
         {/* Bottom description */}
         {bottomDescription && (
           <div>
-            <p className="text-center text-sm text-[#888198]">
+            <p className="text-center text-sm text-text-secondary">
               {bottomDescription}
             </p>
           </div>

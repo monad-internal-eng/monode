@@ -1,6 +1,6 @@
-export default function PageHeader() {
+export function PageHeader() {
   return (
-    <div className="pb-8 md:pb-12 border-b border-[#52525B]/50">
+    <div className="pb-8 md:pb-12 border-b border-zinc-500/50">
       <h1 className="w-fit font-britti-sans text-3xl sm:text-4xl md:text-5xl font-medium leading-none tracking-[-0.04rem] text-white underline-glow">
         Execution Events SDK Showcase
       </h1>
