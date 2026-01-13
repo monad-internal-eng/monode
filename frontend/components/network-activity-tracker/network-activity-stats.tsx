@@ -46,6 +46,11 @@ function StatItem({
       </div>
       <AnimatedNumber
         value={value}
+        format={{
+          notation: 'compact',
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2,
+        }}
         className={cn(
           'text-2xl sm:text-3xl font-bold leading-none',
           colorClass,
