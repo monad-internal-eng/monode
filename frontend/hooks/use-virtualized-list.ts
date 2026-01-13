@@ -93,6 +93,19 @@ export function useVirtualizedList<T>({
     return () => resizeObserver.disconnect()
   }, [])
 
+  // Prevent scroll when following
+  useEffect(() => {
+    const node = containerRef.current
+    if (!node || !isFollowing) return
+
+    const preventScroll = (e: WheelEvent) => {
+      e.preventDefault()
+    }
+
+    node.addEventListener('wheel', preventScroll, { passive: false })
+    return () => node.removeEventListener('wheel', preventScroll)
+  }, [isFollowing])
+
   return {
     scrollContainerRef,
     containerRef,
