@@ -67,8 +67,18 @@ export function BlockTimeTimeline({
   const [containerWidth, setContainerWidth] = useState(0)
   const [dimensions, setDimensions] = useState(getResponsiveDimensions())
 
+  // Freeze data when paused - prevents blocks from changing while user is exploring
+  const [displayedBlocks, setDisplayedBlocks] = useState<Block[]>(blocks)
+
+  // Update displayed blocks only when following chain
+  useEffect(() => {
+    if (isFollowingChain) {
+      setDisplayedBlocks(blocks)
+    }
+  }, [blocks, isFollowingChain])
+
   const { gridRef, sortedBlocks } = useBlockchainScroll({
-    blocks,
+    blocks: displayedBlocks,
     isFollowingChain,
   })
 

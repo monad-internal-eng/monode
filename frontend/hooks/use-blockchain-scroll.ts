@@ -15,6 +15,7 @@ export function useBlockchainScroll({
 }: UseBlockchainScrollOptions) {
   const gridRef = useRef<GridImperativeAPI>(null)
   const prevNewestBlockNumberRef = useRef<number | null>(null)
+  const prevOldestBlockNumberRef = useRef<number | null>(null)
   const wasHiddenRef = useRef(false)
 
   // Sort blocks by Number (oldest on left, newest on right)
@@ -28,15 +29,34 @@ export function useBlockchainScroll({
       ? sortedBlocks[sortedBlocks.length - 1].number
       : null
 
+  const oldestBlockNumber =
+    sortedBlocks.length > 0 ? sortedBlocks[0].number : null
+
   // Auto-scroll to the end when new blocks are added (only if following chain)
   useLayoutEffect(() => {
     if (!gridRef.current || newestBlockNumber === null || !isFollowingChain)
       return
+
     const prevNewestNumber = prevNewestBlockNumberRef.current
+    const prevOldestNumber = prevOldestBlockNumberRef.current
+
     const hasNewBlock =
       prevNewestNumber === null || newestBlockNumber > prevNewestNumber
 
-    if (hasNewBlock) {
+    // Detect if blocks were removed from the beginning (rolling data)
+    const blocksWereRolled =
+      prevOldestNumber !== null &&
+      oldestBlockNumber !== null &&
+      oldestBlockNumber > prevOldestNumber
+
+    // Scroll on new blocks, rolling data, or initial load
+    // This handles both normal new blocks and rolling data scenarios
+    const shouldScroll =
+      hasNewBlock ||
+      blocksWereRolled ||
+      (prevNewestNumber === null && sortedBlocks.length > 0)
+
+    if (shouldScroll) {
       requestAnimationFrame(() => {
         gridRef.current?.scrollToColumn({
           index: sortedBlocks.length - 1,
@@ -47,7 +67,13 @@ export function useBlockchainScroll({
     }
 
     prevNewestBlockNumberRef.current = newestBlockNumber
-  }, [newestBlockNumber, isFollowingChain, sortedBlocks.length])
+    prevOldestBlockNumberRef.current = oldestBlockNumber
+  }, [
+    newestBlockNumber,
+    oldestBlockNumber,
+    isFollowingChain,
+    sortedBlocks.length,
+  ])
 
   // Handle tab visibility changes - scroll to end when tab becomes visible
   // This fixes the issue where requestAnimationFrame is paused in background tabs,
