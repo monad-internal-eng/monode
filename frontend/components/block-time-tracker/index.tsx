@@ -77,7 +77,7 @@ export function BlockTimeExecutionTracker() {
       <div className="w-full flex flex-col gap-4 sm:gap-6">
         <SectionHeader
           title="Block Execution Timeline"
-          description="Two bars per block: block execution time (gray) and total tx execution time (purple). Purple bar taller than gray bar indicates parallel execution in the block."
+          description="Two bars per block: block execution time (dark purple) and total tx execution time (purple). Purple bar taller than gray bar indicates parallel execution in the block."
         >
           <button
             type="button"
