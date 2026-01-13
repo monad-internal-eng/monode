@@ -31,11 +31,13 @@ export function useVirtualizedList<T>({
 
   // Freeze data when paused - this prevents re-renders while paused
   const [displayedData, setDisplayedData] = useState<T[]>(data)
+  const [dataVersion, setDataVersion] = useState(0)
 
   // Update displayed data only when following
   useEffect(() => {
     if (isFollowing) {
       setDisplayedData(data)
+      setDataVersion((prev) => prev + 1)
     }
   }, [data, isFollowing])
 
@@ -45,14 +47,25 @@ export function useVirtualizedList<T>({
 
   // Auto-scroll to top when following and new data arrives
   useEffect(() => {
-    if (isFollowing && displayedData.length > 0 && listRef.current) {
-      listRef.current.scrollToRow({
-        index: 0,
-        align: 'start',
-        behavior: 'smooth',
+    if (
+      isFollowing &&
+      displayedData.length > 0 &&
+      listRef.current &&
+      dataVersion > 0
+    ) {
+      // Use requestAnimationFrame to ensure the List has updated before scrolling
+      requestAnimationFrame(() => {
+        if (listRef.current) {
+          // Force scroll to top to show newest data
+          listRef.current.scrollToRow({
+            index: 0,
+            align: 'start',
+            behavior: 'auto', // Use 'auto' for immediate scroll when following
+          })
+        }
       })
     }
-  }, [displayedData.length, isFollowing])
+  }, [dataVersion, isFollowing])
 
   // Reset horizontal scroll when resuming (isFollowing becomes true)
   useEffect(() => {
@@ -79,19 +92,6 @@ export function useVirtualizedList<T>({
     resizeObserver.observe(node)
     return () => resizeObserver.disconnect()
   }, [])
-
-  // Prevent scroll when following
-  useEffect(() => {
-    const node = containerRef.current
-    if (!node || !isFollowing) return
-
-    const preventScroll = (e: WheelEvent) => {
-      e.preventDefault()
-    }
-
-    node.addEventListener('wheel', preventScroll, { passive: false })
-    return () => node.removeEventListener('wheel', preventScroll)
-  }, [isFollowing])
 
   return {
     scrollContainerRef,

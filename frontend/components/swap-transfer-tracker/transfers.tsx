@@ -94,6 +94,7 @@ export function Transfers({
               </div>
             ) : (
               <List
+                key={displayedData.length > 0 ? displayedData[0]?.id : 'empty'}
                 listRef={listRef}
                 rowComponent={TransferCell}
                 rowCount={displayedData.length}

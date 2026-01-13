@@ -81,6 +81,7 @@ export function Swaps({ data, isLoading, isFollowingData }: SwapsProps) {
             </div>
           ) : (
             <List
+              key={displayedData.length > 0 ? displayedData[0]?.id : 'empty'}
               listRef={listRef}
               rowComponent={SwapCell}
               rowCount={displayedData.length}
