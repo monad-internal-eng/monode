@@ -1,10 +1,18 @@
 import { useCallback, useMemo, useState } from 'react'
-import { fromNsToMsPrecise } from '@/lib/block-metrics'
+import {
+  fromNsToMsPrecise,
+  getBlockWallTimeMs,
+  getTotalTransactionTimeMs,
+} from '@/lib/block-metrics'
 import type { Block } from '@/types/block'
 import type { SerializableEventData } from '@/types/events'
 import { useEvents } from './use-events'
 
 const MAX_BLOCKS = 5000
+
+// Highlight when total tx execution time exceeds block execution time.
+// Keep this as a single constant so UI/copy can stay consistent.
+export const PARALLEL_EXECUTION_RATIO_THRESHOLD = 1
 
 /**
  * Custom hook to track block execution events and manage block state
@@ -268,22 +276,25 @@ export function useBlockTracker() {
     )
   }, [finalizedBlocks])
 
-  const normalizedBlockExecutionTime = useMemo(() => {
+  const normalizedTimeScaleMs = useMemo(() => {
     if (finalizedBlocks.length === 0) return 1
 
-    // Get all execution times in milliseconds
-    const executionTimes = finalizedBlocks
-      .map((block) => fromNsToMsPrecise(block.executionTime ?? BigInt(0)))
+    // Normalize against the larger of:
+    // - block wall-time (BlockEnd - BlockStart)
+    // - ΣTx execution time (sum of TxnHeaderEnd - TxnHeaderStart)
+    // This lets the visualization show when ΣTx > block time (parallel overlap).
+    const maxTimes = finalizedBlocks
+      .map((block) =>
+        Math.max(getBlockWallTimeMs(block), getTotalTransactionTimeMs(block)),
+      )
       .filter((time) => time > 0)
       .sort((a, b) => a - b)
 
-    if (executionTimes.length === 0) return 1
+    if (maxTimes.length === 0) return 1
 
     // Use 95th percentile to be resistant to spikes
-    const percentileIndex = Math.floor(executionTimes.length * 0.95)
-    const percentile95 =
-      executionTimes[percentileIndex] ||
-      executionTimes[executionTimes.length - 1]
+    const percentileIndex = Math.floor(maxTimes.length * 0.95)
+    const percentile95 = maxTimes[percentileIndex] || maxTimes[maxTimes.length - 1]
 
     // Add 10% buffer to prevent clipping of high values near the percentile
     return percentile95 * 1.1
@@ -293,6 +304,6 @@ export function useBlockTracker() {
     blocks,
     finalizedBlocks,
     maxBlockExecutionTime,
-    normalizedBlockExecutionTime,
+    normalizedTimeScaleMs,
   }
 }

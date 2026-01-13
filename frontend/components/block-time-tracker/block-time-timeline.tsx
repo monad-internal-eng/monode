@@ -8,8 +8,8 @@ import type { Block } from '@/types/block'
 import { BlockTime } from './block-time'
 
 const BLOCK_DIMENSIONS = {
-  small: { itemWidth: 120, gridHeight: 280 },
-  large: { itemWidth: 140, gridHeight: 280 },
+  small: { itemWidth: 150, gridHeight: 280 },
+  large: { itemWidth: 180, gridHeight: 280 },
 }
 
 const getResponsiveDimensions = () => {
@@ -27,19 +27,19 @@ const getResponsiveDimensions = () => {
 interface BlockTimeTimelineProps {
   blocks: Block[]
   isFollowingChain: boolean
-  normalizedBlockExecutionTime: number
+  normalizedTimeScaleMs: number
 }
 
 interface BlockCellData {
   blocks: Block[]
-  normalizedBlockExecutionTime: number
+  normalizedTimeScaleMs: number
 }
 
 function BlockCell({
   columnIndex,
   style,
   blocks,
-  normalizedBlockExecutionTime,
+  normalizedTimeScaleMs,
 }: CellComponentProps<BlockCellData>) {
   const block = blocks[columnIndex]
 
@@ -47,7 +47,7 @@ function BlockCell({
     <div style={style} className="flex items-center justify-center relative">
       <BlockTime
         block={block}
-        normalizedBlockExecutionTime={normalizedBlockExecutionTime}
+        normalizedTimeScaleMs={normalizedTimeScaleMs}
       />
     </div>
   )
@@ -61,7 +61,7 @@ function BlockCell({
 export function BlockTimeTimeline({
   blocks,
   isFollowingChain,
-  normalizedBlockExecutionTime,
+  normalizedTimeScaleMs,
 }: BlockTimeTimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
@@ -117,7 +117,7 @@ export function BlockTimeTimeline({
           defaultWidth={containerWidth}
           overscanCount={3}
           cellComponent={BlockCell}
-          cellProps={{ blocks: sortedBlocks, normalizedBlockExecutionTime }}
+          cellProps={{ blocks: sortedBlocks, normalizedTimeScaleMs }}
           className="scrollbar-none"
           style={{
             overflowX: isFollowingChain ? 'hidden' : 'auto',

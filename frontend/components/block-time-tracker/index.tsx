@@ -22,11 +22,8 @@ import { BlockTimeTimeline } from './block-time-timeline'
  * and calculates execution timing metrics for visualization.
  */
 export function BlockTimeExecutionTracker() {
-  const {
-    finalizedBlocks,
-    maxBlockExecutionTime,
-    normalizedBlockExecutionTime,
-  } = useBlockTracker()
+  const { finalizedBlocks, maxBlockExecutionTime, normalizedTimeScaleMs } =
+    useBlockTracker()
   const [isFollowingChain, setIsFollowingChain] = useState(true)
   const { isHovering, hoverProps } = useMouseHover()
   const isPaused = !isFollowingChain || isHovering
@@ -80,7 +77,7 @@ export function BlockTimeExecutionTracker() {
       <div className="w-full flex flex-col gap-4 sm:gap-6">
         <SectionHeader
           title="Block Execution Timeline"
-          description="Each bar represents a block. Height shows execution time."
+          description="Two bars per block: block execution time (gray) and total tx execution time (purple). Purple bar taller than gray bar indicates parallel execution in the block."
         >
           <button
             type="button"
@@ -106,13 +103,13 @@ export function BlockTimeExecutionTracker() {
           <span>Tap Pause to freeze and scroll through blocks</span>
         </div>
 
-        <div className="w-full flex flex-col gap-5 dark-component-colors rounded-xl border p-4 sm:p-6 lg:p-8">
+        <div className="w-full flex flex-col gap-5 dark-component-colors rounded-xl border p-4 sm:p-5">
           {/* Scrollable Blocks Container */}
           <button type="button" className="flex-1" {...hoverProps}>
             <BlockTimeTimeline
               blocks={finalizedBlocks}
               isFollowingChain={!isPaused}
-              normalizedBlockExecutionTime={normalizedBlockExecutionTime}
+              normalizedTimeScaleMs={normalizedTimeScaleMs}
             />
           </button>
 

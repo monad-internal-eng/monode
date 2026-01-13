@@ -6,7 +6,8 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { EXPLORER_URL } from '@/constants/common'
-import { calculateBarMetrics, fromNsToMsPrecise } from '@/lib/block-metrics'
+import { PARALLEL_EXECUTION_RATIO_THRESHOLD } from '@/hooks/use-block-tracker'
+import { calculateBarMetrics } from '@/lib/block-metrics'
 import { formatBlockNumber } from '@/lib/ui'
 import { cn } from '@/lib/utils'
 import type { Block } from '@/types/block'
@@ -14,72 +15,68 @@ import { ExternalLink } from '../ui/external-link'
 
 interface BlockTimeProps {
   block: Block
-  normalizedBlockExecutionTime: number
+  normalizedTimeScaleMs: number
 }
 
-export const BlockTime = ({
-  block,
-  normalizedBlockExecutionTime,
-}: BlockTimeProps) => {
+export const BlockTime = ({ block, normalizedTimeScaleMs }: BlockTimeProps) => {
   const {
-    barHeightPercentage,
-    fillPercentage,
+    blockHeightPct,
+    txHeightPct,
+    blockMs,
     totalTransactionTime,
-    isHighlyParallel,
+    isParallelExecution,
+    parallelizationRatio,
+    timeSavedMs,
   } = useMemo(
-    () => calculateBarMetrics(block, normalizedBlockExecutionTime),
-    [block, normalizedBlockExecutionTime],
+    () =>
+      calculateBarMetrics(
+        block,
+        normalizedTimeScaleMs,
+        PARALLEL_EXECUTION_RATIO_THRESHOLD,
+      ),
+    [block, normalizedTimeScaleMs],
   )
 
-  const formattedBlockExecutionTime = fromNsToMsPrecise(
-    block.executionTime ?? BigInt(0),
-  ).toFixed(3)
+  const formattedBlockExecutionTime = blockMs.toFixed(3)
   const formattedTotalTransactionTime = totalTransactionTime.toFixed(3)
   const numberOfTransactions = (block.transactions ?? []).length
-  const parallelPercentage = isHighlyParallel
-    ? (Number(formattedTotalTransactionTime) * 100) /
-        Number(formattedBlockExecutionTime) -
-      100
-    : 0 // Compute actual percentage of difference tx time and execution between block
-  const timeSaved =
-    Number(formattedTotalTransactionTime) - Number(formattedBlockExecutionTime)
+  const parallelRatioLabel = `${parallelizationRatio.toFixed(2)}×`
+  const timeSaved = timeSavedMs
 
   return (
-    <div className="flex flex-col items-center gap-4 min-w-20">
+    <div className="flex flex-col items-center gap-4 min-w-20 w-full">
       {/* Block Bar Container */}
-      <div className="relative w-full h-32 flex flex-col justify-end p-1.5">
-        {/* Block Time Container (represents total block execution time) */}
+      <div className="relative w-full h-32 flex flex-col justify-end">
+        {/* Dual bar comparison (Block exec time vs total tx exec time) */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <motion.div
-              initial={{ height: 0 }}
-              animate={{ height: `${barHeightPercentage}%` }}
-              transition={{ duration: 0.2 }}
+            <div
               className={cn(
-                'w-full rounded-t-md relative bg-zinc-600',
-                'hover:shadow-lg transition-all duration-200 cursor-pointer',
+                'w-full h-full flex items-end gap-2 px-3.5 py-1.5 rounded-lg',
+                'hover:bg-white/5 transition-all duration-200 cursor-pointer',
               )}
-              title={`Block ${block.number}: ${formattedBlockExecutionTime}ms execution time, ${formattedTotalTransactionTime}ms total tx time, ${numberOfTransactions} transactions`}
+              title={`Block ${block.number}: ${formattedBlockExecutionTime}ms block execution time, ${formattedTotalTransactionTime}ms total tx execution time`}
             >
-              {/* Transaction Time Fill */}
               <motion.div
                 initial={{ height: 0 }}
-                animate={{ height: `${fillPercentage}%` }}
-                transition={{
-                  duration: 0.4,
-                }}
+                animate={{ height: `${blockHeightPct}%` }}
+                transition={{ duration: 0.2 }}
                 className={cn(
-                  'absolute bottom-0 left-0 w-full rounded-t-md bg-bg-card-darker',
-                  isHighlyParallel && 'bg-[#7B66A2]',
+                  'flex-1 rounded-t-md bg-tracker-active/25 ring-1 ring-tracker-active/25',
                 )}
-                style={{
-                  boxShadow: isHighlyParallel
-                    ? '0 0 0.625rem var(--color-purple-glow), 0 0 1.25rem var(--color-purple-glow)'
-                    : undefined,
-                }}
-                title={`${formattedTotalTransactionTime}ms total transaction execution time`}
+                title={`${formattedBlockExecutionTime}ms block execution time`}
               />
-            </motion.div>
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: `${txHeightPct}%` }}
+                transition={{ duration: 0.2 }}
+                className={cn(
+                  'flex-1 rounded-t-md bg-tracker-active ring-1 ring-tracker-active/25',
+                  isParallelExecution && 'ring-1 ring-tracker-active/60',
+                )}
+                title={`${formattedTotalTransactionTime}ms total tx execution time`}
+              />
+            </div>
           </TooltipTrigger>
           <TooltipContent
             sideOffset={5}
@@ -96,7 +93,7 @@ export const BlockTime = ({
                 <div className="flex flex-col gap-1">
                   <div className="flex flex-row items-center justify-between">
                     <p className="text-xs font-mono text-tooltip-text-secondary break-all">
-                      Block Execution Time
+                      Block execution time
                     </p>
                     <p className="text-tooltip-text text-sm font-medium">
                       {formattedBlockExecutionTime}ms
@@ -104,7 +101,7 @@ export const BlockTime = ({
                   </div>
                   <div className="flex flex-row items-center justify-between">
                     <p className="text-xs font-mono text-tooltip-text-secondary break-all">
-                      Transaction Execution Time
+                      Total tx execution time
                     </p>
                     <p className="text-tooltip-text text-sm font-medium">
                       {formattedTotalTransactionTime}ms
@@ -120,30 +117,37 @@ export const BlockTime = ({
                   </div>
                   <div className="flex flex-row items-center justify-between">
                     <p className="text-xs font-mono text-tooltip-text-secondary break-all">
-                      Time Saved
+                      Time saved
                     </p>
                     <p className="text-tooltip-text text-sm font-medium">
-                      {timeSaved < 0 ? 0 : timeSaved.toFixed(3)}
-                      ms
+                      {timeSaved.toFixed(3)}ms
                     </p>
                   </div>
                   <div className="flex flex-row items-center justify-between">
                     <p className="text-xs font-mono text-tooltip-text-secondary break-all">
-                      Parallel Efficiency
+                      Parallel factor
                     </p>
-                    <p className="text-tooltip-text-accent text-sm font-medium">
-                      {parallelPercentage.toFixed(3)}%
+                    <p
+                      className={cn(
+                        'text-sm font-medium',
+                        isParallelExecution
+                          ? 'text-tooltip-text-accent'
+                          : 'text-tooltip-text',
+                      )}
+                    >
+                      {parallelRatioLabel}
                     </p>
                   </div>
                 </div>
               </div>
-              {isHighlyParallel && (
+              {isParallelExecution && (
                 <div className="flex flex-col gap-0">
                   <div className="border-t border-tooltip-separator my-2" />
                   <div className="flex flex-row items-center gap-2">
                     <div className="bg-tooltip-text-accent w-2 h-2 rounded-full" />
                     <p className="text-tooltip-text-accent font-medium">
-                      High parallel execution detected
+                      Parallel execution: total tx execution time &gt; block
+                      execution time
                     </p>
                   </div>
                 </div>
@@ -154,19 +158,51 @@ export const BlockTime = ({
       </div>
 
       {/* Block Stats */}
-      <div className="text-center space-y-1">
-        <p className="text-zinc-600 font-medium text-base">
-          {formattedBlockExecutionTime}ms
-        </p>
-        <p className="text-zinc-500 text-sm">{numberOfTransactions} tx</p>
+      <div className="w-full px-3.5 flex flex-col gap-2 tabular-nums">
+        <div className="w-full grid grid-cols-2 gap-2">
+          <div className="flex flex-col items-center leading-tight text-center">
+            <span className="text-[10px] text-zinc-400 uppercase tracking-wide">
+              Block
+            </span>
+            <span className="text-base font-semibold text-zinc-100">
+              {blockMs.toFixed(2)}ms
+            </span>
+          </div>
+          <div className="flex flex-col items-center leading-tight text-center">
+            <span className="text-[10px] text-zinc-400 uppercase tracking-wide">
+              Tx exec
+            </span>
+            <span className="text-base font-semibold text-tracker-active">
+              {totalTransactionTime.toFixed(2)}ms
+            </span>
+          </div>
+        </div>
+
+        <div className="w-full h-7 mt-1 flex items-center justify-center">
+          <span
+            className={cn(
+              'inline-flex max-w-full items-center rounded-md border px-2 py-0.5 text-[12px] font-medium whitespace-nowrap truncate',
+              isParallelExecution
+                ? 'border-tracker-active/60 bg-tracker-active/20 text-white shadow-[0_0_0_0.5px_rgba(131,110,249,0.35)]'
+                : 'border-zinc-700 bg-zinc-800/40 text-zinc-300',
+            )}
+            title="Parallel factor (Tx exec / Block exec)"
+          >
+            {isParallelExecution
+              ? `Parallel ${parallelRatioLabel}`
+              : `Factor ${parallelRatioLabel}`}
+          </span>
+        </div>
       </div>
 
       {/* Separator */}
       <div className="w-full h-px bg-zinc-700" />
 
       {/* Block number Label */}
-      <div className="text-sm font-medium text-zinc-600">
-        {formatBlockNumber(block.number)}
+      <div className="w-full px-3.5 flex items-center justify-center">
+        <div className="text-sm font-medium text-zinc-400">
+          {formatBlockNumber(block.number)}
+        </div>
       </div>
     </div>
   )
