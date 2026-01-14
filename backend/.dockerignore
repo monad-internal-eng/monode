@@ -1,0 +1,40 @@
+# Git files
+.git
+.gitignore
+.github
+
+# Build artifacts
+target/
+
+# Documentation
+*.md
+README*
+CHANGELOG*
+
+# Docker files
+.dockerignore
+Dockerfile*
+docker-compose*
+
+# IDE and editor files
+.vscode
+.idea
+*.iml
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Test and coverage
+*.test
+coverage/
+.nyc_output
+
+# Logs
+*.log
+logs/

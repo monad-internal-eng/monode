@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Roboto_Mono } from 'next/font/google'
 import localFont from 'next/font/local'
 import './globals.css'
+import { Analytics } from '@vercel/analytics/next'
 import { cn } from '@/lib/utils'
 import { Providers } from './providers'
 
@@ -36,6 +37,7 @@ export default function RootLayout({
         )}
       >
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   )

@@ -1,0 +1,27 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
+    network_mode: host
+    environment:
+      - RUST_LOG=info
+    volumes:
+      # Mount the Monad event ring (read-only)
+      # Note: Update the host path if your event ring is located elsewhere
+      - /var/lib/hugetlbfs/user/monad/pagesize-2MB/event-rings:/var/lib/hugetlbfs/user/monad/pagesize-2MB/event-rings:ro
+      # Optional: Persistent logs volume
+      - logs:/var/log/eventwatch
+    restart: unless-stopped
+    command: ["--server-addr", "0.0.0.0:8443"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  logs:
