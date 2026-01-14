@@ -1,0 +1,50 @@
+# Builder stage
+FROM rust:1.91-slim AS builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    gcc \
+    g++ \
+    cmake \
+    pkg-config \
+    libssl-dev \
+    libclang-dev \
+    libzstd-dev \
+    libhugetlbfs-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /usr/src/app
+
+# Copy all source files
+COPY . .
+
+# Build the binary
+RUN cargo build --release --bin backend
+
+# Runtime stage
+FROM debian:bookworm-slim AS runtime
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libssl3 \
+    libzstd1 \
+    libhugetlbfs0 \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /usr/src/app
+
+# Copy the compiled binary from the builder stage
+COPY --from=builder /usr/src/app/target/release/backend /usr/local/bin/backend
+
+# Expose WebSocket port
+EXPOSE 8443
+
+# Set entrypoint
+ENTRYPOINT ["backend"]
+CMD ["--server-addr", "0.0.0.0:8443"]
+
