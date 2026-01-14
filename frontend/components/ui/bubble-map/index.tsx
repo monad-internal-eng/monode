@@ -39,23 +39,22 @@ export function BubbleMap<T extends BubbleItem>({
   renderBubbleContent,
   renderTooltip,
   bottomDescription,
-  minSize = 90,
-  maxSize = 110,
+  minSize = 40,
+  maxSize = 160,
 }: BubbleMapProps<T>) {
   const maxHits = Math.max(...items.map((i) => i.hits), 1)
 
   const getSize = (hits: number) => {
     const ratio = hits / maxHits
-
-    if (ratio > 0.7) return maxSize
-    return minSize
+    return minSize + (maxSize - minSize) * ratio
   }
 
   const getColor = (hits: number) => {
     const ratio = hits / maxHits
 
-    if (ratio > 0.7) return 'bg-[#B63537] text-white'
-    return 'bg-[#C88328] text-black'
+    if (ratio > 0.8) return 'bg-bubble-map-color-1 text-white'
+    if (ratio > 0.5) return 'bg-bubble-map-color-2 text-black'
+    return 'bg-bubble-map-color-3 text-black'
   }
 
   return (
