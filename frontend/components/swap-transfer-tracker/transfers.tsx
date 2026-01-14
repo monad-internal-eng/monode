@@ -20,7 +20,7 @@ const TABLE_GRID = 'grid grid-cols-6 gap-6 px-4'
 const ROW_HEIGHT = 45
 
 interface TransferRowData {
-  dataRef: React.RefObject<TransferData[]>
+  data: TransferData[]
   gridClass: string
 }
 
@@ -28,10 +28,10 @@ interface TransferRowData {
 function TransferCell({
   index,
   style,
-  dataRef,
+  data,
   gridClass,
 }: RowComponentProps<TransferRowData>): ReactElement {
-  const transfer = dataRef.current?.[index]
+  const transfer = data[index]
 
   return (
     <div style={style}>

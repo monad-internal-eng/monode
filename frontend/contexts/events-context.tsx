@@ -65,7 +65,7 @@ interface EventsProviderProps {
 const EventsContext = createContext<EventsContextValue | null>(null)
 
 const RECONNECT_DELAY = 3000
-const MAX_EVENTS_STORED = 10000
+const MAX_EVENTS_STORED = 25000
 
 /**
  * A context provider for the events context.
