@@ -421,9 +421,9 @@
   --tooltip-separator: #2c2735;
 
   /* Bubble map colors */
-  --color-bubble-map-color-1: #B63537;
-  --color-bubble-map-color-2: #C88328;
-  --color-bubble-map-color-3: #509E68;
+  --color-bubble-map-color-1: #b63537;
+  --color-bubble-map-color-2: #c88328;
+  --color-bubble-map-color-3: #509e68;
 
   /* Text colors */
   --text-secondary-light: var(--color-neutral-500);
