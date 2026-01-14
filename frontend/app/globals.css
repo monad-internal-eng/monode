@@ -420,6 +420,11 @@
   --tooltip-text-accent: #9c6ef8;
   --tooltip-separator: #2c2735;
 
+  /* Bubble map colors */
+  --color-bubble-map-color-1: #B63537;
+  --color-bubble-map-color-2: #C88328;
+  --color-bubble-map-color-3: #509E68;
+
   /* Text colors */
   --text-secondary-light: var(--color-neutral-500);
   --text-secondary-dark: var(--color-zinc-400);
