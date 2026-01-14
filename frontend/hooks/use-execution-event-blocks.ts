@@ -16,7 +16,7 @@ const BLOCK_EVENTS = [
   'BlockReject',
 ] as const
 
-const MAX_BLOCKS = 5000
+const MAX_BLOCKS = 15000
 
 interface UseExecutionEventBlocksReturn {
   blocks: Block[]

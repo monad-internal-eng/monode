@@ -1,11 +1,16 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ListImperativeAPI } from 'react-window'
 
 interface UseVirtualizedListOptions<T> {
   data: T[]
   isFollowing: boolean
+  gridClass: string
+}
+
+interface VirtualizedRowProps<T> {
+  data: T[]
   gridClass: string
 }
 
@@ -15,8 +20,7 @@ interface UseVirtualizedListReturn<T> {
   listRef: React.RefObject<ListImperativeAPI | null>
   containerHeight: number
   displayedData: T[]
-  dataRef: React.RefObject<T[]>
-  rowProps: { dataRef: React.RefObject<T[]>; gridClass: string }
+  rowProps: VirtualizedRowProps<T>
 }
 
 export function useVirtualizedList<T>({
@@ -31,41 +35,27 @@ export function useVirtualizedList<T>({
 
   // Freeze data when paused - this prevents re-renders while paused
   const [displayedData, setDisplayedData] = useState<T[]>(data)
-  const [dataVersion, setDataVersion] = useState(0)
 
   // Update displayed data only when following
   useEffect(() => {
-    if (isFollowing) {
-      setDisplayedData(data)
-      setDataVersion((prev) => prev + 1)
-    }
-  }, [data, isFollowing])
+    if (!isFollowing) return
 
-  // Store displayed data in ref for stable rowProps
-  const dataRef = useRef<T[]>(displayedData)
-  dataRef.current = displayedData
+    setDisplayedData((prev) => (Object.is(prev, data) ? prev : data))
+  }, [data, isFollowing])
 
   // Auto-scroll to top when following and new data arrives
   useEffect(() => {
-    if (
-      isFollowing &&
-      displayedData.length > 0 &&
-      listRef.current &&
-      dataVersion > 0
-    ) {
-      // Use requestAnimationFrame to ensure the List has updated before scrolling
-      requestAnimationFrame(() => {
-        if (listRef.current) {
-          // Force scroll to top to show newest data
-          listRef.current.scrollToRow({
-            index: 0,
-            align: 'start',
-            behavior: 'auto', // Use 'auto' for immediate scroll when following
-          })
-        }
+    if (!isFollowing || displayedData.length === 0 || !listRef.current) return
+
+    // Use requestAnimationFrame to ensure the List has updated before scrolling.
+    requestAnimationFrame(() => {
+      listRef.current?.scrollToRow({
+        index: 0,
+        align: 'start',
+        behavior: 'smooth',
       })
-    }
-  }, [dataVersion, isFollowing])
+    })
+  }, [displayedData, isFollowing])
 
   // Reset horizontal scroll when resuming (isFollowing becomes true)
   useEffect(() => {
@@ -74,9 +64,12 @@ export function useVirtualizedList<T>({
     }
   }, [isFollowing])
 
-  // Stable rowProps - dataRef never changes reference, only its .current
-  const rowPropsRef = useRef({ dataRef, gridClass })
-  const rowProps = rowPropsRef.current
+  // Memoize rowProps so react-window re-renders rows when data changes,
+  // even if the list length stays constant (e.g. when capped at max items).
+  const rowProps = useMemo(
+    () => ({ data: displayedData, gridClass }),
+    [displayedData, gridClass],
+  )
 
   // Update container height on resize
   useEffect(() => {
@@ -112,7 +105,6 @@ export function useVirtualizedList<T>({
     listRef,
     containerHeight,
     displayedData,
-    dataRef,
     rowProps,
   }
 }
