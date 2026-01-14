@@ -45,10 +45,7 @@ function BlockCell({
 
   return (
     <div style={style} className="flex items-center justify-center relative">
-      <BlockTime
-        block={block}
-        normalizedTimeScaleMs={normalizedTimeScaleMs}
-      />
+      <BlockTime block={block} normalizedTimeScaleMs={normalizedTimeScaleMs} />
     </div>
   )
 }

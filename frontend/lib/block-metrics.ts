@@ -27,7 +27,10 @@ export function getTotalTransactionTimeMs(block: Block): number {
   return fromNsToMsPrecise(sumTransactionTimeNs(block))
 }
 
-export function getParallelizationRatio(blockMs: number, totalTxMs: number): number {
+export function getParallelizationRatio(
+  blockMs: number,
+  totalTxMs: number,
+): number {
   if (!(blockMs > 0)) return 0
   const ratio = totalTxMs / blockMs
   return Number.isFinite(ratio) ? ratio : 0
@@ -50,8 +53,12 @@ export function calculateBarMetrics(
 ) {
   const blockMs = getBlockWallTimeMs(block)
   const totalTransactionTime = getTotalTransactionTimeMs(block)
-  const parallelizationRatio = getParallelizationRatio(blockMs, totalTransactionTime)
-  const isParallelExecution = parallelizationRatio > parallelExecutionRatioThreshold
+  const parallelizationRatio = getParallelizationRatio(
+    blockMs,
+    totalTransactionTime,
+  )
+  const isParallelExecution =
+    parallelizationRatio > parallelExecutionRatioThreshold
 
   const timeSavedMs = getTimeSavedMs(blockMs, totalTransactionTime)
 
@@ -60,7 +67,8 @@ export function calculateBarMetrics(
   // Normalize both bars using the same scale so that ΣTx can exceed block time.
   // If no execution time yet, show a minimal visible placeholder.
   const blockHeightPct = blockMs > 0 ? (blockMs / scaleMs) * 100 : 20
-  const txHeightPct = totalTransactionTime > 0 ? (totalTransactionTime / scaleMs) * 100 : 0
+  const txHeightPct =
+    totalTransactionTime > 0 ? (totalTransactionTime / scaleMs) * 100 : 0
 
   return {
     blockHeightPct: Math.max(Math.min(blockHeightPct, 100) * 0.9, 15), // Ensure minimum height + a little headroom

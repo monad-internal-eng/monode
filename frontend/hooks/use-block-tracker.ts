@@ -294,7 +294,8 @@ export function useBlockTracker() {
 
     // Use 95th percentile to be resistant to spikes
     const percentileIndex = Math.floor(maxTimes.length * 0.95)
-    const percentile95 = maxTimes[percentileIndex] || maxTimes[maxTimes.length - 1]
+    const percentile95 =
+      maxTimes[percentileIndex] || maxTimes[maxTimes.length - 1]
 
     // Add 10% buffer to prevent clipping of high values near the percentile
     return percentile95 * 1.1
