@@ -1,7 +1,8 @@
 import type { BlockState } from '@/types/block'
 
 export const SLOW_MOTION_DURATION_SECONDS = 30
-export const SLOW_MOTION_EVENT_INTERVAL_MS = 75
+export const SLOW_MOTION_CHUNK_INTERVAL_MS = 2000
+export const SLOW_MOTION_CHUNK_NEW_BLOCKS = 2
 
 /**
  * Color tokens for block states (CSS variables for consistency).
