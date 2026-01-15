@@ -167,7 +167,7 @@ export const BlockTime = ({
       {/* Block number Label */}
       <ExternalLink
         href={`${EXPLORER_URL}/block/${block.number}`}
-        className="text-sm font-medium text-zinc-600 hover:text-zinc-500"
+        className="text-sm font-medium text-zinc-600 hover:text-white"
       >
         {formatBlockNumber(block.number)}
       </ExternalLink>
