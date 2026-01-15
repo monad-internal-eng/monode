@@ -241,7 +241,17 @@ impl EventFilter {
 // Load restricted filters from file
 // These filters are statically specified to restrict the events that can be subscribed to
 pub fn load_restricted_filters() -> EventFilter {
-    let file = File::open("restricted_filters.json").unwrap();
+    let file = if let Ok(f) = File::open("restricted_filters.json") {
+        f
+    } else if let Ok(f) = File::open("backend/restricted_filters.json") {
+        f
+    } else {
+        panic!("restricted_filters.json not found");
+    };
     let filters: Vec<EventFilterSpec> = serde_json::from_reader(file).unwrap();
     EventFilter::new(filters)
+}
+
+pub fn is_restricted_mode() -> bool {
+    std::env::var("ALLOW_UNRESTRICTED_SUBSCRIPTIONS").is_err()
 }
