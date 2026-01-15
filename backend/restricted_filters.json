@@ -32,9 +32,7 @@
       {
         "field": "address",
         "filter": {
-          "values": [
-            "0xa68a7f0601effdc65c64d9c47ca1b18d96b4352c"
-          ]
+          "values": ["0xa68a7f0601effdc65c64d9c47ca1b18d96b4352c"]
         }
       },
       {
@@ -53,9 +51,7 @@
       {
         "field": "address",
         "filter": {
-          "values": [
-            "0x188d586ddcf52439676ca21a244753fa19f9ea8e"
-          ]
+          "values": ["0x188d586ddcf52439676ca21a244753fa19f9ea8e"]
         }
       },
       {
@@ -75,9 +71,7 @@
       {
         "field": "address",
         "filter": {
-          "values": [
-            "0xd5b70d70cbe6c42bcd1aaa662a21673a83f4615b"
-          ]
+          "values": ["0xd5b70d70cbe6c42bcd1aaa662a21673a83f4615b"]
         }
       },
       {
@@ -96,9 +90,7 @@
       {
         "field": "address",
         "filter": {
-          "values": [
-            "0xb3e6778480b2e488385e8205ea05e20060b813cb"
-          ]
+          "values": ["0xb3e6778480b2e488385e8205ea05e20060b813cb"]
         }
       },
       {
@@ -117,9 +109,7 @@
       {
         "field": "address",
         "filter": {
-          "values": [
-            "0x6131b5fae19ea4f9d964eac0408e4408b66337b5"
-          ]
+          "values": ["0x6131b5fae19ea4f9d964eac0408e4408b66337b5"]
         }
       },
       {
@@ -138,9 +128,7 @@
       {
         "field": "address",
         "filter": {
-          "values": [
-            "0x6352a56caadc4f1e25cd6c75970fa768a3304e64"
-          ]
+          "values": ["0x6352a56caadc4f1e25cd6c75970fa768a3304e64"]
         }
       },
       {
@@ -162,9 +150,7 @@
       {
         "field": "address",
         "filter": {
-          "values": [
-            "0x3bd359c1119da7da1d913d1c4d2b7c461115433a"
-          ]
+          "values": ["0x3bd359c1119da7da1d913d1c4d2b7c461115433a"]
         }
       },
       {
