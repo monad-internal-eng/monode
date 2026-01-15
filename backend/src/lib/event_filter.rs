@@ -236,6 +236,11 @@ impl EventFilter {
     pub fn accepts_all(&self) -> bool {
         self.event_filters.is_empty()
     }
+
+    /// Returns a clone of the event filter specs
+    pub fn get_filter_specs(&self) -> Vec<EventFilterSpec> {
+        self.event_filters.clone()
+    }
 }
 
 // Load restricted filters from file
@@ -253,5 +258,5 @@ pub fn load_restricted_filters() -> EventFilter {
 }
 
 pub fn is_restricted_mode() -> bool {
-    std::env::var("ALLOW_UNRESTRICTED_SUBSCRIPTIONS").is_err()
+    std::env::var("ALLOW_UNRESTRICTED_FILTERS").is_err()
 }
