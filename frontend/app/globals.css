@@ -138,10 +138,10 @@
   --color-border-active: #e5e5e5;
 
   /* Block state colors */
-  --color-block-proposed: #342b6f;
-  --color-block-voted: #6e54ff;
-  --color-block-finalized: #2dd4bf;
-  --color-block-verified: #22c55e;
+  --color-block-proposed: #d4631f;
+  --color-block-voted: #8b68d9;
+  --color-block-finalized: #4680d6;
+  --color-block-verified: #2aad7c;
 
   /* Swap provider and transfer colors */
   --color-purple-primary: #836ef9;
@@ -153,7 +153,7 @@
   --color-blue-primary: #0066ff;
 
   /* UI component colors */
-  --color-text-muted: #52525e;
+  --color-text-muted: #a0a0b0;
   --color-text-muted-darker: #6a6a7a;
   --color-bg-card-dark: #454150;
   --color-bg-card-darker: #696274;
@@ -426,23 +426,21 @@
   --toast-error-bg-dark: hsla(0, 84%, 60%, 0.1);
 
   /* Tooltip colors */
-  --tooltip-bg: #18181b;
-  --tooltip-border: #e5e5e5;
+  --tooltip-bg: #0e0e1a;
+  --tooltip-border: #2a2a4a;
   --tooltip-text: #ffffff;
-  --tooltip-text-secondary: #a8a3b8;
-  --tooltip-text-accent: #6e54ff;
-  --tooltip-separator: #27272a;
+  --tooltip-text-secondary: #8888a0;
+  --tooltip-text-accent: #9c6ef8;
+  --tooltip-separator: #2c2735;
 
   /* Bubble map colors */
-  --color-bubble-map-color-1: #d33636;
-  --color-bubble-map-color-2: #d34936;
-  --color-bubble-map-color-3: #d38736;
-  --color-bubble-map-color-4: #afa10d;
-  --color-bubble-map-color-5: #67ae11;
+  --color-bubble-map-color-1: #b63537;
+  --color-bubble-map-color-2: #c88328;
+  --color-bubble-map-color-3: #509e68;
 
   /* Text colors */
   --text-secondary-light: var(--color-neutral-500);
-  --text-secondary-dark: #a8a3b8;
+  --text-secondary-dark: var(--color-zinc-400);
   --text-tertiary-light: var(--color-neutral-400);
   --text-tertiary-dark: #65656f;
   --text-disabled-light: var(--color-neutral-200);
