@@ -46,7 +46,7 @@ export function BlockStateTracker() {
       />
 
       {/* Main container - no rounded corners */}
-      <div className="w-full flex flex-col border-x border-b border-zinc-800 bg-[#0E100F]">
+      <div className="w-full flex flex-col border-b border-zinc-800 bg-[#0E100F]">
         {/* Legend bar with slow mode toggle */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-6 sm:px-10 py-4 border-b border-zinc-800">
           <div className="flex items-center gap-4 sm:gap-6">

@@ -108,9 +108,9 @@ export function BlockTimeTimeline({
   }, [isFollowingChain])
 
   return (
-    <div ref={containerRef} className="flex-1 min-h-[21.25rem]">
+    <div ref={containerRef} className="flex-1 min-h-85">
       {sortedBlocks.length === 0 ? (
-        <div className="flex items-center justify-center w-full h-[21.25rem]">
+        <div className="flex items-center justify-center w-full h-85">
           <Spinner text="Waiting for blocks..." />
         </div>
       ) : (

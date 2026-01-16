@@ -36,7 +36,7 @@ export function SwapTransferTracker() {
         description="Real-time swaps and transfers observed directly from execution events."
       />
 
-      <div className="flex flex-col border-x border-b border-zinc-800 overflow-hidden">
+      <div className="flex flex-col border-b border-zinc-800 overflow-hidden">
         <Tabs defaultValue="transfers" className="w-full">
           <div className="flex flex-col">
             <div className="overflow-x-auto scrollbar-none">
