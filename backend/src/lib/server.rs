@@ -10,6 +10,7 @@ use tokio_tungstenite::{accept_async, tungstenite::Message, WebSocketStream};
 use tracing::{error, info, warn};
 use serde::{Deserialize, Serialize};
 
+use crate::event_filter::{is_restricted_mode, load_restricted_filters};
 use crate::event_listener::EventName;
 use crate::top_k_tracker::{AccessEntry, TopKTracker};
 
@@ -71,6 +72,7 @@ impl TPSTracker {
 async fn wait_for_subscription(
     ws_receiver: &mut SplitStream<WebSocketStream<TcpStream>>,
     addr: SocketAddr,
+    restricted_filters: Option<EventFilter>,
 ) -> Option<EventFilter> {
     let timeout = tokio::time::Duration::from_secs(10);
 
@@ -78,6 +80,15 @@ async fn wait_for_subscription(
         Ok(Some(Ok(Message::Text(text)))) => match serde_json::from_str::<ClientMessage>(&text) {
             Ok(ClientMessage::Subscribe { event_filters }) => {
                 let filter = EventFilter::new(event_filters.clone());
+                if let Some(restricted_filters) = restricted_filters {
+                    if filter != restricted_filters {
+                        warn!(
+                            "Client {} subscription does not match restricted filters, closing connection",
+                            addr
+                        );
+                        return None;
+                    }
+                }
                 if filter.accepts_all() {
                     info!("Client {} subscribed to all events", addr);
                 } else {
@@ -341,6 +352,7 @@ async fn handle_connection(
     stream: TcpStream,
     addr: SocketAddr,
     event_broadcast_receiver: broadcast::Receiver<EventDataOrMetrics>,
+    restricted_filters: Option<EventFilter>,
 ) {
     info!("New WebSocket connection from: {}", addr);
 
@@ -355,7 +367,7 @@ async fn handle_connection(
     let (ws_sender, mut ws_receiver) = ws_stream.split();
 
     // Wait for subscription message before streaming events
-    let filter = match wait_for_subscription(&mut ws_receiver, addr).await {
+    let filter = match wait_for_subscription(&mut ws_receiver, addr, restricted_filters).await {
         Some(f) => f,
         None => return,
     };
@@ -408,12 +420,20 @@ pub async fn run_websocket_server(
     let listener = TcpListener::bind(&server_addr).await?;
     info!("WebSocket server listening on: {}", server_addr);
 
+    let restricted_filters: Option<EventFilter> = if is_restricted_mode() {
+        info!("Running in restricted mode");
+        Some(load_restricted_filters())
+    } else {
+        info!("Running in unrestricted mode");
+        None
+    };
+
     // Accept incoming connections
     loop {
         match listener.accept().await {
             Ok((stream, client_addr)) => {                        
                 let event_broadcast_receiver = event_broadcast_sender.subscribe();
-                tokio::spawn(handle_connection(stream, client_addr, event_broadcast_receiver));
+                tokio::spawn(handle_connection(stream, client_addr, event_broadcast_receiver, restricted_filters.clone()));
             }
             Err(e) => {
                 error!("Error accepting connection: {}", e);

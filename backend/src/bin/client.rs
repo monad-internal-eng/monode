@@ -6,6 +6,7 @@ use execution_events_example::{
     event_filter::{ClientMessage, EventFilterSpec},
     server::ServerMessage,
 };
+use execution_events_example::event_filter::load_restricted_filters;
 use futures_util::{SinkExt, StreamExt};
 use std::collections::HashMap;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
@@ -25,6 +26,9 @@ struct Cli {
     /// If not specified, all events are received.
     #[arg(short, long, value_delimiter = ',')]
     events: Option<Vec<String>>,
+
+    #[arg(long, default_value = "false")]
+    restricted: bool,
 
     #[arg(long, default_value = "false")]
     verbose_events: bool,
@@ -77,25 +81,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let (mut write, mut read) = ws_stream.split();
 
-    // Parse event names from strings to EventName enum
-    let event_strings = cli.events.clone().unwrap_or_default();
-    let events: Vec<EventName> = if event_strings.is_empty() {
-        Vec::new()
+    // Build event filter specs for subscription
+    let event_filters: Vec<EventFilterSpec> = if cli.restricted {
+        info!("Loading restricted filters");
+        let restricted_filters = load_restricted_filters();
+        restricted_filters.get_filter_specs()
     } else {
-        event_strings
-            .iter()
-            .map(|s| {
-                serde_json::from_value(serde_json::Value::String(s.clone()))
-                    .map_err(|_| format!("Invalid event name: {}", s))
-            })
-            .collect::<Result<Vec<_>, _>>()?
-    };
-
-    // Send subscription message
-    let subscribe_msg = ClientMessage::Subscribe {
-        event_filters: if events.is_empty() {
+        let event_strings = cli.events.clone().unwrap_or_default();
+        if event_strings.is_empty() {
             Vec::new()
         } else {
+            let events: Vec<EventName> = event_strings
+                .iter()
+                .map(|s| {
+                    serde_json::from_value(serde_json::Value::String(s.clone()))
+                        .map_err(|_| format!("Invalid event name: {}", s))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
             events
                 .iter()
                 .map(|event_name| EventFilterSpec {
@@ -103,15 +105,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     field_filters: Vec::new(),
                 })
                 .collect()
-        },
+        }
     };
+
+    // Send subscription message
+    let subscribe_msg = ClientMessage::Subscribe { event_filters: event_filters.clone() };
     let subscribe_json = serde_json::to_string(&subscribe_msg)?;
     write.send(Message::Text(subscribe_json)).await?;
 
-    if events.is_empty() {
+    if event_filters.is_empty() {
         info!("Subscribed to all events");
     } else {
-        info!("Subscribed to events: {:?}", events);
+        info!("Subscribed to {} event filters", event_filters.len());
     }
 
     // Read messages from the server

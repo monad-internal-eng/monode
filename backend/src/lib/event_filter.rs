@@ -1,5 +1,6 @@
 use alloy_primitives::{Address, B256, U256};
 use serde::{Deserialize, Serialize};
+use std::fs::File;
 use super::event_listener::EventName;
 use super::serializable_event::{SerializableEventData, SerializableExecEvent};
 
@@ -183,6 +184,24 @@ pub struct EventFilter {
     event_filters: Vec<EventFilterSpec>,
 }
 
+impl PartialEq for EventFilter {
+    fn eq(&self, other: &Self) -> bool {
+        // Check that all elements in self exist in other
+        for spec in &self.event_filters {
+            if !other.event_filters.contains(spec) {
+                return false;
+            }
+        }
+        // Check that all elements in other exist in self
+        for spec in &other.event_filters {
+            if !self.event_filters.contains(spec) {
+                return false;
+            }
+        }
+        true
+    }
+}
+
 impl EventFilter {
     /// Create a filter from event filter specs
     pub fn new(event_filters: Vec<EventFilterSpec>) -> Self {
@@ -217,4 +236,27 @@ impl EventFilter {
     pub fn accepts_all(&self) -> bool {
         self.event_filters.is_empty()
     }
+
+    /// Returns a clone of the event filter specs
+    pub fn get_filter_specs(&self) -> Vec<EventFilterSpec> {
+        self.event_filters.clone()
+    }
+}
+
+// Load restricted filters from file
+// These filters are statically specified to restrict the events that can be subscribed to
+pub fn load_restricted_filters() -> EventFilter {
+    let file = if let Ok(f) = File::open("restricted_filters.json") {
+        f
+    } else if let Ok(f) = File::open("backend/restricted_filters.json") {
+        f
+    } else {
+        panic!("restricted_filters.json not found");
+    };
+    let filters: Vec<EventFilterSpec> = serde_json::from_reader(file).unwrap();
+    EventFilter::new(filters)
+}
+
+pub fn is_restricted_mode() -> bool {
+    std::env::var("ALLOW_UNRESTRICTED_FILTERS").is_err()
 }

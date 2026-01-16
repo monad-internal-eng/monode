@@ -1,0 +1,166 @@
+[
+  {
+    "event_name": "TxnHeaderStart"
+  },
+  {
+    "event_name": "BlockStart"
+  },
+  {
+    "event_name": "BlockQC"
+  },
+  {
+    "event_name": "BlockFinalized"
+  },
+  {
+    "event_name": "BlockVerified"
+  },
+  {
+    "event_name": "BlockReject"
+  },
+  {
+    "event_name": "BlockEnd"
+  },
+  {
+    "event_name": "TxnEnd"
+  },
+  {
+    "event_name": "TxnEvmOutput"
+  },
+  {
+    "event_name": "TxnLog",
+    "field_filters": [
+      {
+        "field": "address",
+        "filter": {
+          "values": ["0xa68a7f0601effdc65c64d9c47ca1b18d96b4352c"]
+        }
+      },
+      {
+        "field": "topics",
+        "filter": {
+          "values": [
+            "0x6e4c3aa29fc5ed6dc56aa0a95d8ac6660b6bf4e9c2ab49a0ea79b9cdafbcd7eb"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "event_name": "TxnLog",
+    "field_filters": [
+      {
+        "field": "address",
+        "filter": {
+          "values": ["0x188d586ddcf52439676ca21a244753fa19f9ea8e"]
+        }
+      },
+      {
+        "field": "topics",
+        "filter": {
+          "values": [
+            "0x40e9cecb9f5f1f1c5b9c97dec2917b7ee92e57ba5563708daca94dd84ad7112f",
+            "0xadaf30776f551bccdfb307c3fd8cdec198ca9a852434c8022ee32d1ccedd8219"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "event_name": "TxnLog",
+    "field_filters": [
+      {
+        "field": "address",
+        "filter": {
+          "values": ["0xd5b70d70cbe6c42bcd1aaa662a21673a83f4615b"]
+        }
+      },
+      {
+        "field": "topics",
+        "filter": {
+          "values": [
+            "0x19b47279256b2a23a1665c810c8d55a1758940ee09377d4f8d26497a3577dc83"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "event_name": "TxnLog",
+    "field_filters": [
+      {
+        "field": "address",
+        "filter": {
+          "values": ["0xb3e6778480b2e488385e8205ea05e20060b813cb"]
+        }
+      },
+      {
+        "field": "topics",
+        "filter": {
+          "values": [
+            "0xc2e9a469a567800a865e66b33df0528af708b4d0764eb83443b96980e99f4c68"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "event_name": "TxnLog",
+    "field_filters": [
+      {
+        "field": "address",
+        "filter": {
+          "values": ["0x6131b5fae19ea4f9d964eac0408e4408b66337b5"]
+        }
+      },
+      {
+        "field": "topics",
+        "filter": {
+          "values": [
+            "0xd6d4f5681c246c9f42c203e287975af1601f8df8035a9251f79aab5c8f09e2f8"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "event_name": "TxnLog",
+    "field_filters": [
+      {
+        "field": "address",
+        "filter": {
+          "values": ["0x6352a56caadc4f1e25cd6c75970fa768a3304e64"]
+        }
+      },
+      {
+        "field": "topics",
+        "filter": {
+          "values": [
+            "0x76af224a143865a50b41496e1a73622698692c565c1214bc862f18e22d829c5e"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "event_name": "NativeTransfer"
+  },
+  {
+    "event_name": "TxnLog",
+    "field_filters": [
+      {
+        "field": "address",
+        "filter": {
+          "values": ["0x3bd359c1119da7da1d913d1c4d2b7c461115433a"]
+        }
+      },
+      {
+        "field": "topics",
+        "filter": {
+          "values": [
+            "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+          ]
+        }
+      }
+    ]
+  }
+]
