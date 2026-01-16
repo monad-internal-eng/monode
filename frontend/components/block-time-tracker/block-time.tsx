@@ -6,7 +6,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { EXPLORER_URL } from '@/constants/common'
-import { PARALLEL_EXECUTION_RATIO_THRESHOLD } from '@/hooks/use-block-tracker'
+import { PARALLEL_EXECUTION_RATIO_THRESHOLD } from '@/hooks/use-block-execution-tracker'
 import { calculateBarMetrics } from '@/lib/block-metrics'
 import { formatBlockNumber } from '@/lib/ui'
 import { cn } from '@/lib/utils'
