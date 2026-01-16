@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  SLOW_MOTION_CHUNK_INTERVAL_MS,
+  SLOW_MOTION_CHUNK_NEW_BLOCKS,
   SLOW_MOTION_DURATION_SECONDS,
-  SLOW_MOTION_EVENT_INTERVAL_MS,
 } from '@/constants/block-state'
 import type { SerializableEventData } from '@/types/events'
 
@@ -93,14 +94,30 @@ export function useBlockchainSlowMotion({
     eventQueueRef.current = []
 
     // Start the slow processing interval
+    // Process queued events in chunks so the UI advances in visible steps.
+    // A "chunk" aims to include ~N new events (BlockStart events) plus any subsequent state transitions for those blocks that are already queued.
     processIntervalRef.current = setInterval(() => {
-      if (eventQueueRef.current.length > 0) {
-        const event = eventQueueRef.current.shift()
-        if (event) {
-          onProcessEventRef.current(event)
+      if (eventQueueRef.current.length === 0) return
+
+      const chunk: SerializableEventData[] = []
+      let newBlocksInChunk = 0
+
+      while (
+        eventQueueRef.current.length > 0 &&
+        newBlocksInChunk < SLOW_MOTION_CHUNK_NEW_BLOCKS
+      ) {
+        const next = eventQueueRef.current.shift()
+        if (!next) break
+        chunk.push(next)
+        if (next.payload.type === 'BlockStart') {
+          newBlocksInChunk += 1
         }
       }
-    }, SLOW_MOTION_EVENT_INTERVAL_MS)
+
+      if (chunk.length > 0) {
+        onFlushEventsRef.current(chunk)
+      }
+    }, SLOW_MOTION_CHUNK_INTERVAL_MS)
 
     // Start the countdown timer using timestamp-based calculation
     countdownIntervalRef.current = setInterval(updateRemainingSeconds, 1000)
