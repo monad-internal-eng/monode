@@ -28,13 +28,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body
-        className={cn(
-          brittiSans.variable,
-          robotoMono.variable,
-          'antialiased bg-zinc-950',
-        )}
+        className={cn(brittiSans.variable, robotoMono.variable, 'antialiased')}
       >
         <Providers>{children}</Providers>
         <Analytics />
