@@ -18,7 +18,7 @@ const BLOCK_EVENTS = [
 
 const MAX_BLOCKS = 15000
 
-interface UseExecutionEventBlocksReturn {
+interface UseBlockStateTrackerReturn {
   blocks: Block[]
   isSlowMotion: boolean
   remainingSeconds: number
@@ -81,7 +81,7 @@ function applyEventToBlocks(
   }
 }
 
-export function useExecutionEventBlocks(): UseExecutionEventBlocksReturn {
+export function useBlockStateTracker(): UseBlockStateTrackerReturn {
   const [blocks, setBlocks] = useState<Block[]>([])
   const [isFollowingChain, setIsFollowingChain] = useState(true)
 
