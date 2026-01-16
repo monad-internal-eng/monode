@@ -236,16 +236,6 @@ export function useBlockExecutionTracker() {
 
   // Subscribe to real-time events
   useEvents({
-    filters: [
-      { eventName: 'BlockStart' },
-      { eventName: 'BlockQC' },
-      { eventName: 'BlockFinalized' },
-      { eventName: 'BlockVerified' },
-      { eventName: 'BlockEnd' },
-      { eventName: 'TxnHeaderStart' },
-      { eventName: 'TxnEnd' },
-      { eventName: 'TxnEvmOutput' },
-    ],
     onEvent: handleEvent,
   })
   // Memoize computed values to avoid unnecessary recalculations

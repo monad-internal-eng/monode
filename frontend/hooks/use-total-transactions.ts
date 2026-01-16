@@ -22,7 +22,6 @@ export function useTotalTransactions(): number {
   }, [])
 
   useEvents({
-    filters: [{ eventName: 'TxnHeaderStart' }],
     onEvent: handleTxnEvent,
   })
 
