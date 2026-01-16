@@ -1,6 +1,6 @@
 'use client'
 
-import { Clock, Info, Pause, Play, TrendingUp } from 'lucide-react'
+import { Clock, Pointer, TrendingUp } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { SectionHeader } from '@/components/ui/section-header'
 import { StatCard } from '@/components/ui/stat-card'
@@ -74,56 +74,55 @@ export function BlockTimeExecutionTracker() {
       </div>
 
       {/* Block Execution Timeline */}
-      <div className="w-full flex flex-col gap-4 sm:gap-6">
+      <div className="w-full flex flex-col">
         <SectionHeader
           title="Block Execution Timeline"
-          description="Dark purple = block execution time, purple = total tx execution time. The difference in times indicates parallel execution."
-        >
-          <button
-            type="button"
-            onClick={() => setIsFollowingChain(!isFollowingChain)}
-            className={cn(
-              'flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium cursor-pointer transition-all duration-200 w-fit',
-              isFollowingChain
-                ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700'
-                : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white',
-            )}
-          >
-            {isFollowingChain ? (
-              <Pause className="w-4 h-4" />
-            ) : (
-              <Play className="w-4 h-4" />
-            )}
-            {isFollowingChain ? 'Pause' : 'Resume'}
-          </button>
-        </SectionHeader>
-        {/* Info copy - only for mobile */}
-        <div className="flex items-center gap-2 text-sm text-zinc-500 md:hidden">
-          <Info className="w-4 h-4" />
-          <span>Tap Pause to freeze and scroll through blocks</span>
-        </div>
+          description="Visualize block and transaction execution times. If transation execution time is greater than block execution time then it indicates parallel execution."
+        />
 
-        <div className="w-full flex flex-col gap-5 dark-component-colors rounded-xl border p-4 sm:p-5">
-          {/* Scrollable Blocks Container */}
-          <button type="button" className="flex-1" {...hoverProps}>
+        {/* Main container - no rounded corners, borders carry across */}
+        <div className="w-full flex flex-col border-x border-b border-zinc-800 bg-[#0E100F]">
+          {/* Legend bar */}
+          <div className="flex items-center px-6 sm:px-10 py-4 border-b border-zinc-800">
+            <BlockTimeLegend />
+          </div>
+
+          {/* Blocks timeline area */}
+          <div className="relative" {...hoverProps}>
+            {/* Left fade gradient - only on sm and above */}
+            <div className="hidden sm:block absolute left-0 top-0 bottom-0 w-[18.75rem] z-10 pointer-events-none bg-gradient-to-r from-[#0E100F] to-transparent" />
+
             <BlockTimeTimeline
               blocks={finalizedBlocks}
               isFollowingChain={!isPaused}
               normalizedTimeScaleMs={normalizedTimeScaleMs}
             />
-          </button>
+          </div>
 
-          {/* Seperator */}
-          <div className="w-full h-0.5 bg-zinc-700" />
+          {/* Footer with hover pause info (desktop) and pause button (mobile) */}
+          <div className="flex items-center gap-4 px-6 sm:px-10 py-2.5 border-t border-zinc-800">
+            {/* Mobile pause/resume button */}
+            <button
+              type="button"
+              onClick={() => setIsFollowingChain(!isFollowingChain)}
+              className={cn(
+                'md:hidden h-9 px-4 py-2 rounded-md font-mono text-sm text-white uppercase cursor-pointer transition-all duration-200',
+                isFollowingChain
+                  ? 'bg-[radial-gradient(ellipse_50%_50%_at_50%_50%,rgba(23,23,23,0.2)_0%,rgba(163,163,163,0.16)_100%),#0A0A0A] shadow-[0_0_0_1px_rgba(0,0,0,0.8)]'
+                  : 'bg-[radial-gradient(ellipse_50%_50%_at_50%_50%,rgba(110,84,255,0)_0%,rgba(255,255,255,0.12)_100%),#6E54FF] shadow-[0_0_0_1px_rgba(79,71,235,0.9)]',
+              )}
+            >
+              {isFollowingChain ? 'Pause' : 'Resume'}
+            </button>
 
-          {/* Legend */}
-          <BlockTimeLegend />
-        </div>
-
-        {/* Info copy - only for desktop */}
-        <div className="hidden md:flex items-center gap-2 text-sm text-zinc-500">
-          <Info className="w-4 h-4" />
-          <span>Hover to pause</span>
+            {/* Desktop hover pause info */}
+            <div className="hidden md:flex items-center gap-4">
+              <Pointer className="w-5 h-5 text-[#52525E]" />
+              <span className="text-base text-[#52525E]">
+                Hovering on the Block stream pauses the update.
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
