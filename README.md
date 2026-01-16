@@ -14,6 +14,8 @@ cargo run --bin backend -- --server-addr 0.0.0.0:<SERVER_PORT>
 
 Replace `<SERVER_PORT>` with your desired port number (e.g., 8080).
 
+> **_NOTE:_** By default, the backend runs in **restricted** mode, which requires clients to subscribe to the events specified in `backend/restricted_filters.json`. To disable this behavior, set the `ALLOW_UNRESTRICTED_FILTERS` environment variable to a non-empty value before spawning the backend process.
+
 ### 2. Configure the Frontend
 
 Edit the `.env` file in the frontend directory to set the WebSocket URL:

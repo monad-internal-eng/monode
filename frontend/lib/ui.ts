@@ -1,6 +1,18 @@
 import { formatUnits } from 'viem'
 import { getTokenDecimals } from '@/constants/swap-provider-config'
 
+const intNumberFormatter = new Intl.NumberFormat('en-US', {
+  notation: 'standard',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+})
+
+const compactNumberFormatter = new Intl.NumberFormat('en-US', {
+  notation: 'compact',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})
+
 export function formatBlockNumber(num: number): string {
   const str = num.toString()
   if (str.length <= 9) {
@@ -12,21 +24,14 @@ export function formatBlockNumber(num: number): string {
 }
 
 export function formatIntNumber(num: number): string {
-  return new Intl.NumberFormat('en-US', {
-    notation: 'standard',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(num)
+  return intNumberFormatter.format(num)
 }
 
 export function formatAmount(amount: number) {
   if (amount === 0) return '0'
   if (amount < 0.001) return '<0.001'
   if (amount < 1) return amount.toFixed(3)
-  if (amount < 1000) return amount.toFixed(2)
-  if (amount < 1_000_000) return `${(amount / 1000).toFixed(2)}K`
-  if (amount < 1_000_000_000) return `${(amount / 1_000_000).toFixed(2)}M`
-  return `${(amount / 1_000_000_000).toFixed(2)}B`
+  return compactNumberFormatter.format(amount)
 }
 
 export function formatTokenAmount(

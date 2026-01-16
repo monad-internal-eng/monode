@@ -10,10 +10,11 @@ use tokio_tungstenite::{accept_async, tungstenite::Message, WebSocketStream};
 use tracing::{error, info, warn};
 use serde::{Deserialize, Serialize};
 
+use crate::event_filter::{is_restricted_mode, load_restricted_filters};
 use crate::event_listener::EventName;
 use crate::top_k_tracker::{AccessEntry, TopKTracker};
 
-use super::event_filter::{ClientMessage, EventFilter};
+use super::event_filter::EventFilter;
 use super::event_listener::EventData;
 use super::serializable_event::SerializableEventData;
 
@@ -66,51 +67,6 @@ impl TPSTracker {
     }
 }
 
-/// Wait for the client to send a subscription message, with a timeout.
-/// Returns the filter, or None if the client disconnects or times out.
-async fn wait_for_subscription(
-    ws_receiver: &mut SplitStream<WebSocketStream<TcpStream>>,
-    addr: SocketAddr,
-) -> Option<EventFilter> {
-    let timeout = tokio::time::Duration::from_secs(10);
-
-    match tokio::time::timeout(timeout, ws_receiver.next()).await {
-        Ok(Some(Ok(Message::Text(text)))) => match serde_json::from_str::<ClientMessage>(&text) {
-            Ok(ClientMessage::Subscribe { event_filters }) => {
-                let filter = EventFilter::new(event_filters.clone());
-                if filter.accepts_all() {
-                    info!("Client {} subscribed to all events", addr);
-                } else {
-                    info!("Client {} subscribed with {} event filters", addr, event_filters.len());
-                }
-                Some(filter)
-            }
-            Err(e) => {
-                warn!(
-                    "Client {} sent invalid subscription: {} - {}",
-                    addr, e, text
-                );
-                None
-            }
-        },
-        Ok(Some(Ok(_))) => {
-            warn!("Client {} sent non-text message before subscribing", addr);
-            None
-        }
-        Ok(Some(Err(e))) => {
-            warn!("WebSocket error from {} before subscription: {}", addr, e);
-            None
-        }
-        Ok(None) => {
-            warn!("Client {} disconnected before subscribing", addr);
-            None
-        }
-        Err(_) => {
-            warn!("Client {} timed out waiting for subscription", addr);
-            None
-        }
-    }
-}
 
 // Helper function to process events into buffers
 fn process_event(
@@ -341,6 +297,7 @@ async fn handle_connection(
     stream: TcpStream,
     addr: SocketAddr,
     event_broadcast_receiver: broadcast::Receiver<EventDataOrMetrics>,
+    filter: EventFilter,
 ) {
     info!("New WebSocket connection from: {}", addr);
 
@@ -352,13 +309,7 @@ async fn handle_connection(
         }
     };
 
-    let (ws_sender, mut ws_receiver) = ws_stream.split();
-
-    // Wait for subscription message before streaming events
-    let filter = match wait_for_subscription(&mut ws_receiver, addr).await {
-        Some(f) => f,
-        None => return,
-    };
+    let (ws_sender, ws_receiver) = ws_stream.split();
 
     // Spawn a task to receive events from the broadcast channel and send batches to this client
     let mut send_task = tokio::spawn(client_write_task(
@@ -369,7 +320,7 @@ async fn handle_connection(
     ));
 
     // Spawn a task to handle incoming messages from the client (mostly for ping/pong)
-    let mut recv_task = tokio::spawn(client_read_task(addr.clone(), ws_receiver));
+    let mut recv_task = tokio::spawn(client_read_task(addr, ws_receiver));
 
     // Wait for either task to finish
     tokio::select! {
@@ -408,12 +359,20 @@ pub async fn run_websocket_server(
     let listener = TcpListener::bind(&server_addr).await?;
     info!("WebSocket server listening on: {}", server_addr);
 
+    let filter: EventFilter = if is_restricted_mode() {
+        info!("Running in restricted mode");
+        load_restricted_filters()
+    } else {
+        info!("Running in unrestricted mode");
+        EventFilter::default()
+    };
+
     // Accept incoming connections
     loop {
         match listener.accept().await {
-            Ok((stream, client_addr)) => {                        
+            Ok((stream, client_addr)) => {
                 let event_broadcast_receiver = event_broadcast_sender.subscribe();
-                tokio::spawn(handle_connection(stream, client_addr, event_broadcast_receiver));
+                tokio::spawn(handle_connection(stream, client_addr, event_broadcast_receiver, filter.clone()));
             }
             Err(e) => {
                 error!("Error accepting connection: {}", e);

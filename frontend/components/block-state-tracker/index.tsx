@@ -4,7 +4,7 @@ import { Info, Pause, Play } from 'lucide-react'
 import { ExternalLink } from '@/components/ui/external-link'
 import { SectionHeader } from '@/components/ui/section-header'
 import { BLOCK_STATE_LEGEND } from '@/constants/block-state'
-import { useExecutionEventBlocks } from '@/hooks/use-execution-event-blocks'
+import { useBlockStateTracker } from '@/hooks/use-block-state-tracker'
 import { useMouseHover } from '@/hooks/use-mouse-hover'
 import { cn } from '@/lib/utils'
 import { Blockchain } from './blockchain'
@@ -23,7 +23,7 @@ export function BlockStateTracker() {
     stopSlowMotion,
     isFollowingChain,
     setIsFollowingChain,
-  } = useExecutionEventBlocks()
+  } = useBlockStateTracker()
 
   const { isHovering, hoverProps } = useMouseHover()
   const isPaused = !isFollowingChain || isHovering

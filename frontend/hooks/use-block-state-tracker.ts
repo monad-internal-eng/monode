@@ -7,18 +7,9 @@ import { formatTimestamp } from '@/lib/timestamp'
 import type { Block, BlockState } from '@/types/block'
 import type { SerializableEventData } from '@/types/events'
 
-// Events we subscribe to for block state tracking
-const BLOCK_EVENTS = [
-  'BlockStart',
-  'BlockQC',
-  'BlockFinalized',
-  'BlockVerified',
-  'BlockReject',
-] as const
+const MAX_BLOCKS = 15000
 
-const MAX_BLOCKS = 5000
-
-interface UseExecutionEventBlocksReturn {
+interface UseBlockStateTrackerReturn {
   blocks: Block[]
   isSlowMotion: boolean
   remainingSeconds: number
@@ -81,7 +72,7 @@ function applyEventToBlocks(
   }
 }
 
-export function useExecutionEventBlocks(): UseExecutionEventBlocksReturn {
+export function useBlockStateTracker(): UseBlockStateTrackerReturn {
   const [blocks, setBlocks] = useState<Block[]>([])
   const [isFollowingChain, setIsFollowingChain] = useState(true)
 
@@ -107,7 +98,6 @@ export function useExecutionEventBlocks(): UseExecutionEventBlocksReturn {
   })
 
   useEvents({
-    filters: BLOCK_EVENTS.map((event) => ({ eventName: event })),
     onEvent: queueEvent,
   })
 

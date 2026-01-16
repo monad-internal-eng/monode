@@ -18,7 +18,7 @@ const TABLE_GRID = 'grid grid-cols-6 gap-6 px-4'
 const ROW_HEIGHT = 45
 
 interface SwapRowData {
-  dataRef: React.RefObject<SwapData[]>
+  data: SwapData[]
   gridClass: string
 }
 
@@ -26,10 +26,10 @@ interface SwapRowData {
 function SwapCell({
   index,
   style,
-  dataRef,
+  data,
   gridClass,
 }: RowComponentProps<SwapRowData>): ReactElement {
-  const swap = dataRef.current?.[index]
+  const swap = data[index]
 
   return (
     <div style={style}>

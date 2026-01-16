@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { decodeEventLog, type Hex } from 'viem'
 import {
   EVENT_ABIS,
@@ -314,21 +314,6 @@ function truncateAddress(address: string): string {
 export function useSwapEvents() {
   const [allSwaps, setAllSwaps] = useState<SwapData[]>([])
 
-  const filters = useMemo(
-    () =>
-      SWAP_PROVIDER_CONFIG.map((config) => ({
-        eventName: 'TxnLog' as const,
-        fieldFilters: [
-          {
-            field: 'address' as const,
-            filter: { values: [config.contractAddress.toLowerCase()] },
-          },
-          { field: 'topics' as const, filter: { values: config.eventTopics } },
-        ],
-      })),
-    [],
-  )
-
   const handleEvent = useCallback((event: SerializableEventData) => {
     if (event.payload.type !== 'TxnLog') return
 
@@ -352,7 +337,6 @@ export function useSwapEvents() {
   }, [])
 
   const { isConnected } = useEvents({
-    filters,
     onEvent: handleEvent,
   })
 

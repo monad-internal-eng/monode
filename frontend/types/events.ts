@@ -171,29 +171,3 @@ export interface SerializableEventData {
   seqno: number
   timestamp_ns: string
 }
-
-type RangeFilter<T> =
-  | {
-      min: T
-    }
-  | {
-      max: T
-    }
-  | {
-      min: T
-      max: T
-    }
-
-interface ExactMatchFilter<T> {
-  values: T[]
-}
-
-interface ArrayPrefixFilter<T> {
-  values: T[]
-}
-
-export type FieldFilter =
-  | { field: 'txn_index'; filter: RangeFilter<number> }
-  | { field: 'address'; filter: ExactMatchFilter<string> }
-  | { field: 'log_index'; filter: RangeFilter<number> }
-  | { field: 'topics'; filter: ArrayPrefixFilter<string> }

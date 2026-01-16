@@ -15,10 +15,9 @@ const MAX_BLOCKS = 5000
 export const PARALLEL_EXECUTION_RATIO_THRESHOLD = 1
 
 /**
- * Custom hook to track block execution events and manage block state
- * @returns Object containing blocks state and calculated metrics
+ * Hook to track block execution events and derive timing metrics.
  */
-export function useBlockTracker() {
+export function useBlockExecutionTracker() {
   const [blocks, setBlocks] = useState<Block[]>([])
 
   // Handle real-time events from the backend
@@ -245,16 +244,6 @@ export function useBlockTracker() {
 
   // Subscribe to real-time events
   useEvents({
-    filters: [
-      { eventName: 'BlockStart' },
-      { eventName: 'BlockQC' },
-      { eventName: 'BlockFinalized' },
-      { eventName: 'BlockVerified' },
-      { eventName: 'BlockEnd' },
-      { eventName: 'TxnHeaderStart' },
-      { eventName: 'TxnEnd' },
-      { eventName: 'TxnEvmOutput' },
-    ],
     onEvent: handleEvent,
   })
   // Memoize computed values to avoid unnecessary recalculations

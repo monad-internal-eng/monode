@@ -4,7 +4,7 @@ import { Clock, Info, Pause, Play, TrendingUp } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { SectionHeader } from '@/components/ui/section-header'
 import { StatCard } from '@/components/ui/stat-card'
-import { useBlockTracker } from '@/hooks/use-block-tracker'
+import { useBlockExecutionTracker } from '@/hooks/use-block-execution-tracker'
 import { useMouseHover } from '@/hooks/use-mouse-hover'
 import { fromNsToMsPrecise } from '@/lib/block-metrics'
 import { cn } from '@/lib/utils'
@@ -23,7 +23,7 @@ import { BlockTimeTimeline } from './block-time-timeline'
  */
 export function BlockTimeExecutionTracker() {
   const { finalizedBlocks, maxBlockExecutionTime, normalizedTimeScaleMs } =
-    useBlockTracker()
+    useBlockExecutionTracker()
   const [isFollowingChain, setIsFollowingChain] = useState(true)
   const { isHovering, hoverProps } = useMouseHover()
   const isPaused = !isFollowingChain || isHovering

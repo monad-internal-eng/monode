@@ -2,11 +2,8 @@ use alloy_primitives::B256;
 use clap::Parser;
 use execution_events_example::event_listener::EventName;
 use execution_events_example::serializable_event::SerializableExecEvent;
-use execution_events_example::{
-    event_filter::{ClientMessage, EventFilterSpec},
-    server::ServerMessage,
-};
-use futures_util::{SinkExt, StreamExt};
+use execution_events_example::server::ServerMessage;
+use futures_util::StreamExt;
 use std::collections::HashMap;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 
@@ -20,11 +17,6 @@ struct Cli {
     /// WebSocket server URL
     #[arg(short, long, default_value = "ws://127.0.0.1:3000")]
     url: String,
-
-    /// Filter events by type (comma-separated).
-    /// If not specified, all events are received.
-    #[arg(short, long, value_delimiter = ',')]
-    events: Option<Vec<String>>,
 
     #[arg(long, default_value = "false")]
     verbose_events: bool,
@@ -75,44 +67,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (ws_stream, _) = connect_async(&cli.url).await?;
     info!("Connected!");
 
-    let (mut write, mut read) = ws_stream.split();
-
-    // Parse event names from strings to EventName enum
-    let event_strings = cli.events.clone().unwrap_or_default();
-    let events: Vec<EventName> = if event_strings.is_empty() {
-        Vec::new()
-    } else {
-        event_strings
-            .iter()
-            .map(|s| {
-                serde_json::from_value(serde_json::Value::String(s.clone()))
-                    .map_err(|_| format!("Invalid event name: {}", s))
-            })
-            .collect::<Result<Vec<_>, _>>()?
-    };
-
-    // Send subscription message
-    let subscribe_msg = ClientMessage::Subscribe {
-        event_filters: if events.is_empty() {
-            Vec::new()
-        } else {
-            events
-                .iter()
-                .map(|event_name| EventFilterSpec {
-                    event_name: *event_name,
-                    field_filters: Vec::new(),
-                })
-                .collect()
-        },
-    };
-    let subscribe_json = serde_json::to_string(&subscribe_msg)?;
-    write.send(Message::Text(subscribe_json)).await?;
-
-    if events.is_empty() {
-        info!("Subscribed to all events");
-    } else {
-        info!("Subscribed to events: {:?}", events);
-    }
+    let (_, mut read) = ws_stream.split();
 
     // Read messages from the server
     let mut events_per_sec_interval = tokio::time::interval(tokio::time::Duration::from_secs(1));
