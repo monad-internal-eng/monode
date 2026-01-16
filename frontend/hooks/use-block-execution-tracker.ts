@@ -7,10 +7,9 @@ import { useEvents } from './use-events'
 const MAX_BLOCKS = 5000
 
 /**
- * Custom hook to track block execution events and manage block state
- * @returns Object containing blocks state and calculated metrics
+ * Hook to track block execution events and derive timing metrics.
  */
-export function useBlockTracker() {
+export function useBlockExecutionTracker() {
   const [blocks, setBlocks] = useState<Block[]>([])
 
   // Handle real-time events from the backend
