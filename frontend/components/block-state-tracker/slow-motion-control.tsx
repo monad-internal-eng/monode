@@ -15,7 +15,7 @@ interface SlowMotionControlProps {
   onStop: () => void
 }
 
-function SlowModeTooltip({ children }: { children: ReactElement }) {
+function SlowModeTooltipWrapper({ children }: { children: ReactElement }) {
   return (
     <Tooltip delayDuration={1000}>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
@@ -40,7 +40,7 @@ export function SlowMotionControl({
 }: SlowMotionControlProps) {
   if (isActive) {
     return (
-      <SlowModeTooltip>
+      <SlowModeTooltipWrapper>
         <div className="h-10.5 flex items-center gap-1.5 px-3 py-2.5 rounded-lg border bg-purple-500/20 border-purple-400 text-purple-300 text-sm font-medium">
           <div className="flex items-center gap-1">
             <Timer className="w-4 h-4" />
@@ -56,12 +56,12 @@ export function SlowMotionControl({
             <X className="w-4 h-4" />
           </button>
         </div>
-      </SlowModeTooltip>
+      </SlowModeTooltipWrapper>
     )
   }
 
   return (
-    <SlowModeTooltip>
+    <SlowModeTooltipWrapper>
       <button
         type="button"
         onClick={onStart}
@@ -70,6 +70,6 @@ export function SlowMotionControl({
         <Timer className="w-4 h-4" />
         <span>Slow Mode (30s)</span>
       </button>
-    </SlowModeTooltip>
+    </SlowModeTooltipWrapper>
   )
 }
