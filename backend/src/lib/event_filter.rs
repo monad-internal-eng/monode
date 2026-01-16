@@ -139,33 +139,6 @@ impl EventFilterSpec {
     }
 }
 
-/// Message sent by client to subscribe to specific event types
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type")]
-pub enum ClientMessage {
-    /// Subscribe to events with filter specs.
-    /// Empty event_filters means subscribe to all events.
-    /// OR logic between specs: event passes if it matches ANY spec.
-    ///
-    /// Example: Subscribe to all BlockStart OR TxnLog with address=0xABC:
-    /// ```json
-    /// {
-    ///   "type": "subscribe",
-    ///   "event_filters": [
-    ///     { "event_name": "BlockStart" },
-    ///     { "event_name": "TxnLog", "field_filters": [
-    ///       { "field": "Address", "filter": { "values": ["0xABC"] } }
-    ///     ]}
-    ///   ]
-    /// }
-    /// ```
-    #[serde(rename = "subscribe")]
-    Subscribe {
-        #[serde(default)]
-        event_filters: Vec<EventFilterSpec>,
-    },
-}
-
 fn is_native_transfer(event: &SerializableEventData) -> bool {
     if let SerializableExecEvent::TxnCallFrame {
         value,

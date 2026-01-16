@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { decodeEventLog, type Hex } from 'viem'
 import {
   ERC20_TRANSFER_ABI,
@@ -96,28 +96,6 @@ export function useTransferEvents() {
     BigInt(0),
   )
 
-  const filters = useMemo(
-    () => [
-      {
-        eventName: 'NativeTransfer' as const,
-      },
-      {
-        eventName: 'TxnLog' as const,
-        fieldFilters: [
-          {
-            field: 'address' as const,
-            filter: { values: [WMON_ADDRESS.toLowerCase()] },
-          },
-          {
-            field: 'topics' as const,
-            filter: { values: [ERC20_TRANSFER_TOPIC] },
-          },
-        ],
-      },
-    ],
-    [],
-  )
-
   const handleEvent = useCallback((event: SerializableEventData) => {
     let transferData: TransferData | null = null
 
@@ -125,7 +103,11 @@ export function useTransferEvents() {
       transferData = parseNativeTransfer(event)
     } else if (event.payload.type === 'TxnLog') {
       const address = event.payload.address.toLowerCase()
-      if (address === WMON_ADDRESS.toLowerCase()) {
+      const topics = event.payload.topics
+      if (
+        address === WMON_ADDRESS.toLowerCase() &&
+        topics.at(0)?.toLowerCase() === ERC20_TRANSFER_TOPIC.toLowerCase()
+      ) {
         transferData = parseWmonTransfer(event)
       }
     }
@@ -139,7 +121,6 @@ export function useTransferEvents() {
   }, [])
 
   const { isConnected } = useEvents({
-    filters,
     onEvent: handleEvent,
   })
 
