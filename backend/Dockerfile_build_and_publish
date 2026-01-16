@@ -36,15 +36,17 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
-WORKDIR /usr/src/app
+WORKDIR /app
 
 # Copy the compiled binary from the builder stage
-COPY --from=builder /usr/src/app/target/release/backend /usr/local/bin/backend
+COPY --from=builder /usr/src/app/target/release/backend /app/backend
+
+# Copy the restricted filters configuration
+COPY --from=builder /usr/src/app/restricted_filters.json /app/restricted_filters.json
 
 # Expose WebSocket port
 EXPOSE 8443
 
-# Set entrypoint
-ENTRYPOINT ["backend"]
+# Set entrypoint using absolute path or relative to WORKDIR
+ENTRYPOINT ["./backend"]
 CMD ["--server-addr", "0.0.0.0:8443"]
-
