@@ -8,8 +8,8 @@ import type { Block } from '@/types/block'
 import { BlockTime } from './block-time'
 
 const BLOCK_DIMENSIONS = {
-  small: { itemWidth: 150, gridHeight: 280 },
-  large: { itemWidth: 180, gridHeight: 280 },
+  small: { itemWidth: 180, gridHeight: 340 },
+  large: { itemWidth: 220, gridHeight: 340 },
 }
 
 const getResponsiveDimensions = () => {
@@ -108,9 +108,9 @@ export function BlockTimeTimeline({
   }, [isFollowingChain])
 
   return (
-    <div ref={containerRef} className="flex-1 min-h-[280px]">
+    <div ref={containerRef} className="flex-1 min-h-[21.25rem]">
       {sortedBlocks.length === 0 ? (
-        <div className="flex items-center justify-center w-full h-[280px]">
+        <div className="flex items-center justify-center w-full h-[21.25rem]">
           <Spinner text="Waiting for blocks..." />
         </div>
       ) : (

@@ -70,6 +70,10 @@ export function calculateBarMetrics(
   const txHeightPct =
     totalTransactionTime > 0 ? (totalTransactionTime / scaleMs) * 100 : 0
 
+  // Calculate parallel efficiency as percentage
+  const parallelEfficiencyPct =
+    totalTransactionTime > 0 ? (timeSavedMs / totalTransactionTime) * 100 : 0
+
   return {
     blockHeightPct: Math.max(Math.min(blockHeightPct, 100) * 0.9, 15), // Ensure minimum height + a little headroom
     txHeightPct: Math.min(txHeightPct, 100) * 0.9,
@@ -78,5 +82,6 @@ export function calculateBarMetrics(
     parallelizationRatio,
     isParallelExecution,
     timeSavedMs,
+    parallelEfficiencyPct,
   }
 }
