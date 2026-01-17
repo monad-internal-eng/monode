@@ -8,8 +8,8 @@ import type { Block } from '@/types/block'
 import { BlockTime } from './block-time'
 
 const BLOCK_DIMENSIONS = {
-  small: { itemWidth: 120, gridHeight: 280 },
-  large: { itemWidth: 140, gridHeight: 280 },
+  small: { itemWidth: 180, gridHeight: 340 },
+  large: { itemWidth: 220, gridHeight: 340 },
 }
 
 const getResponsiveDimensions = () => {
@@ -27,28 +27,25 @@ const getResponsiveDimensions = () => {
 interface BlockTimeTimelineProps {
   blocks: Block[]
   isFollowingChain: boolean
-  normalizedBlockExecutionTime: number
+  normalizedTimeScaleMs: number
 }
 
 interface BlockCellData {
   blocks: Block[]
-  normalizedBlockExecutionTime: number
+  normalizedTimeScaleMs: number
 }
 
 function BlockCell({
   columnIndex,
   style,
   blocks,
-  normalizedBlockExecutionTime,
+  normalizedTimeScaleMs,
 }: CellComponentProps<BlockCellData>) {
   const block = blocks[columnIndex]
 
   return (
     <div style={style} className="flex items-center justify-center relative">
-      <BlockTime
-        block={block}
-        normalizedBlockExecutionTime={normalizedBlockExecutionTime}
-      />
+      <BlockTime block={block} normalizedTimeScaleMs={normalizedTimeScaleMs} />
     </div>
   )
 }
@@ -61,7 +58,7 @@ function BlockCell({
 export function BlockTimeTimeline({
   blocks,
   isFollowingChain,
-  normalizedBlockExecutionTime,
+  normalizedTimeScaleMs,
 }: BlockTimeTimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
@@ -111,9 +108,9 @@ export function BlockTimeTimeline({
   }, [isFollowingChain])
 
   return (
-    <div ref={containerRef} className="flex-1 min-h-[280px]">
+    <div ref={containerRef} className="flex-1 min-h-85">
       {sortedBlocks.length === 0 ? (
-        <div className="flex items-center justify-center w-full h-[280px]">
+        <div className="flex items-center justify-center w-full h-85">
           <Spinner text="Waiting for blocks..." />
         </div>
       ) : (
@@ -127,7 +124,7 @@ export function BlockTimeTimeline({
           defaultWidth={containerWidth}
           overscanCount={3}
           cellComponent={BlockCell}
-          cellProps={{ blocks: sortedBlocks, normalizedBlockExecutionTime }}
+          cellProps={{ blocks: sortedBlocks, normalizedTimeScaleMs }}
           className="scrollbar-none"
           style={{
             overflowX: isFollowingChain ? 'hidden' : 'auto',

@@ -127,6 +127,16 @@
   --color-tracker-badge-bg: #2a233a;
   --color-tracker-active: #836ef9;
 
+  /* Block time tracker colors - new design */
+  --color-block-exec-bar: #38bdf8;
+  --color-tx-exec-bar: #6e54ff;
+  --color-text-secondary-new: #a8a3b8;
+  --color-text-muted-new: #52525e;
+  --color-bg-primary: #0e100f;
+  --color-bg-secondary: #18181b;
+  --color-border-primary: #27272a;
+  --color-border-active: #e5e5e5;
+
   /* Block state colors */
   --color-block-proposed: #342b6f;
   --color-block-voted: #6e54ff;

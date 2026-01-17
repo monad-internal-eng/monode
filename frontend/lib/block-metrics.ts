@@ -12,58 +12,76 @@ export function fromNsToMsPrecise(ns: bigint): number {
   return msPart + nsPart / 1_000_000
 }
 
-/**
- * Calculate bar metrics for a block visualization
- * @param block - The block to calculate metrics for
- * @param maxBlockExecutionTime - The maximum block execution time in the dataset for normalization
- * @returns Object containing bar height percentage and fill percentage
- */
-export function calculateBarMetrics(
-  block: Block,
-  maxBlockExecutionTime: number,
-) {
-  const blockExecutionTime = block.executionTime ?? BigInt(0)
-
-  // Calculate total transaction execution time with high precision
-  const totalTransactionTimeNs = (block.transactions ?? []).reduce(
+function sumTransactionTimeNs(block: Block): bigint {
+  return (block.transactions ?? []).reduce(
     (sum, tx) => sum + BigInt(tx.transactionTime ?? 0),
     BigInt(0),
   )
-  const totalTransactionTime = fromNsToMsPrecise(totalTransactionTimeNs)
+}
 
-  // Normalize bar height based on block time (container represents block execution time)
-  // If no execution time, show minimal height for blocks that exist
-  const barHeightPercentage =
-    Number(blockExecutionTime) > 0
-      ? (fromNsToMsPrecise(blockExecutionTime) / maxBlockExecutionTime) * 100
-      : 20 // Show something for blocks without execution time yet
+export function getBlockWallTimeMs(block: Block): number {
+  return fromNsToMsPrecise(block.executionTime ?? BigInt(0))
+}
 
-  // Calculate fill percentage (transaction time relative to block time)
-  // If transactions run in parallel, total transaction time can be > block time
-  // But the fill can't exceed 100% of the container
-  const fillPercentage =
-    Number(blockExecutionTime) > 0
-      ? Math.min(
-          (totalTransactionTime / fromNsToMsPrecise(blockExecutionTime)) * 100,
-          100,
-        )
-      : totalTransactionTime > 0
-        ? 50
-        : 0 // Show some fill if we have transactions
+export function getTotalTransactionTimeMs(block: Block): number {
+  return fromNsToMsPrecise(sumTransactionTimeNs(block))
+}
 
-  // Calculate efficiency metrics
-  const parallelizationRatio =
-    Number(blockExecutionTime) > 0
-      ? totalTransactionTime / fromNsToMsPrecise(blockExecutionTime)
-      : 0
-  const isHighlyParallel =
-    parallelizationRatio > 1 && Number.isFinite(parallelizationRatio)
+export function getParallelizationRatio(
+  blockMs: number,
+  totalTxMs: number,
+): number {
+  if (!(blockMs > 0)) return 0
+  const ratio = totalTxMs / blockMs
+  return Number.isFinite(ratio) ? ratio : 0
+}
+
+export function getTimeSavedMs(blockMs: number, totalTxMs: number): number {
+  return Math.max(totalTxMs - blockMs, 0)
+}
+
+/**
+ * Calculate bar metrics for a block visualization
+ * @param block - The block to calculate metrics for
+ * @param normalizedTimeScaleMs - Shared normalization scale for both bars (ms)
+ * @returns Object containing bar height percentages and tooltip metrics
+ */
+export function calculateBarMetrics(
+  block: Block,
+  normalizedTimeScaleMs: number,
+  parallelExecutionRatioThreshold: number,
+) {
+  const blockMs = getBlockWallTimeMs(block)
+  const totalTransactionTime = getTotalTransactionTimeMs(block)
+  const parallelizationRatio = getParallelizationRatio(
+    blockMs,
+    totalTransactionTime,
+  )
+  const isParallelExecution =
+    parallelizationRatio > parallelExecutionRatioThreshold
+
+  const timeSavedMs = getTimeSavedMs(blockMs, totalTransactionTime)
+
+  const scaleMs = normalizedTimeScaleMs > 0 ? normalizedTimeScaleMs : 1
+
+  // Normalize both bars using the same scale so that ΣTx can exceed block time.
+  // If no execution time yet, show a minimal visible placeholder.
+  const blockHeightPct = blockMs > 0 ? (blockMs / scaleMs) * 100 : 20
+  const txHeightPct =
+    totalTransactionTime > 0 ? (totalTransactionTime / scaleMs) * 100 : 0
+
+  // Calculate parallel efficiency as percentage
+  const parallelEfficiencyPct =
+    totalTransactionTime > 0 ? (timeSavedMs / totalTransactionTime) * 100 : 0
 
   return {
-    barHeightPercentage: Math.max(barHeightPercentage * 0.8, 15), // Ensure minimum height
-    fillPercentage,
+    blockHeightPct: Math.max(Math.min(blockHeightPct, 100) * 0.9, 15), // Ensure minimum height + a little headroom
+    txHeightPct: Math.min(txHeightPct, 100) * 0.9,
+    blockMs,
     totalTransactionTime,
     parallelizationRatio,
-    isHighlyParallel,
+    isParallelExecution,
+    timeSavedMs,
+    parallelEfficiencyPct,
   }
 }

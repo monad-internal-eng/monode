@@ -9,18 +9,21 @@ import { SwapTransferTracker } from '@/components/swap-transfer-tracker'
 export default function Home() {
   return (
     <div className="min-h-screen text-white font-sans">
-      <main className="py-6 px-4 max-w-7xl mx-auto sm:py-8 sm:px-6 md:py-12 flex flex-col gap-8 md:gap-12">
+      <main className="py-6 px-4 max-w-7xl mx-auto sm:py-8 sm:px-6 md:py-12 flex flex-col">
         <PageHeader />
 
-        <NetworkActivityTracker />
+        {/* Sections container with continuous left/right borders */}
+        <div className="flex flex-col border-x border-zinc-800">
+          <NetworkActivityTracker />
 
-        <BlockStateTracker />
+          <BlockStateTracker />
 
-        <BlockTimeExecutionTracker />
+          <BlockTimeExecutionTracker />
 
-        <SwapTransferTracker />
+          <SwapTransferTracker />
+        </div>
 
-        <section className="flex flex-col md:flex-row gap-8 md:gap-4">
+        <section className="flex flex-col md:flex-row gap-8 md:gap-4 mt-8 md:mt-12">
           <HotAccountsBubbleMap />
           <HotSlotsBubbleMap />
         </section>

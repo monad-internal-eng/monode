@@ -6,171 +6,191 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { EXPLORER_URL } from '@/constants/common'
-import { calculateBarMetrics, fromNsToMsPrecise } from '@/lib/block-metrics'
+import { PARALLEL_EXECUTION_RATIO_THRESHOLD } from '@/hooks/use-block-execution-tracker'
+import { calculateBarMetrics } from '@/lib/block-metrics'
 import { formatBlockNumber } from '@/lib/ui'
 import { cn } from '@/lib/utils'
 import type { Block } from '@/types/block'
-import { ExternalLink } from '../ui/external-link'
 
 interface BlockTimeProps {
   block: Block
-  normalizedBlockExecutionTime: number
+  normalizedTimeScaleMs: number
 }
 
-export const BlockTime = ({
-  block,
-  normalizedBlockExecutionTime,
-}: BlockTimeProps) => {
+const BAR_CONTAINER_HEIGHT = 200
+
+export const BlockTime = ({ block, normalizedTimeScaleMs }: BlockTimeProps) => {
   const {
-    barHeightPercentage,
-    fillPercentage,
+    blockHeightPct,
+    txHeightPct,
+    blockMs,
     totalTransactionTime,
-    isHighlyParallel,
+    parallelizationRatio,
+    isParallelExecution,
+    timeSavedMs,
+    parallelEfficiencyPct,
   } = useMemo(
-    () => calculateBarMetrics(block, normalizedBlockExecutionTime),
-    [block, normalizedBlockExecutionTime],
+    () =>
+      calculateBarMetrics(
+        block,
+        normalizedTimeScaleMs,
+        PARALLEL_EXECUTION_RATIO_THRESHOLD,
+      ),
+    [block, normalizedTimeScaleMs],
   )
 
-  const formattedBlockExecutionTime = fromNsToMsPrecise(
-    block.executionTime ?? BigInt(0),
-  ).toFixed(3)
-  const formattedTotalTransactionTime = totalTransactionTime.toFixed(3)
+  const formattedBlockExecutionTime = blockMs.toFixed(2)
+  const formattedTotalTransactionTime = totalTransactionTime.toFixed(2)
   const numberOfTransactions = (block.transactions ?? []).length
-  const parallelPercentage = isHighlyParallel
-    ? (Number(formattedTotalTransactionTime) * 100) /
-        Number(formattedBlockExecutionTime) -
-      100
-    : 0 // Compute actual percentage of difference tx time and execution between block
-  const timeSaved =
-    Number(formattedTotalTransactionTime) - Number(formattedBlockExecutionTime)
+  const parallelRatioLabel = `${parallelizationRatio.toFixed(2)}×`
+  const timeSaved = timeSavedMs
 
   return (
-    <div className="flex flex-col items-center gap-4 min-w-20">
-      {/* Block Bar Container */}
-      <div className="relative w-full h-32 flex flex-col justify-end p-1.5">
-        {/* Block Time Container (represents total block execution time) */}
+    <div className="flex flex-col items-center w-full min-w-35 sm:min-w-55 gap-6 px-6 sm:px-10 py-6">
+      {/* Bar chart area */}
+      <div
+        className="w-full flex justify-center items-end border-b border-zinc-800"
+        style={{ height: `${BAR_CONTAINER_HEIGHT / 16}rem` }}
+      >
         <Tooltip>
           <TooltipTrigger asChild>
-            <motion.div
-              initial={{ height: 0 }}
-              animate={{ height: `${barHeightPercentage}%` }}
-              transition={{ duration: 0.2 }}
-              className={cn(
-                'w-full rounded-t-md relative bg-zinc-600',
-                'hover:shadow-lg transition-all duration-200 cursor-pointer',
-              )}
-              title={`Block ${block.number}: ${formattedBlockExecutionTime}ms execution time, ${formattedTotalTransactionTime}ms total tx time, ${numberOfTransactions} transactions`}
-            >
-              {/* Transaction Time Fill */}
-              <motion.div
-                initial={{ height: 0 }}
-                animate={{ height: `${fillPercentage}%` }}
-                transition={{
-                  duration: 0.4,
-                }}
-                className={cn(
-                  'absolute bottom-0 left-0 w-full rounded-t-md bg-bg-card-darker',
-                  isHighlyParallel && 'bg-[#7B66A2]',
-                )}
-                style={{
-                  boxShadow: isHighlyParallel
-                    ? '0 0 0.625rem var(--color-purple-glow), 0 0 1.25rem var(--color-purple-glow)'
-                    : undefined,
-                }}
-                title={`${formattedTotalTransactionTime}ms total transaction execution time`}
-              />
-            </motion.div>
+            <div className="flex items-end cursor-pointer">
+              {/* Left bar column (cyan) - label + bar */}
+              <div
+                className="flex flex-col items-start relative z-10 -mr-2"
+                style={{ width: '80px' }}
+              >
+                <span className="text-white text-base font-normal leading-[150%] text-left mb-2">
+                  {formattedBlockExecutionTime}ms
+                </span>
+                <motion.div
+                  initial={{ height: 0 }}
+                  animate={{
+                    height: `${(blockHeightPct / 100) * (BAR_CONTAINER_HEIGHT - 40)}px`,
+                  }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full rounded-t-lg bg-[#38BDF8] shadow-[0.25rem_0_1.5rem_rgba(0,0,0,0.32)]"
+                />
+              </div>
+
+              {/* Right bar column (purple) - label + bar */}
+              <div
+                className="flex flex-col items-end"
+                style={{ width: '80px' }}
+              >
+                <span className="text-white text-base font-normal leading-[150%] text-right mb-2">
+                  {formattedTotalTransactionTime}ms
+                </span>
+                <motion.div
+                  initial={{ height: 0 }}
+                  animate={{
+                    height: `${(txHeightPct / 100) * (BAR_CONTAINER_HEIGHT - 40)}px`,
+                  }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full rounded-t-lg bg-[#6E54FF]"
+                />
+              </div>
+            </div>
           </TooltipTrigger>
+
+          {/* Tooltip content */}
           <TooltipContent
-            sideOffset={5}
-            className="bg-tooltip-bg border border-tooltip-border text-tooltip-text rounded-lg p-2 sm:p-3 shadow-xl text-xs sm:text-sm w-87.5"
+            sideOffset={8}
+            className="bg-[#18181B] border border-[#E5E5E5] text-white rounded-2xl p-0 shadow-[0_1rem_2.5rem_rgba(0,0,0,0.32)] overflow-hidden min-w-87"
           >
-            <div className="flex flex-col gap-1">
-              <div className="flex flex-col gap-2">
-                <ExternalLink
-                  href={`${EXPLORER_URL}/block/${block.number}`}
-                  className="text-sm text-tooltip-text uppercase tracking-wider hover:underline"
-                >
+            <div className="flex flex-col">
+              {/* Tooltip header */}
+              <div className="flex flex-col gap-4 px-6 py-4">
+                <span className="text-base text-white">
                   Block {formatBlockNumber(block.number)}
-                </ExternalLink>
-                <div className="flex flex-col gap-1">
-                  <div className="flex flex-row items-center justify-between">
-                    <p className="text-xs font-mono text-tooltip-text-secondary break-all">
-                      Block Execution Time
-                    </p>
-                    <p className="text-tooltip-text text-sm font-medium">
+                </span>
+
+                {/* Stats rows */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-mono text-[#A8A3B8] uppercase">
+                      Block execution time:
+                    </span>
+                    <span className="text-sm text-white">
                       {formattedBlockExecutionTime}ms
-                    </p>
+                    </span>
                   </div>
-                  <div className="flex flex-row items-center justify-between">
-                    <p className="text-xs font-mono text-tooltip-text-secondary break-all">
-                      Transaction Execution Time
-                    </p>
-                    <p className="text-tooltip-text text-sm font-medium">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-mono text-[#A8A3B8] uppercase">
+                      Transaction execution time:
+                    </span>
+                    <span className="text-sm text-white">
                       {formattedTotalTransactionTime}ms
-                    </p>
+                    </span>
                   </div>
-                  <div className="flex flex-row items-center justify-between">
-                    <p className="text-xs font-mono text-tooltip-text-secondary break-all">
-                      Transactions
-                    </p>
-                    <p className="text-tooltip-text text-sm font-medium">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-mono text-[#A8A3B8] uppercase">
+                      Transactions:
+                    </span>
+                    <span className="text-sm text-white">
                       {numberOfTransactions}
-                    </p>
+                    </span>
                   </div>
-                  <div className="flex flex-row items-center justify-between">
-                    <p className="text-xs font-mono text-tooltip-text-secondary break-all">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-mono text-[#A8A3B8] uppercase">
                       Time Saved
-                    </p>
-                    <p className="text-tooltip-text text-sm font-medium">
-                      {timeSaved < 0 ? 0 : timeSaved.toFixed(3)}
-                      ms
-                    </p>
+                    </span>
+                    <span className="text-sm text-white">
+                      {timeSaved.toFixed(2)}ms
+                    </span>
                   </div>
-                  <div className="flex flex-row items-center justify-between">
-                    <p className="text-xs font-mono text-tooltip-text-secondary break-all">
-                      Parallel Efficiency
-                    </p>
-                    <p className="text-tooltip-text-accent text-sm font-medium">
-                      {parallelPercentage.toFixed(3)}%
-                    </p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-mono text-[#A8A3B8] uppercase">
+                      Parallel Efficiency:
+                    </span>
+                    <span className="text-sm text-white">
+                      {parallelEfficiencyPct.toFixed(2)}%
+                    </span>
                   </div>
                 </div>
               </div>
-              {isHighlyParallel && (
-                <div className="flex flex-col gap-0">
-                  <div className="border-t border-tooltip-separator my-2" />
-                  <div className="flex flex-row items-center gap-2">
-                    <div className="bg-tooltip-text-accent w-2 h-2 rounded-full" />
-                    <p className="text-tooltip-text-accent font-medium">
-                      High parallel execution detected
-                    </p>
-                  </div>
-                </div>
-              )}
+
+              {/* Tooltip footer */}
+              <div className="flex justify-between items-center px-6 py-3 border-t border-[#27272A]">
+                <span className="text-base text-[#A8A3B8]">
+                  {numberOfTransactions} tx
+                  {numberOfTransactions !== 1 ? 's' : ''}
+                </span>
+                <a
+                  href={`${EXPLORER_URL}/block/${block.number}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-9 px-4 py-2 bg-[radial-gradient(ellipse_50%_50%_at_50%_50%,rgba(23,23,23,0.2)_0%,rgba(163,163,163,0.16)_100%),#0A0A0A] shadow-[0_0_0_1px_rgba(0,0,0,0.8)] rounded-md flex items-center justify-center font-mono text-sm text-white uppercase hover:opacity-80 transition-opacity"
+                >
+                  View on explorer
+                </a>
+              </div>
             </div>
           </TooltipContent>
         </Tooltip>
       </div>
 
-      {/* Block Stats */}
-      <div className="text-center space-y-1">
-        <p className="text-zinc-600 font-medium text-base">
-          {formattedBlockExecutionTime}ms
-        </p>
-        <p className="text-zinc-500 text-sm">{numberOfTransactions} tx</p>
+      {/* Block info below bars */}
+      <div className="flex flex-col items-center gap-2.5">
+        <a
+          href={`${EXPLORER_URL}/block/${block.number}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-base text-white tabular-nums hover:underline"
+        >
+          {formatBlockNumber(block.number)}
+        </a>
+        <span
+          className={cn(
+            'px-4 py-1 rounded-full border text-sm text-white tabular-nums',
+            isParallelExecution
+              ? 'bg-[#6E54FF]/20 border-[#6E54FF]'
+              : 'bg-[#18181B] border-zinc-700',
+          )}
+        >
+          Parallel {parallelRatioLabel}
+        </span>
       </div>
-
-      {/* Separator */}
-      <div className="w-full h-px bg-zinc-700" />
-
-      {/* Block number Label */}
-      <ExternalLink
-        href={`${EXPLORER_URL}/block/${block.number}`}
-        className="text-sm font-medium text-zinc-600 hover:text-white"
-      >
-        {formatBlockNumber(block.number)}
-      </ExternalLink>
     </div>
   )
 }
