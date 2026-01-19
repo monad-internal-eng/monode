@@ -21,11 +21,13 @@ export default function Home() {
 
           <NetworkActivityTracker />
 
-          <BlockStateTracker />
+          <div className="flex flex-col gap-1">
+            <BlockStateTracker />
 
-          <SectionSeparator />
+            <SectionSeparator />
 
-          <BlockTimeExecutionTracker />
+            <BlockTimeExecutionTracker />
+          </div>
 
           <SwapTransferTracker />
 
