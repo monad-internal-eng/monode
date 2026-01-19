@@ -11,15 +11,6 @@ import { cn } from '@/lib/utils'
 import { Swaps } from './swaps'
 import { Transfers } from './transfers'
 
-const TAB_TRIGGER_CLASS = cn(
-  'flex items-center justify-center gap-2 px-4 py-3 h-[34px]',
-  'rounded-md border-0 bg-transparent cursor-pointer transition-all',
-  'text-zinc-400 text-sm font-medium uppercase tracking-wide',
-  'data-[state=active]:bg-brand-purple-primary data-[state=active]:text-white',
-  'data-[state=active]:shadow-[var(--shadow-tabs)]',
-  'hover:text-white',
-)
-
 export function SwapTransferTracker() {
   const { allSwaps, isConnected: isSwapConnected } = useSwapEvents()
   const {
@@ -41,13 +32,9 @@ export function SwapTransferTracker() {
         <Tabs defaultValue="transfers" className="w-full">
           <div className="flex flex-col">
             <div className="flex items-center justify-between overflow-x-auto scrollbar-none">
-              <TabsList className="w-fit h-12 mx-6 my-4 p-1.5 gap-1 bg-background-secondary rounded-lg border border-border shadow-[var(--shadow-tabs-inset)] sm:mx-10 sm:py-6">
-                <TabsTrigger value="transfers" className={TAB_TRIGGER_CLASS}>
-                  Transfers
-                </TabsTrigger>
-                <TabsTrigger value="swaps" className={TAB_TRIGGER_CLASS}>
-                  Swaps
-                </TabsTrigger>
+              <TabsList className="mx-6 my-4 sm:mx-10 sm:my-6">
+                <TabsTrigger value="transfers">Transfers</TabsTrigger>
+                <TabsTrigger value="swaps">Swaps</TabsTrigger>
               </TabsList>
             </div>
           </div>
