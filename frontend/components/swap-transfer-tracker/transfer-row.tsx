@@ -1,12 +1,14 @@
 'use client'
 
+import { zeroAddress } from 'viem'
 import { ExternalLink } from '@/components/ui/external-link'
 import { EXPLORER_URL } from '@/constants/common'
+import { WMON_ADDRESS } from '@/constants/transfer-config'
 import { formatTimeDisplay } from '@/lib/timestamp'
 import { formatTokenAmount } from '@/lib/ui'
 import { cn, shortenHex } from '@/lib/utils'
 import type { TransferData } from '@/types/transfer'
-import { TokenBadge } from './token-badge'
+import { TokenIcon } from './token-icon'
 
 interface TransferRowProps {
   transfer: TransferData
@@ -15,17 +17,18 @@ interface TransferRowProps {
 
 export function TransferRow({ transfer, gridClass }: TransferRowProps) {
   const tokenSymbol = transfer.type === 'native' ? 'MON' : 'WMON'
+  const tokenAddress = transfer.type === 'native' ? zeroAddress : WMON_ADDRESS
 
   return (
     <div
       className={cn(
-        'py-3 items-center border-b border-zinc-800/50 hover:bg-tracker-row-hover transition-colors',
+        'h-14 border-b hover:bg-tracker-row-hover transition-colors',
         gridClass,
       )}
     >
       <ExternalLink
         href={`${EXPLORER_URL}/tx/${transfer.txHash}`}
-        className="text-sm font-mono text-zinc-400 hover:text-white transition-colors truncate"
+        className="w-32 text-sm transition-colors truncate"
         title={transfer.txHash}
       >
         {shortenHex(transfer.txHash)}
@@ -33,7 +36,7 @@ export function TransferRow({ transfer, gridClass }: TransferRowProps) {
 
       <ExternalLink
         href={`${EXPLORER_URL}/address/${transfer.from}`}
-        className="text-sm font-mono text-zinc-400 hover:text-white transition-colors truncate"
+        className="w-32 text-sm transition-colors truncate"
         title={transfer.from}
       >
         {shortenHex(transfer.from)}
@@ -41,19 +44,18 @@ export function TransferRow({ transfer, gridClass }: TransferRowProps) {
 
       <ExternalLink
         href={`${EXPLORER_URL}/address/${transfer.to}`}
-        className="text-sm font-mono text-zinc-400 hover:text-white transition-colors truncate"
+        className="w-32 text-sm transition-colors truncate"
         title={transfer.to}
       >
         {shortenHex(transfer.to)}
       </ExternalLink>
 
-      <span className="text-sm font-mono text-white tabular-nums">
-        {formatTokenAmount(transfer.value, tokenSymbol)}
+      <span className="w-24 flex items-center justify-end gap-1.5 text-sm tabular-nums">
+        {formatTokenAmount(transfer.value, tokenSymbol, tokenAddress)}
+        <TokenIcon address={tokenAddress} size={16} />
       </span>
 
-      <TokenBadge symbol={tokenSymbol} />
-
-      <span className="text-sm font-mono text-zinc-400 tabular-nums">
+      <span className="w-24 text-sm tabular-nums">
         {formatTimeDisplay(transfer.timestamp)}
       </span>
     </div>

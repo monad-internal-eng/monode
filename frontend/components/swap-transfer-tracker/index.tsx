@@ -1,8 +1,8 @@
 'use client'
 
-import { ArrowLeftRight, Pointer, Send } from 'lucide-react'
+import { Pointer } from 'lucide-react'
 import { useState } from 'react'
-import { LiveBadge } from '@/components/common/live-badge'
+import { LiveDot } from '@/components/ui/live-dot'
 import { SectionHeader } from '@/components/ui/section-header'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useSwapEvents } from '@/hooks/use-swap-events'
@@ -12,12 +12,12 @@ import { Swaps } from './swaps'
 import { Transfers } from './transfers'
 
 const TAB_TRIGGER_CLASS = cn(
-  'mx-1 w-36 flex items-center justify-center gap-2 px-4 py-3',
-  'rounded-none border-0 bg-transparent cursor-pointer transition-colors',
-  'text-zinc-400 data-[state=active]:text-tracker-active',
-  'relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5',
-  'after:bg-transparent data-[state=active]:after:bg-tracker-active',
-  'data-[state=active]:bg-transparent data-[state=active]:shadow-none',
+  'flex items-center justify-center gap-2 px-4 py-3 h-[34px]',
+  'rounded-md border-0 bg-transparent cursor-pointer transition-all',
+  'text-zinc-400 text-sm font-medium uppercase tracking-wide',
+  'data-[state=active]:bg-brand-purple-primary data-[state=active]:text-white',
+  'data-[state=active]:shadow-[var(--shadow-tabs)]',
+  'hover:text-white',
 )
 
 export function SwapTransferTracker() {
@@ -33,27 +33,23 @@ export function SwapTransferTracker() {
     <div className="w-full flex flex-col">
       <SectionHeader
         title="Live Transaction Log"
+        titleAdornment={isSwapConnected && isTransferConnected && <LiveDot />}
         description="Real-time swaps and transfers observed directly from execution events."
       />
 
       <div className="flex flex-col border-b border-zinc-800 overflow-hidden">
         <Tabs defaultValue="transfers" className="w-full">
           <div className="flex flex-col">
-            <div className="overflow-x-auto scrollbar-none">
-              <TabsList className="w-fit h-auto py-1 px-4 gap-2 bg-transparent rounded-none">
+            <div className="flex items-center justify-between overflow-x-auto scrollbar-none">
+              <TabsList className="w-fit h-12 mx-6 my-4 p-1.5 gap-1 bg-background-secondary rounded-lg border border-border shadow-[var(--shadow-tabs-inset)] sm:mx-10 sm:py-6">
                 <TabsTrigger value="transfers" className={TAB_TRIGGER_CLASS}>
-                  <Send className="size-4" />
-                  <span className="text-sm font-medium">Transfers</span>
-                  <LiveBadge isConnected={isTransferConnected} />
+                  Transfers
                 </TabsTrigger>
                 <TabsTrigger value="swaps" className={TAB_TRIGGER_CLASS}>
-                  <ArrowLeftRight className="size-4" />
-                  <span className="text-sm font-medium">Swaps</span>
-                  <LiveBadge isConnected={isSwapConnected} />
+                  Swaps
                 </TabsTrigger>
               </TabsList>
             </div>
-            <div className="w-full h-px bg-zinc-800" />
           </div>
 
           <TabsContent value="transfers" className="mt-0">
