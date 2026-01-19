@@ -1,7 +1,8 @@
 'use client'
 
-import { Clock, Pointer, TrendingUp } from 'lucide-react'
+import { Clock, TrendingUp } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { HoverPauseFooter } from '@/components/common/hover-pause-footer'
 import { PauseResumeControl } from '@/components/common/pause-resume-control'
 import { SectionHeader } from '@/components/ui/section-header'
 import { StatCard } from '@/components/ui/stat-card'
@@ -10,10 +11,6 @@ import { useMouseHover } from '@/hooks/use-mouse-hover'
 import { fromNsToMsPrecise } from '@/lib/block-metrics'
 import { BlockTimeLegend } from './block-time-legend'
 import { BlockTimeTimeline } from './block-time-timeline'
-
-// =============================================================================
-// Main Component
-// =============================================================================
 
 /**
  * Block Time Tracker visualizes block and transaction execution times in real-time.
@@ -107,15 +104,7 @@ export function BlockTimeExecutionTracker() {
             />
           </div>
 
-          {/* Footer with hover pause info - desktop only */}
-          <div className="hidden md:block px-6 sm:px-10 bg-[linear-gradient(153deg,#18181B_0%,rgba(24,24,27,0)_100%)]">
-            <div className="flex items-center gap-4 py-3 bg-[linear-gradient(135deg,#18181B_0%,rgba(24,24,27,0)_100%)]">
-              <Pointer className="w-5 h-5 text-[#52525E]" />
-              <span className="text-base text-[#52525E] font-normal leading-6">
-                Hovering on the Block stream pauses the update.
-              </span>
-            </div>
-          </div>
+          <HoverPauseFooter />
         </div>
       </div>
     </div>
