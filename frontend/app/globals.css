@@ -358,9 +358,9 @@
   --chart-5-dark: hsla(160, 60%, 45%, 1);
 
   --chart-axis-light: var(--color-zinc-500);
-  --chart-axis-dark: var(--color-zinc-500);
+  --chart-axis-dark: var(--color-text-muted);
   --chart-grid-light: rgba(228, 228, 231, 0.25);
-  --chart-grid-dark: rgba(63, 63, 70, 0.25);
+  --chart-grid-dark: #27272a;
   --chart-cursor-light: var(--color-zinc-400);
   --chart-cursor-dark: var(--color-zinc-600);
 

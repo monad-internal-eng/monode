@@ -32,7 +32,7 @@ export function SectionHeader({
 
           {/* Description section */}
           <div className="hidden sm:flex w-2/5 h-full px-10 items-center">
-            <div className="flex-1 text-gray-400 text-base font-normal leading-6">
+            <div className="flex-1 text-text-secondary text-base font-normal leading-6">
               {description}
             </div>
           </div>
