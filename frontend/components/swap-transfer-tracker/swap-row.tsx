@@ -7,7 +7,7 @@ import { formatTimeDisplay } from '@/lib/timestamp'
 import { formatTokenAmount } from '@/lib/ui'
 import { cn, shortenHex } from '@/lib/utils'
 import type { SwapData } from '@/types/swap'
-import { TokenBadge } from './token-badge'
+import { TokenIcon } from './token-icon'
 
 interface SwapRowProps {
   swap: SwapData
@@ -20,55 +20,51 @@ export function SwapRow({ swap, gridClass }: SwapRowProps) {
   return (
     <div
       className={cn(
-        'py-3 items-center border-b border-zinc-800/50 hover:bg-tracker-row-hover transition-colors',
+        'h-14 border-b hover:bg-tracker-row-hover transition-colors',
         gridClass,
       )}
     >
       <ExternalLink
         href={`${EXPLORER_URL}/tx/${swap.txHash}`}
-        className="text-sm font-mono text-zinc-400 hover:text-white transition-colors truncate"
+        className="w-32 text-sm transition-colors truncate"
         title={swap.txHash}
       >
         {shortenHex(swap.txHash)}
       </ExternalLink>
 
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-mono text-white tabular-nums">
-          {formatTokenAmount(swap.amountIn, swap.tokenIn, swap.tokenInAddress)}
-        </span>
-        <TokenBadge symbol={swap.tokenIn} />
-      </div>
+      <span className="w-28 flex items-center justify-end gap-1.5 text-sm tabular-nums">
+        {formatTokenAmount(swap.amountIn, swap.tokenIn, swap.tokenInAddress)}
+        <TokenIcon address={swap.tokenInAddress} size={16} />
+      </span>
 
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-mono text-white tabular-nums">
-          {formatTokenAmount(
-            swap.amountOut,
-            swap.tokenOut,
-            swap.tokenOutAddress,
-          )}
-        </span>
-        <TokenBadge symbol={swap.tokenOut} />
-      </div>
+      <span className="w-28 flex items-center justify-end gap-1.5 text-sm tabular-nums">
+        {formatTokenAmount(swap.amountOut, swap.tokenOut, swap.tokenOutAddress)}
+        <TokenIcon address={swap.tokenOutAddress} size={16} />
+      </span>
 
-      {config && (
-        <span
-          className="w-fit inline-flex items-center px-2 py-0.5 rounded text-xs font-mono"
-          style={{ backgroundColor: `${config.color}20`, color: config.color }}
-        >
-          {config.name}
-        </span>
-      )}
-      {!config && <span />}
+      <span className="w-32">
+        {config && (
+          <span
+            className="inline-flex items-center text-sm"
+            style={{
+              backgroundColor: `${config.color}20`,
+              color: config.color,
+            }}
+          >
+            {config.name}
+          </span>
+        )}
+      </span>
 
       <ExternalLink
         href={`${EXPLORER_URL}/address/${swap.sender}`}
-        className="text-sm font-mono text-zinc-400 hover:text-white transition-colors truncate"
+        className="w-32 text-sm transition-colors truncate"
         title={swap.sender}
       >
         {shortenHex(swap.sender)}
       </ExternalLink>
 
-      <span className="text-sm font-mono text-zinc-400 tabular-nums">
+      <span className="w-24 text-sm tabular-nums">
         {formatTimeDisplay(swap.timestamp)}
       </span>
     </div>

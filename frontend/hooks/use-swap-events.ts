@@ -1,13 +1,14 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import { decodeEventLog, type Hex } from 'viem'
+import { decodeEventLog, type Hex, zeroAddress } from 'viem'
 import {
   EVENT_ABIS,
   getTokenByAddress,
   SWAP_PROVIDER_CONFIG,
   type SwapProvider,
 } from '@/constants/swap-provider-config'
+import { AUSD_ADDRESS, WMON_ADDRESS } from '@/constants/transfer-config'
 import { useEvents } from '@/hooks/use-events'
 import { parseTopicsString } from '@/lib/abi-decode'
 import type { SerializableEventData } from '@/types/events'
@@ -112,6 +113,8 @@ function parseUniswapV4Swap(
       tokenIn: 'MON',
       tokenOut: 'AUSD',
       txHash: '',
+      tokenInAddress: zeroAddress,
+      tokenOutAddress: AUSD_ADDRESS,
     }
   }
 
@@ -126,6 +129,8 @@ function parseUniswapV4Swap(
     tokenIn: 'AUSD',
     tokenOut: 'MON',
     txHash: '',
+    tokenInAddress: AUSD_ADDRESS,
+    tokenOutAddress: zeroAddress,
   }
 }
 
@@ -162,6 +167,8 @@ function parsePancakeSwapV3Swap(
     tokenIn: isSellingAUSD ? 'AUSD' : 'WMON',
     tokenOut: isSellingAUSD ? 'WMON' : 'AUSD',
     txHash: '',
+    tokenInAddress: isSellingAUSD ? AUSD_ADDRESS : WMON_ADDRESS,
+    tokenOutAddress: isSellingAUSD ? WMON_ADDRESS : AUSD_ADDRESS,
   }
 }
 

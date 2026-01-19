@@ -116,7 +116,7 @@ export function BlockStateTracker() {
           <Blockchain blocks={blocks} isFollowingChain={!isPaused} />
         </div>
 
-        <HoverPauseFooter />
+        <HoverPauseFooter label="Hovering on the Block stream pauses the update." />
       </div>
     </div>
   )
