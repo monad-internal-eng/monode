@@ -8,13 +8,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { cn } from '@/lib/utils'
 
 interface StatItemProps {
   label: string
   value: number
   info?: string
   colorClass?: string
+  tooltipDistance?: number
 }
 
 interface NetworkActivityStatsProps {
@@ -23,22 +23,22 @@ interface NetworkActivityStatsProps {
   totalTransactions: number
 }
 
-function StatItem({
-  label,
-  value,
-  info,
-  colorClass = 'text-white',
-}: StatItemProps) {
+function StatItem({ label, value, info, tooltipDistance }: StatItemProps) {
   return (
-    <div className="flex flex-col items-end gap-1">
-      <div className="flex items-center gap-1">
-        <span className="text-xs text-zinc-500 uppercase tracking-wider font-medium">
+    <div className="flex flex-col items-center gap-2 relative">
+      <div className="flex items-end gap-1">
+        <span className="text-sm text-text-muted font-normal leading-5 max-w-18 text-center">
           {label}
         </span>
         {info && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Info className="size-3 text-zinc-600 cursor-help" />
+              <Info
+                className="size-3 text-text-muted cursor-help absolute top-6 hidden sm:inline-block"
+                style={{
+                  right: tooltipDistance ? `-${tooltipDistance * 4}px` : '0px',
+                }}
+              />
             </TooltipTrigger>
             <TooltipContent side="top">{info}</TooltipContent>
           </Tooltip>
@@ -51,10 +51,7 @@ function StatItem({
           minimumFractionDigits: 0,
           maximumFractionDigits: 2,
         }}
-        className={cn(
-          'text-2xl sm:text-3xl font-bold leading-none',
-          colorClass,
-        )}
+        className="text-xl sm:text-2xl font-medium leading-7 font-britti-sans text-text-secondary"
       />
     </div>
   )
@@ -68,22 +65,18 @@ export const NetworkActivityStats = ({
   return (
     <AnimatedNumberGroup>
       <div className="flex justify-between gap-3 sm:gap-7 xs:justify-end">
+        <StatItem label="Transaction per second" value={currentTps} />
         <StatItem
-          label="Live TPS"
-          value={currentTps}
-          colorClass="text-[var(--color-chart-1)]"
-        />
-        <StatItem
-          label="Peak TPS"
+          label="Peak Volume"
           value={peakTps}
           info="Highest TPS since page load"
-          colorClass="text-amber-400"
+          tooltipDistance={1}
         />
         <StatItem
-          label="Total Txns"
+          label="Total transactions"
           value={totalTransactions}
           info="Total transactions since page load"
-          colorClass="text-blue-400"
+          tooltipDistance={5}
         />
       </div>
     </AnimatedNumberGroup>

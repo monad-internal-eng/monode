@@ -1,6 +1,7 @@
 'use client'
 
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts'
+import Image from 'next/image'
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import {
   type ChartConfig,
   ChartContainer,
@@ -27,10 +28,22 @@ export function TpsChart() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex flex-col gap-3 pb-4 xs:flex-row xs:items-start xs:justify-between">
+      <div className="flex flex-col gap-3 pb-10 xs:flex-row xs:items-start xs:justify-between">
         <div className="flex flex-col gap-0.5">
-          <span className="text-base font-medium text-zinc-400">Live TPS</span>
-          <span className="text-sm text-zinc-600">Last 5 minutes</span>
+          <div className="flex flex-row justify-center gap-1">
+            <span className="text-2xl font-medium text-white font-britti-sans leading-7">
+              Transaction volume
+            </span>
+            <Image
+              src="/live-dot.svg"
+              alt="live indicator"
+              width={24}
+              height={24}
+            />
+          </div>
+          <span className="text-sm text-text-secondary">
+            for the last 5 minutes
+          </span>
         </div>
         <NetworkActivityStats
           currentTps={currentTps}
@@ -43,17 +56,25 @@ export function TpsChart() {
         {hasData ? (
           <ChartContainer
             config={chartConfig}
-            className="h-full min-w-2xl w-full"
+            className="h-full min-w-2xl w-full p-0"
           >
-            <LineChart
+            <AreaChart
               data={history}
               margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
             >
-              <CartesianGrid
-                strokeDasharray="4 4"
-                stroke="var(--chart-grid)"
-                vertical={false}
-              />
+              <defs>
+                <linearGradient
+                  id="tpsGradient"
+                  x1="0%"
+                  y1="0%"
+                  x2="0%"
+                  y2="100%"
+                >
+                  <stop offset="55%" stopColor="#6E54FF" />
+                  <stop offset="100%" stopColor="rgba(0, 0, 0, 0)" />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
               <XAxis
                 dataKey="timestamp"
                 tickLine={false}
@@ -95,19 +116,20 @@ export function TpsChart() {
                   />
                 }
               />
-              <Line
+              <Area
                 type="linear"
                 dataKey="tps"
-                stroke="var(--color-tps)"
+                stroke="#6E54FF"
                 strokeWidth={2}
+                fill="url(#tpsGradient)"
                 dot={false}
                 isAnimationActive={false}
               />
-            </LineChart>
+            </AreaChart>
           </ChartContainer>
         ) : (
           <div className="size-full flex items-center justify-center">
-            <p className="text-sm text-zinc-600">Waiting for data...</p>
+            <p className="text-sm text-text-secondary">Waiting for data...</p>
           </div>
         )}
       </div>

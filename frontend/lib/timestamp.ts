@@ -36,10 +36,9 @@ export function formatDateDisplay(timestamp: string) {
 export function formatRelativeTime(timestamp: number): string {
   const diffSeconds = Math.floor((Date.now() - timestamp) / 1000)
   if (diffSeconds <= 0) return 'now'
-  if (diffSeconds < 60) return `${diffSeconds}s ago`
   const mins = Math.floor(diffSeconds / 60)
   const secs = diffSeconds % 60
-  return secs === 0 ? `${mins}m ago` : `${mins}m ${secs}s`
+  return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
 export function formatTimeHMS(timestamp: number): string {
