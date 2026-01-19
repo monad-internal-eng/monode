@@ -8,8 +8,8 @@ import type { Block } from '@/types/block'
 import { BlockCard } from './block-card'
 
 const BLOCK_DIMENSIONS = {
-  small: { itemWidth: 200, gridHeight: 244 }, // w-48 + gap
-  large: { itemWidth: 240, gridHeight: 250 }, // w-56 + gap
+  small: { itemWidth: 208, gridHeight: 280 }, // w-48 (192px) + gap
+  large: { itemWidth: 240, gridHeight: 280 }, // w-56 (224px) + gap
 }
 
 const getResponsiveDimensions = () => {

@@ -1,7 +1,6 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Check } from 'lucide-react'
 import { ExternalLink } from '@/components/ui/external-link'
 import { BLOCK_STATE_CONFIG } from '@/constants/block-state'
 import { formatTimeDisplay } from '@/lib/timestamp'
@@ -17,7 +16,7 @@ interface BlockCardProps {
 
 const STATE_ORDER: BlockState[] = ['proposed', 'voted', 'finalized', 'verified']
 
-/** Horizontal state tracker with circles, links, and state numbers */
+/** Horizontal state tracker with step indicators */
 function StateTracker({ currentState }: { currentState: BlockState }) {
   const currentIndex = STATE_ORDER.indexOf(currentState)
 
@@ -27,51 +26,30 @@ function StateTracker({ currentState }: { currentState: BlockState }) {
         const isDone = index < currentIndex
         const isCurrent = index === currentIndex
         const isPending = index > currentIndex
-        const stateNumber = index + 1
 
         return (
           <div key={state} className="flex items-center">
-            <motion.div
-              className={cn(
-                'w-5 h-5 rounded-full flex items-center justify-center border transition-all duration-300',
-                isDone && 'bg-zinc-800 border-zinc-700',
-                isCurrent && 'bg-zinc-700 border-zinc-600',
-                isPending && 'bg-zinc-800/50 border-zinc-800',
+            <div className="relative">
+              <motion.div
+                className={cn(
+                  'w-3 h-3 rounded-md transition-all duration-300',
+                  (isDone || isCurrent) && 'bg-[#6E54FF]',
+                  isPending && 'border border-zinc-800 bg-transparent',
+                )}
+                animate={isCurrent ? { scale: [1, 1.1, 1] } : undefined}
+                transition={{
+                  duration: 1,
+                  repeat: isCurrent ? Infinity : 0,
+                  repeatDelay: 0.5,
+                }}
+              />
+              {isCurrent && (
+                <div className="absolute -inset-1 bg-[#6E54FF]/20 rounded-full" />
               )}
-              animate={{ scale: isCurrent ? [1, 1.05, 1] : 1 }}
-              transition={{
-                duration: 1,
-                repeat: isCurrent ? Infinity : 0,
-                repeatDelay: 0.5,
-              }}
-            >
-              {isDone || isCurrent ? (
-                <Check
-                  className={cn(
-                    'w-2.5 h-2.5',
-                    isDone && 'text-zinc-500',
-                    isCurrent && 'text-white',
-                  )}
-                />
-              ) : (
-                <span
-                  className={cn(
-                    'text-2xs font-medium',
-                    isPending && 'text-zinc-600',
-                  )}
-                >
-                  {stateNumber}
-                </span>
-              )}
-            </motion.div>
+            </div>
 
             {index < STATE_ORDER.length - 1 && (
-              <div
-                className={cn(
-                  'w-2 h-0.5 mx-1 transition-colors duration-300',
-                  index < currentIndex ? 'bg-zinc-700' : 'bg-zinc-800/30',
-                )}
-              />
+              <div className="w-4 h-px bg-zinc-800" />
             )}
           </div>
         )
@@ -101,57 +79,51 @@ export function BlockCard({
       }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className={cn(
-        'relative flex flex-col gap-y-4 text-left rounded-xl select-none dark-component-colors border hover:border-zinc-700 w-48 h-52 sm:w-56 sm:h-54 p-4 transition-all duration-300',
+        'relative flex flex-col gap-y-4 text-center rounded-4xl select-none bg-zinc-900 w-48 h-64 sm:w-56 sm:h-64 p-6 transition-all duration-300',
+        isLatest
+          ? 'border border-[#6E54FF]'
+          : 'border border-zinc-800 hover:border-zinc-700',
         className,
       )}
     >
-      {isLatest && (
-        <div className="absolute -top-4.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 bg-purple-500/15 border border-purple-400 rounded-full text-sm font-medium text-purple-400 backdrop-blur-sm">
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-purple-500" />
+      {/* Status badge */}
+      <div className="flex justify-end">
+        <div className="flex items-center gap-2 px-1.5 py-1.5 rounded-full border border-zinc-800 bg-zinc-900">
+          <div
+            className="w-3 h-3 rounded-full"
+            style={{ backgroundColor: config.color }}
+          />
+          <span className="text-white text-xs font-normal font-mono uppercase leading-3">
+            {config.label}
           </span>
-          LIVE
         </div>
-      )}
+      </div>
 
-      <ExternalLink
-        href={`https://monadvision.com/block/${block.number}`}
-        className="font-mono text-xl sm:text-2xl font-medium text-white hover:underline underline-offset-2 cursor-pointer"
-        title={`View block ${formattedBlockNumber} on MonadVision`}
-      >
-        {formattedBlockNumber}
-      </ExternalLink>
-
-      <StateTracker currentState={block.state} />
-
-      <div className="flex flex-col gap-2.5">
-        <span
-          className="px-3 py-0.5 rounded-full text-sm font-medium border backdrop-blur-sm w-fit"
-          style={{
-            color: config.color,
-            borderColor: config.color,
-            backgroundColor: `${config.color}25`,
-          }}
+      {/* Block number and description */}
+      <div className="flex-1 flex flex-col justify-start items-center gap-1">
+        <ExternalLink
+          href={`https://monadvision.com/block/${block.number}`}
+          className="font-britti-sans text-2xl font-medium text-white hover:underline underline-offset-2 cursor-pointer"
+          title={`View block ${formattedBlockNumber} on MonadVision`}
         >
-          {config.label}
-        </span>
+          {formattedBlockNumber}
+        </ExternalLink>
         {config.description && (
-          <span className="text-xs text-zinc-500">{config.description}</span>
+          <span className="text-sm text-gray-400">{config.description}</span>
         )}
       </div>
 
-      {block.timestamp && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mt-auto"
-        >
-          <span className="text-sm sm:text-base text-zinc-500">
-            {formatTimeDisplay(block.timestamp)}
-          </span>
-        </motion.div>
-      )}
+      {/* State tracker and timestamp */}
+      <div className="flex flex-col items-center gap-4">
+        <StateTracker currentState={block.state} />
+        {block.timestamp && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <span className="text-base text-gray-400">
+              {formatTimeDisplay(block.timestamp)}
+            </span>
+          </motion.div>
+        )}
+      </div>
     </motion.div>
   )
 }

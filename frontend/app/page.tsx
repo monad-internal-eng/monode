@@ -1,6 +1,7 @@
 import { BlockStateTracker } from '@/components/block-state-tracker'
 import { BlockTimeExecutionTracker } from '@/components/block-time-tracker'
 import { PageHeader } from '@/components/common/page-header'
+import { SectionSeparator } from '@/components/common/section-separator'
 import { HotAccountsBubbleMap } from '@/components/hot-accounts-bubble-map'
 import { HotSlotsBubbleMap } from '@/components/hot-slots-bubble-map'
 import { NetworkActivityTracker } from '@/components/network-activity-tracker'
@@ -17,6 +18,8 @@ export default function Home() {
           <NetworkActivityTracker />
 
           <BlockStateTracker />
+
+          <SectionSeparator />
 
           <BlockTimeExecutionTracker />
 
