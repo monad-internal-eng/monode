@@ -11,7 +11,7 @@ export function PageHeader() {
             alt="Monad Rings"
             width={60}
             height={60}
-            className="-mr-1.5"
+            className="-mr-1.5 hidden lg:inline-block"
           />
           <h1 className="w-fit font-britti-sans text-4xl sm:text-5xl md:text-6xl font-medium leading-none tracking-[-0.08rem] text-white text-center">
             Live Blockchain Execution
