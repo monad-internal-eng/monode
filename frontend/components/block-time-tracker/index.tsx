@@ -104,7 +104,7 @@ export function BlockTimeExecutionTracker() {
             />
           </div>
 
-          <HoverPauseFooter />
+          <HoverPauseFooter label="Hovering on the Block stream pauses the update." />
         </div>
       </div>
     </div>

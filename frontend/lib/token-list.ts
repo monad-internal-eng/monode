@@ -4,6 +4,7 @@ interface TokenInfo {
   address: string
   name: string
   symbol: string
+  logoURI?: string
 }
 
 /**
@@ -17,6 +18,7 @@ const TOKEN_MAP: Map<string, TokenInfo> = new Map(
       address: token.address,
       name: token.name,
       symbol: token.symbol,
+      logoURI: token.logoURI,
     },
   ]),
 )

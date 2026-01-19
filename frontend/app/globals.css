@@ -126,6 +126,17 @@
   --color-tracker-row-hover: #2b233d;
   --color-tracker-badge-bg: #2a233a;
   --color-tracker-active: #836ef9;
+  --color-tracker-live-dot-core: var(--color-brand-purple-primary);
+  --color-tracker-live-dot-ring-inner: rgba(110, 84, 255, 0.2);
+  --color-tracker-live-dot-ring-middle: rgba(110, 84, 255, 0.1);
+  --color-tracker-live-dot-ring-outer: rgba(110, 84, 255, 0.1);
+
+  /* Corner decoration border color */
+  --color-border-corner: #e5e5e5;
+
+  /* Tabs component colors */
+  --shadow-tabs: 0px 4px 16px 0px rgba(14, 16, 15, 0.6);
+  --shadow-tabs-inset: 0px 0px 24px 0px rgba(255, 255, 255, 0.08) inset;
 
   /* Block time tracker colors - new design */
   --color-block-exec-bar: #38bdf8;
@@ -803,4 +814,21 @@
     inset 0 0.5px 0.5px 0 rgba(255, 255, 255, 0.25),
     inset 0 -0.5px 0.5px 0 rgba(255, 255, 255, 0.25),
     0 0 0 1px rgba(0, 0, 0, 0.8);
+}
+
+/* Live dot pulse animation */
+@keyframes live-dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+}
+
+.animate-live-dot-pulse {
+  animation: live-dot-pulse 2s ease-in-out infinite;
 }
