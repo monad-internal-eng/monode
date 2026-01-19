@@ -818,7 +818,8 @@
 
 /* Live dot pulse animation */
 @keyframes live-dot-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
