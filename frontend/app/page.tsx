@@ -13,7 +13,7 @@ export default function Home() {
     <div className="min-h-screen text-white font-sans">
       <main className="py-6 px-4 max-w-7xl mx-auto sm:py-8 sm:px-6 md:py-12 flex flex-col">
         {/* Sections container with continuous left/right borders */}
-        <CornerDecorationsContainer className="flex flex-col gap-20 border border-zinc-800">
+        <CornerDecorationsContainer className="flex flex-col gap-20 border-zinc-800">
           <PageHeader />
 
           <NetworkActivityTracker />

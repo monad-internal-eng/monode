@@ -33,7 +33,7 @@ export function StatCard({
               <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
           </div>
-          <p className="text-lg sm:text-4xl font-medium text-white leading-10 flex items-center gap-2">
+          <p className="text-lg sm:text-4xl font-medium text-white leading-10 flex items-baseline gap-2">
             <span className="text-4xl sm:text-6xl text-white font-bold tabular-nums font-britti-sans">
               {value}
             </span>
