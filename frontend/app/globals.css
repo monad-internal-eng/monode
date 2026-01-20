@@ -444,12 +444,13 @@
   --tooltip-text-accent: #9c6ef8;
   --tooltip-separator: #27272a;
 
-  /* Bubble map colors */
-  --color-bubble-map-color-1: #d33636;
-  --color-bubble-map-color-2: #d34936;
-  --color-bubble-map-color-3: #d38736;
-  --color-bubble-map-color-4: #afa10d;
-  --color-bubble-map-color-5: #67ae11;
+  /* Bubble map colors - heat scale from hottest (1) to coolest (6) */
+  --color-bubble-map-color-1: #d23636;
+  --color-bubble-map-color-2: #d24836;
+  --color-bubble-map-color-3: #d28736;
+  --color-bubble-map-color-4: #aea10c;
+  --color-bubble-map-color-5: #66ad10;
+  --color-bubble-map-color-6: #079818;
 
   /* Text colors */
   --text-secondary-light: var(--color-neutral-500);

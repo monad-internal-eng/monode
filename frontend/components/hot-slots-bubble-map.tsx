@@ -16,6 +16,15 @@ interface HotSlot {
 }
 
 /**
+ * Returns responsive text sizes based on bubble diameter.
+ */
+function getBubbleTextSizes(size: number) {
+  if (size >= 140) return { address: 'text-[0.625rem]', count: 'text-base' }
+  if (size >= 100) return { address: 'text-[0.5rem]', count: 'text-sm' }
+  return { address: 'text-[0.4375rem]', count: 'text-xs' }
+}
+
+/**
  * A bubble map component that displays the most accessed storage slots.
  */
 export function HotSlotsBubbleMap() {
@@ -40,47 +49,56 @@ export function HotSlotsBubbleMap() {
 
   return (
     <BubbleMap
-      title="Hot Slots Map"
+      title="Storage Contention Map"
       description="Storage slots with the highest concurrent access during block execution."
       items={slots}
-      renderBubbleContent={(slot) => (
-        <>
-          <span className="text-xs font-normal w-full">
-            {shortenHex(slot.slot)}
-          </span>
-          <span className="text-sm font-bold font-mono mt-0.5">
-            {formatIntNumber(slot.hits)}
-          </span>
-        </>
-      )}
+      minSize={64}
+      maxSize={160}
+      renderBubbleContent={(slot, size) => {
+        const textSizes = getBubbleTextSizes(size)
+        return (
+          <>
+            <span
+              className={`${textSizes.address} font-normal font-mono text-center leading-3`}
+            >
+              {shortenHex(slot.slot)}
+            </span>
+            <span
+              className={`${textSizes.count} font-medium font-britti-sans leading-5`}
+            >
+              {formatIntNumber(slot.hits)}
+            </span>
+          </>
+        )
+      }}
       renderTooltip={(slot) => {
         const label = getLabel(slot.address)
         const displayName = label?.displayName ?? shortenHex(slot.address)
         return (
           <div className="flex flex-col gap-1">
             <div className="flex flex-col gap-2">
-              <span className="text-sm text-tooltip-text-accent uppercase tracking-wider">
+              <span className="text-sm uppercase tracking-wider text-tooltip-text-accent">
                 {displayName}
               </span>
               <div className="flex flex-col gap-1">
-                <p className="text-2xs font-mono text-tooltip-text-secondary break-all">
+                <p className="break-all font-mono text-2xs text-tooltip-text-secondary">
                   Contract:{' '}
-                  <span className="text-white text-xs">
+                  <span className="text-xs text-white">
                     {shortenHex(slot.address)}
                   </span>
                 </p>
-                <p className="text-2xs font-mono text-tooltip-text-secondary break-all">
+                <p className="break-all font-mono text-2xs text-tooltip-text-secondary">
                   Slot:{' '}
-                  <span className="text-white text-xs">
+                  <span className="text-xs text-white">
                     {shortenHex(slot.slot)}
                   </span>
                 </p>
               </div>
             </div>
             <div className="flex flex-col gap-0">
-              <div className="border-t border-tooltip-separator my-2" />
+              <div className="my-2 border-t border-tooltip-separator" />
               <div className="flex flex-row justify-between">
-                <p className="text-white font-medium">
+                <p className="font-medium text-white">
                   {formatIntNumber(slot.hits)}{' '}
                   <span className="text-tooltip-text-secondary">hits</span>
                 </p>
@@ -92,7 +110,6 @@ export function HotSlotsBubbleMap() {
           </div>
         )
       }}
-      bottomDescription="Storage slot access frequencies during transaction execution."
     />
   )
 }

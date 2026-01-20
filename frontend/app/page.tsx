@@ -31,9 +31,14 @@ export default function Home() {
 
           <SwapTransferTracker />
 
-          <section className="flex flex-col md:flex-row gap-8 md:gap-4 mt-8 md:mt-12">
-            <HotAccountsBubbleMap />
-            <HotSlotsBubbleMap />
+          {/* Bubble Maps Section - 2 columns with borders */}
+          <section className="flex flex-col md:flex-row md:gap-4">
+            <div className="flex-1 md:border-r md:border-zinc-800">
+              <HotAccountsBubbleMap />
+            </div>
+            <div className="flex-1 md:border-l md:border-zinc-800">
+              <HotSlotsBubbleMap />
+            </div>
           </section>
         </div>
       </main>

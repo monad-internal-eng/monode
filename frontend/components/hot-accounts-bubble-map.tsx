@@ -15,6 +15,15 @@ interface HotAccount {
 }
 
 /**
+ * Returns responsive text sizes based on bubble diameter.
+ */
+function getBubbleTextSizes(size: number) {
+  if (size >= 140) return { address: 'text-[0.625rem]', count: 'text-base' }
+  if (size >= 100) return { address: 'text-[0.5rem]', count: 'text-sm' }
+  return { address: 'text-[0.4375rem]', count: 'text-xs' }
+}
+
+/**
  * A bubble map component that displays the most accessed accounts.
  */
 export function HotAccountsBubbleMap() {
@@ -35,36 +44,45 @@ export function HotAccountsBubbleMap() {
 
   return (
     <BubbleMap
-      title="Hot Accounts Map"
-      description="Accounts most frequently accessed during parallel transaction execution."
+      title="Most Active Accounts"
+      description="Accounts accessed most frequently during parallel transaction execution."
       items={accounts}
-      renderBubbleContent={(account) => (
-        <>
-          <span className="text-xs font-normal w-full">
-            {shortenHex(account.address)}
-          </span>
-          <span className="text-sm font-bold font-mono mt-0.5">
-            {formatIntNumber(account.hits)}
-          </span>
-        </>
-      )}
+      minSize={64}
+      maxSize={160}
+      renderBubbleContent={(account, size) => {
+        const textSizes = getBubbleTextSizes(size)
+        return (
+          <>
+            <span
+              className={`${textSizes.address} font-normal font-mono text-center leading-3`}
+            >
+              {shortenHex(account.address)}
+            </span>
+            <span
+              className={`${textSizes.count} font-medium font-britti-sans leading-5`}
+            >
+              {formatIntNumber(account.hits)}
+            </span>
+          </>
+        )
+      }}
       renderTooltip={(account) => {
         const label = getLabel(account.address)
         const displayName = label?.displayName ?? shortenHex(account.address)
         return (
           <div className="flex flex-col gap-1">
             <div className="flex flex-col gap-2">
-              <span className="text-sm text-tooltip-text-accent tracking-wider uppercase">
+              <span className="text-sm uppercase tracking-wider text-tooltip-text-accent">
                 {displayName}
               </span>
-              <p className="text-xs font-mono text-tooltip-text-secondary break-all">
+              <p className="break-all font-mono text-xs text-tooltip-text-secondary">
                 {account.address}
               </p>
             </div>
             <div className="flex flex-col gap-0">
-              <div className="border-t border-tooltip-separator my-2" />
+              <div className="my-2 border-t border-tooltip-separator" />
               <div className="flex flex-row justify-between">
-                <p className="text-white font-medium">
+                <p className="font-medium text-white">
                   {formatIntNumber(account.hits)}{' '}
                   <span className="text-tooltip-text-secondary">hits</span>
                 </p>
@@ -76,7 +94,6 @@ export function HotAccountsBubbleMap() {
           </div>
         )
       }}
-      bottomDescription="Account access frequencies during transaction execution."
     />
   )
 }
