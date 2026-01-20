@@ -17,10 +17,7 @@ export function PauseResumeControl({
 }: PauseResumeControlProps) {
   return (
     <div className="flex items-center gap-3">
-      <Button
-        variant={isFollowingChain ? 'secondary' : 'primary'}
-        onClick={onToggle}
-      >
+      <Button variant="secondary" onClick={onToggle}>
         {isFollowingChain ? 'Pause' : 'Resume'}
       </Button>
       <span className="text-sm text-[#52525E]">

@@ -11,6 +11,7 @@ import { calculateBarMetrics } from '@/lib/block-metrics'
 import { formatBlockNumber } from '@/lib/ui'
 import { cn } from '@/lib/utils'
 import type { Block } from '@/types/block'
+import { Button } from '../ui/button'
 
 interface BlockTimeProps {
   block: Block
@@ -156,14 +157,18 @@ export const BlockTime = ({ block, normalizedTimeScaleMs }: BlockTimeProps) => {
                   {numberOfTransactions} tx
                   {numberOfTransactions !== 1 ? 's' : ''}
                 </span>
-                <a
-                  href={`${EXPLORER_URL}/block/${block.number}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="h-9 px-4 py-2 bg-[radial-gradient(ellipse_50%_50%_at_50%_50%,rgba(23,23,23,0.2)_0%,rgba(163,163,163,0.16)_100%),#0A0A0A] shadow-[0_0_0_1px_rgba(0,0,0,0.8)] rounded-md flex items-center justify-center font-mono text-sm text-white uppercase hover:opacity-80 transition-opacity"
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    window.open(
+                      `${EXPLORER_URL}/block/${block.number}`,
+                      '_blank',
+                      'noopener,noreferrer',
+                    )
+                  }
                 >
-                  View on explorer
-                </a>
+                  VIEW ON EXPLORER
+                </Button>
               </div>
             </div>
           </TooltipContent>
