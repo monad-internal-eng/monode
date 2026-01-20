@@ -84,8 +84,8 @@ class WebSocketMonitor {
             {'event_name': 'BlockStart'}
           ]
         }
-        this.ws?.send(JSON.stringify(subscribeMessage))
-        console.log('Sent subscribe message')
+        //this.ws?.send(JSON.stringify(subscribeMessage))
+        //console.log('Sent subscribe message')
 
         // Reset last message time on successful connection
         this.lastMessageTime = Date.now()
