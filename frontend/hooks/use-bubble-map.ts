@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 export interface BubbleItem {
   id: string
@@ -13,205 +13,192 @@ export interface PackedBubble<T extends BubbleItem> {
   y: number
   radius: number
   colorClass: string
-  ratio: number
-}
-
-interface UseBubbleMapOptions {
-  minSize?: number
-  maxSize?: number
-  maxBubbles?: number
-  padding?: number
 }
 
 interface UseBubbleMapResult<T extends BubbleItem> {
-  containerRef: React.RefObject<HTMLDivElement | null>
+  containerRef: (node: HTMLDivElement | null) => void
   packedBubbles: PackedBubble<T>[]
   isReady: boolean
-  maxHits: number
 }
 
+// Bubble sizing and layout constants
+const MIN_BUBBLE_SIZE = 58
+const MAX_BUBBLE_SIZE = 138
+const MAX_BUBBLES = 10
+const BUBBLE_PADDING = 5
+
 /**
- * Get bubble color class based on hit ratio.
- * Adjusted thresholds for better distribution across 10 bubbles.
- * Uses a more gradual color scale.
+ * Get bubble color class based on normalized hit value (0 = lowest hits, 1 = highest)
+ * Uses hit-value bands so bubbles with same/similar hits get same color
  */
-function getBubbleColorClass(ratio: number): string {
-  if (ratio >= 0.95) return 'bg-bubble-map-color-1'
-  if (ratio >= 0.8) return 'bg-bubble-map-color-2'
-  if (ratio >= 0.6) return 'bg-bubble-map-color-3'
-  if (ratio >= 0.4) return 'bg-bubble-map-color-4'
-  if (ratio >= 0.2) return 'bg-bubble-map-color-5'
+function getBubbleColorClass(normalizedHits: number): string {
+  if (normalizedHits >= 0.9) return 'bg-bubble-map-color-1'
+  if (normalizedHits >= 0.7) return 'bg-bubble-map-color-2'
+  if (normalizedHits >= 0.5) return 'bg-bubble-map-color-3'
+  if (normalizedHits >= 0.3) return 'bg-bubble-map-color-4'
+  if (normalizedHits >= 0.15) return 'bg-bubble-map-color-5'
   return 'bg-bubble-map-color-6'
 }
 
 /**
- * Circle packing algorithm using greedy spiral placement.
- * Optimized for visual appeal with tighter packing.
+ * Hash string to number for deterministic positioning
+ */
+function hashString(str: string): number {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i)
+    hash = hash & hash
+  }
+  return Math.abs(hash)
+}
+
+/**
+ * Circle packing with stable positions based on item ID.
+ * Positions are determined by ID hash, not by hits - so small hit changes don't move bubbles.
  */
 function packCircles<T extends BubbleItem>(
   items: T[],
-  containerWidth: number,
-  containerHeight: number,
+  width: number,
+  height: number,
   minRadius: number,
   maxRadius: number,
   padding: number,
 ): PackedBubble<T>[] {
-  if (items.length === 0 || containerWidth === 0 || containerHeight === 0) {
-    return []
-  }
+  if (items.length === 0 || width <= 0 || height <= 0) return []
 
   const maxHits = Math.max(...items.map((i) => i.hits), 1)
   const minHits = Math.min(...items.map((i) => i.hits), 1)
+  const hitRange = maxHits - minHits || 1
+
+  // Sort by ID for stable ordering (not by hits!)
+  const sorted = [...items].sort((a, b) => a.id.localeCompare(b.id))
+
+  // Normalize hits to 0-1 range for both size and color
+  const getNormalized = (hits: number): number => (hits - minHits) / hitRange
+
+  const getRadius = (hits: number): number => {
+    const normalized = getNormalized(hits)
+    // Power > 1 spreads sizes - lower hits become much smaller than high hits
+    return minRadius + (maxRadius - minRadius) * normalized ** 1.8
+  }
+
   const packed: PackedBubble<T>[] = []
+  const centerX = width / 2
+  const centerY = height / 2
 
-  const getRadius = (hits: number) => {
-    const ratio = (hits - minHits) / (maxHits - minHits || 1)
-    return minRadius + (maxRadius - minRadius) * ratio
-  }
-
-  const getRatio = (hits: number) => {
-    return hits / maxHits
-  }
-
-  const doesOverlap = (x: number, y: number, radius: number) => {
-    for (const circle of packed) {
-      const dx = x - circle.x
-      const dy = y - circle.y
-      const distance = Math.sqrt(dx * dx + dy * dy)
-      if (distance < radius + circle.radius + padding) {
-        return true
-      }
+  const overlaps = (
+    x: number,
+    y: number,
+    r: number,
+    excludeId?: string,
+  ): boolean => {
+    for (const c of packed) {
+      if (excludeId && c.item.id === excludeId) continue
+      const dx = x - c.x
+      const dy = y - c.y
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      if (dist < r + c.radius + padding) return true
     }
     return false
   }
 
-  const isInBounds = (x: number, y: number, radius: number) => {
-    const margin = 4
+  const inBounds = (x: number, y: number, r: number): boolean => {
+    const margin = 8
     return (
-      x - radius >= margin &&
-      x + radius <= containerWidth - margin &&
-      y - radius >= margin &&
-      y + radius <= containerHeight - margin
+      x - r >= margin &&
+      x + r <= width - margin &&
+      y - r >= margin &&
+      y + r <= height - margin
     )
   }
 
-  // Sort by hits (largest first) for better packing
-  const sortedItems = [...items].sort((a, b) => b.hits - a.hits)
-
-  for (const item of sortedItems) {
+  for (const item of sorted) {
     const radius = getRadius(item.hits)
-    const ratio = getRatio(item.hits)
+    // Color based on normalized hit value - same hits = same color
+    const colorClass = getBubbleColorClass(getNormalized(item.hits))
+
+    // Use ID hash for deterministic starting angle
+    const idHash = hashString(item.id)
+    const baseAngle = (idHash % 360) * (Math.PI / 180)
+
+    let bestX = centerX
+    let bestY = centerY
     let placed = false
 
-    // Try to place near the center first, then spiral outward
-    const centerX = containerWidth / 2
-    const centerY = containerHeight / 2
-    const maxAttempts = 800
-    const spiralStep = 5
+    // Spiral outward from center with ID-based angle offset
+    for (let dist = 0; dist < Math.max(width, height) && !placed; dist += 8) {
+      for (
+        let angleOffset = 0;
+        angleOffset < Math.PI * 2;
+        angleOffset += Math.PI / 16
+      ) {
+        const angle = baseAngle + angleOffset
+        const x = centerX + dist * Math.cos(angle)
+        const y = centerY + dist * Math.sin(angle)
 
-    for (let attempt = 0; attempt < maxAttempts && !placed; attempt++) {
-      // Tighter spiral pattern from center
-      const angle = attempt * 0.4
-      const distance = spiralStep * Math.sqrt(attempt)
-      const x = centerX + distance * Math.cos(angle)
-      const y = centerY + distance * Math.sin(angle)
-
-      if (isInBounds(x, y, radius) && !doesOverlap(x, y, radius)) {
-        packed.push({
-          item,
-          x,
-          y,
-          radius,
-          colorClass: getBubbleColorClass(ratio),
-          ratio,
-        })
-        placed = true
-      }
-    }
-
-    // Fallback: random placement
-    if (!placed) {
-      for (let attempt = 0; attempt < 200; attempt++) {
-        const x = radius + Math.random() * (containerWidth - 2 * radius)
-        const y = radius + Math.random() * (containerHeight - 2 * radius)
-
-        if (isInBounds(x, y, radius) && !doesOverlap(x, y, radius)) {
-          packed.push({
-            item,
-            x,
-            y,
-            radius,
-            colorClass: getBubbleColorClass(ratio),
-            ratio,
-          })
+        if (inBounds(x, y, radius) && !overlaps(x, y, radius)) {
+          bestX = x
+          bestY = y
           placed = true
           break
         }
       }
+    }
+
+    if (placed) {
+      packed.push({ item, x: bestX, y: bestY, radius, colorClass })
     }
   }
 
   return packed
 }
 
-/**
- * Custom hook for bubble map logic.
- * Handles container sizing, circle packing, and color calculations.
- */
 export function useBubbleMap<T extends BubbleItem>(
   items: T[],
-  options: UseBubbleMapOptions = {},
 ): UseBubbleMapResult<T> {
-  const { minSize = 48, maxSize = 100, maxBubbles = 10, padding = 2 } = options
+  const [container, setContainer] = useState<HTMLDivElement | null>(null)
+  const [size, setSize] = useState({ width: 0, height: 0 })
 
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
-
-  // Observe container size changes
-  useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect
-        setDimensions({ width, height })
-      }
-    })
-
-    resizeObserver.observe(container)
-    return () => resizeObserver.disconnect()
+  const containerRef = useCallback((node: HTMLDivElement | null) => {
+    setContainer(node)
   }, [])
 
-  const displayItems = useMemo(
-    () => items.slice(0, maxBubbles),
-    [items, maxBubbles],
-  )
+  useEffect(() => {
+    if (!container) return
 
-  const maxHits = useMemo(
-    () => Math.max(...displayItems.map((i) => i.hits), 1),
-    [displayItems],
-  )
+    const measure = () => {
+      const { offsetWidth, offsetHeight } = container
+      if (offsetWidth > 0 && offsetHeight > 0) {
+        setSize({ width: offsetWidth, height: offsetHeight })
+      }
+    }
+
+    const rafId = requestAnimationFrame(measure)
+    const observer = new ResizeObserver(measure)
+    observer.observe(container)
+
+    return () => {
+      cancelAnimationFrame(rafId)
+      observer.disconnect()
+    }
+  }, [container])
+
+  const displayItems = useMemo(() => items.slice(0, MAX_BUBBLES), [items])
 
   const packedBubbles = useMemo(
     () =>
       packCircles(
         displayItems,
-        dimensions.width,
-        dimensions.height,
-        minSize / 2,
-        maxSize / 2,
-        padding,
+        size.width,
+        size.height,
+        MIN_BUBBLE_SIZE / 2,
+        MAX_BUBBLE_SIZE / 2,
+        BUBBLE_PADDING,
       ),
-    [displayItems, dimensions, minSize, maxSize, padding],
+    [displayItems, size],
   )
 
-  const isReady = dimensions.width > 0 && dimensions.height > 0
+  const isReady = size.width > 0 && size.height > 0
 
-  return {
-    containerRef,
-    packedBubbles,
-    isReady,
-    maxHits,
-  }
+  return { containerRef, packedBubbles, isReady }
 }

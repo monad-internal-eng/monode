@@ -14,13 +14,10 @@ interface HotAccount {
   hits: number
 }
 
-/**
- * Returns responsive text sizes based on bubble diameter.
- */
 function getBubbleTextSizes(size: number) {
-  if (size >= 140) return { address: 'text-[0.625rem]', count: 'text-base' }
-  if (size >= 100) return { address: 'text-[0.5rem]', count: 'text-sm' }
-  return { address: 'text-[0.4375rem]', count: 'text-xs' }
+  if (size >= 100) return { address: 'text-[0.625rem]', count: 'text-base' }
+  if (size >= 80) return { address: 'text-[0.5625rem]', count: 'text-sm' }
+  return { address: 'text-[0.5rem]', count: 'text-xs' }
 }
 
 /**
@@ -47,19 +44,17 @@ export function HotAccountsBubbleMap() {
       title="Most Active Accounts"
       description="Accounts accessed most frequently during parallel transaction execution."
       items={accounts}
-      minSize={64}
-      maxSize={160}
       renderBubbleContent={(account, size) => {
         const textSizes = getBubbleTextSizes(size)
         return (
           <>
             <span
-              className={`${textSizes.address} font-normal font-mono text-center leading-3`}
+              className={`${textSizes.address} font-normal font-mono text-center text-white leading-[1.2]`}
             >
               {shortenHex(account.address)}
             </span>
             <span
-              className={`${textSizes.count} font-medium font-britti-sans leading-5`}
+              className={`${textSizes.count} font-medium font-britti-sans text-white leading-[1.2]`}
             >
               {formatIntNumber(account.hits)}
             </span>

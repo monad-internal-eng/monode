@@ -20,9 +20,6 @@ interface BubbleMapProps<T extends BubbleItem> {
   items: T[]
   renderBubbleContent: (item: T, size: number) => ReactNode
   renderTooltip: (item: T) => ReactNode
-  minSize?: number
-  maxSize?: number
-  maxBubbles?: number
 }
 
 /**
@@ -35,39 +32,34 @@ export function BubbleMap<T extends BubbleItem>({
   items,
   renderBubbleContent,
   renderTooltip,
-  minSize = 48,
-  maxSize = 100,
-  maxBubbles = 10,
 }: BubbleMapProps<T>) {
-  const { containerRef, packedBubbles, isReady } = useBubbleMap(items, {
-    minSize,
-    maxSize,
-    maxBubbles,
-    padding: 2,
-  })
+  const { containerRef, packedBubbles, isReady } = useBubbleMap(items)
 
   return (
     <div className="flex flex-1 flex-col">
       {/* Header section with title and description stacked */}
-      <div className="flex flex-col gap-4 p-10 border-t border-b border-zinc-800">
-        <h2 className="text-4xl font-medium font-britti-sans leading-10 text-white">
+      <div className="flex flex-col gap-4 p-6 lg:p-10 border-t border-b border-zinc-800">
+        <h2 className="text-2xl lg:text-4xl font-medium font-britti-sans leading-8 lg:leading-10 text-white">
           {title}
         </h2>
-        <p className="text-base font-normal leading-6 text-gray-400">
+        <p className="text-sm lg:text-base font-normal leading-5 lg:leading-6 text-gray-400">
           {description}
         </p>
       </div>
 
       {/* Bubble map container */}
-      <div className="px-10 py-6">
-        <CornerDecorationsContainer className="h-128 border-zinc-800">
+      <div className="px-4 py-4 lg:px-10 lg:py-6 flex-1 flex items-center justify-center">
+        <CornerDecorationsContainer className="border-zinc-800 w-full">
           {items.length === 0 ? (
-            <div className="flex h-full items-center justify-center">
+            <div className="flex h-80 lg:h-[32rem] items-center justify-center">
               <Spinner text="Waiting for data..." />
             </div>
           ) : (
-            <div ref={containerRef} className="relative h-full w-full p-4">
-              <AnimatePresence mode="popLayout">
+            <div
+              ref={containerRef}
+              className="relative h-80 lg:h-128 w-full overflow-hidden"
+            >
+              <AnimatePresence mode="sync">
                 {isReady &&
                   packedBubbles.map(({ item, x, y, radius, colorClass }) => {
                     const size = radius * 2
@@ -75,7 +67,6 @@ export function BubbleMap<T extends BubbleItem>({
                     return (
                       <motion.div
                         key={item.id}
-                        layout
                         initial={{ scale: 0, opacity: 0 }}
                         animate={{
                           scale: 1,
@@ -88,8 +79,8 @@ export function BubbleMap<T extends BubbleItem>({
                         exit={{ scale: 0, opacity: 0 }}
                         transition={{
                           type: 'spring',
-                          stiffness: 200,
-                          damping: 25,
+                          stiffness: 120,
+                          damping: 20,
                           mass: 0.8,
                         }}
                         style={{
@@ -103,15 +94,16 @@ export function BubbleMap<T extends BubbleItem>({
                           <TooltipTrigger asChild>
                             <motion.div
                               className={cn(
-                                'flex h-full w-full cursor-pointer flex-col items-center justify-center gap-0.5 overflow-hidden rounded-full px-1 pt-2 text-white',
+                                'flex h-full w-full cursor-pointer flex-col items-center justify-center gap-0.5 overflow-hidden rounded-full px-1 text-white',
                                 'hover:z-20 hover:shadow-[0_0_0_0.125rem_var(--color-shadow-accent),0_0_0_0.25rem_var(--color-brand-purple-hover)]',
+                                'transition-colors duration-500 ease-out',
                                 colorClass,
                               )}
-                              whileHover={{ scale: 1.05 }}
+                              whileHover={{ scale: 1.08 }}
                               transition={{
                                 type: 'spring',
                                 stiffness: 400,
-                                damping: 17,
+                                damping: 15,
                               }}
                             >
                               {renderBubbleContent(item, size)}
