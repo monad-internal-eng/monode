@@ -51,13 +51,13 @@ export function BubbleMap<T extends BubbleItem>({
       <div className="px-4 py-4 lg:px-10 lg:py-6 flex-1 flex items-center justify-center">
         <CornerDecorationsContainer className="border-zinc-800 w-full">
           {items.length === 0 ? (
-            <div className="flex h-80 lg:h-[32rem] items-center justify-center">
+            <div className="flex h-128 items-center justify-center">
               <Spinner text="Waiting for data..." />
             </div>
           ) : (
             <div
               ref={containerRef}
-              className="relative h-80 lg:h-128 w-full overflow-hidden"
+              className="relative h-128 w-full overflow-hidden"
             >
               <AnimatePresence mode="sync">
                 {isReady &&
