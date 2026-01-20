@@ -1,7 +1,6 @@
 'use client'
 
 import { Info } from 'lucide-react'
-import { HoverPauseFooter } from '@/components/common/hover-pause-footer'
 import { PauseResumeControl } from '@/components/common/pause-resume-control'
 import { SectionHeader } from '@/components/ui/section-header'
 import { Switch } from '@/components/ui/switch'
@@ -110,13 +109,11 @@ export function BlockStateTracker() {
         </div>
 
         {/* Blockchain visualization */}
-        <div className="relative py-4 px-4 sm:py-6 sm:px-10" {...hoverProps}>
+        <div className="relative pt-4 px-4 sm:pt-6 sm:px-10" {...hoverProps}>
           {/* Left fade gradient - only on sm and above */}
           <div className="hidden sm:block absolute left-0 top-0 bottom-0 w-75 z-10 pointer-events-none bg-linear-to-r from-[#0E100F] to-transparent" />
           <Blockchain blocks={blocks} isFollowingChain={!isPaused} />
         </div>
-
-        <HoverPauseFooter label="Hovering on the Block stream pauses the update." />
       </div>
     </div>
   )

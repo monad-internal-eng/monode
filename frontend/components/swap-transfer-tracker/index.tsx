@@ -6,7 +6,6 @@ import { SectionHeader } from '@/components/ui/section-header'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useSwapEvents } from '@/hooks/use-swap-events'
 import { useTransferEvents } from '@/hooks/use-transfer-events'
-import { HoverPauseFooter } from '../common/hover-pause-footer'
 import { PauseResumeControl } from '../common/pause-resume-control'
 import { Swaps } from './swaps'
 import { Transfers } from './transfers'
@@ -63,8 +62,6 @@ export function SwapTransferTracker() {
             />
           </TabsContent>
         </Tabs>
-
-        <HoverPauseFooter label="Hovering on the tables pauses the update." />
       </div>
     </div>
   )

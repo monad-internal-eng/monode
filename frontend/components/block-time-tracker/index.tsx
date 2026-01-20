@@ -2,7 +2,6 @@
 
 import { ClockArrowUp, Hourglass } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { HoverPauseFooter } from '@/components/common/hover-pause-footer'
 import { PauseResumeControl } from '@/components/common/pause-resume-control'
 import { SectionHeader } from '@/components/ui/section-header'
 import { StatCard } from '@/components/ui/stat-card'
@@ -89,7 +88,7 @@ export function BlockTimeExecutionTracker() {
           </div>
 
           {/* Blocks timeline area */}
-          <div className="relative py-4 px-4 sm:py-6 sm:px-10" {...hoverProps}>
+          <div className="relative pt-4 px-4 sm:pt-6 sm:px-10" {...hoverProps}>
             {/* Left fade gradient - only on sm and above */}
             <div className="hidden sm:block absolute left-0 top-0 bottom-0 w-75 z-10 pointer-events-none bg-linear-to-r from-[#0E100F] to-transparent" />
 
@@ -99,8 +98,6 @@ export function BlockTimeExecutionTracker() {
               normalizedTimeScaleMs={normalizedTimeScaleMs}
             />
           </div>
-
-          <HoverPauseFooter label="Hovering on the Block stream pauses the update." />
         </div>
       </div>
     </div>
