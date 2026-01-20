@@ -1,5 +1,4 @@
 import type { LucideIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 interface StatCardProps {
   label: string
@@ -20,29 +19,34 @@ export function StatCard({
   unit,
   description,
   icon: Icon,
-  iconClassName = 'text-tracker-active',
-  iconBgClassName = 'bg-tracker-active/10',
 }: StatCardProps) {
   return (
-    <div className="dark-component-colors rounded-xl border p-5 w-full flex flex-col gap-4 items-start">
+    <div className="bg-bg-primary border border-border-primary p-6 w-full flex flex-col gap-4 items-start relative">
+      <div className="absolute -top-px -left-px w-4 h-4 border-t border-l border-white" />
+      <div className="absolute -top-px -right-px w-4 h-4 border-t border-r border-white" />
+      <div className="absolute -bottom-px -left-px w-4 h-4 border-b border-l border-white" />
+      <div className="absolute -bottom-px -right-px w-4 h-4 border-b border-r border-white" />
+
       <div className="flex flex-row justify-between w-full">
-        <div className="flex flex-col items-start gap-1">
-          <p className="text-sm sm:text-base text-tooltip-text-secondary">
-            {label}
-          </p>
-          <p className="text-lg sm:text-xl font-medium text-tooltip-text-secondary">
-            <span className="text-3xl sm:text-5xl text-white font-bold tabular-nums">
+        <div className="flex flex-col items-start gap-2 md:gap-4 w-full">
+          <div className="flex flex-row items-center justify-between w-full">
+            <p className="text-sm sm:text-base text-tooltip-text-secondary leading-6">
+              {label}
+            </p>
+            <div className="bg-bg-primary border border-border-primary p-2 rounded-lg h-fit w-fit">
+              <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            </div>
+          </div>
+          <p className="text-lg sm:text-4xl font-medium text-white leading-10 flex items-center gap-2">
+            <span className="text-4xl sm:text-6xl text-white font-bold tabular-nums font-britti-sans">
               {value}
             </span>
             {unit && <> {unit}</>}
           </p>
         </div>
-        <div className={cn('p-2 rounded-lg h-fit w-fit', iconBgClassName)}>
-          <Icon className={cn('w-5 h-5 sm:w-6 sm:h-6', iconClassName)} />
-        </div>
       </div>
       {description && (
-        <p className="text-sm sm:text-base text-tooltip-text-secondary">
+        <p className="text-sm sm:text-base text-text-muted leading-6">
           {description}
         </p>
       )}

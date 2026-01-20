@@ -1,6 +1,6 @@
 'use client'
 
-import { Clock, TrendingUp } from 'lucide-react'
+import { ClockArrowUp, Hourglass } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { HoverPauseFooter } from '@/components/common/hover-pause-footer'
 import { PauseResumeControl } from '@/components/common/pause-resume-control'
@@ -43,29 +43,25 @@ export function BlockTimeExecutionTracker() {
   return (
     <div className="w-full flex flex-col gap-8 md:gap-12">
       {/* Execution Block Time */}
-      <div className="w-full flex flex-col gap-4 sm:gap-6">
+      <div className="w-full flex flex-col gap-2 sm:gap-4">
         <SectionHeader
           title="Execution Block Time"
-          description="Execution time observed directly from execution events."
+          description="Time taken to execute each block, observed in real time."
         />
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col md:flex-row gap-6 px-6 md:px-10 py-6">
           <StatCard
             label="Average Execution Time"
             value={avgBlockExecutionTime.toFixed(0)}
             unit="ms"
-            description="Measured during execution, not inferred post-finalization."
-            icon={Clock}
-            iconClassName="text-green-400"
-            iconBgClassName="bg-green-950"
+            description="Calculated from live execution data, not after finalization."
+            icon={Hourglass}
           />
           <StatCard
             label="Max Execution Time"
             value={maxBlockExecutionTime.toFixed(0)}
             unit="ms"
-            description="Peak execution time observed in the current session."
-            icon={TrendingUp}
-            iconClassName="text-orange-400"
-            iconBgClassName="bg-orange-950"
+            description="Longest execution time observed in the current session."
+            icon={ClockArrowUp}
           />
         </div>
       </div>
