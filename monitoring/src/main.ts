@@ -78,17 +78,17 @@ class WebSocketMonitor {
         this.reconnectAttempts = 0
 
         // Send subscribe message (must be sent within 10 seconds)
-        const subscribeMessage = {
-          type: 'subscribe',
-          event_filters: [
-            {'event_name': 'BlockStart'}
-          ]
-        }
+        //const subscribeMessage = {
+          //type: 'subscribe',
+          //event_filters: [
+            //{'event_name': 'BlockStart'}
+          //]
+        //}
         //this.ws?.send(JSON.stringify(subscribeMessage))
         //console.log('Sent subscribe message')
 
         // Reset last message time on successful connection
-        this.lastMessageTime = Date.now()
+        //this.lastMessageTime = Date.now()
       })
 
       this.ws.on('message', () => {
