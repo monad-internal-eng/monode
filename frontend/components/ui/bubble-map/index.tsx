@@ -59,7 +59,7 @@ export function BubbleMap<T extends BubbleItem>({
               ref={containerRef}
               className="relative h-128 w-full overflow-hidden"
             >
-              <AnimatePresence mode="sync">
+              <AnimatePresence mode="popLayout">
                 {isReady &&
                   packedBubbles.map(({ item, x, y, radius, colorClass }) => {
                     const size = radius * 2
