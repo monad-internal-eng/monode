@@ -6,14 +6,14 @@ import { HotAccountsBubbleMap } from '@/components/hot-accounts-bubble-map'
 import { HotSlotsBubbleMap } from '@/components/hot-slots-bubble-map'
 import { NetworkActivityTracker } from '@/components/network-activity-tracker'
 import { SwapTransferTracker } from '@/components/swap-transfer-tracker'
-import { CornerContainer } from '@/components/ui/corner-container'
+import { CornerDecorationsContainer } from '@/components/ui/corner-decorations-container'
 
 export default function Home() {
   return (
     <div className="min-h-screen text-white font-sans">
       <main className="py-6 px-4 max-w-7xl mx-auto sm:py-8 sm:px-6 md:py-12 flex flex-col">
         {/* Sections container with continuous left/right borders */}
-        <CornerContainer className="flex flex-col gap-20 border border-zinc-800">
+        <CornerDecorationsContainer className="flex flex-col gap-20 border border-zinc-800">
           <PageHeader />
 
           <NetworkActivityTracker />
@@ -32,7 +32,7 @@ export default function Home() {
             <HotAccountsBubbleMap />
             <HotSlotsBubbleMap />
           </section>
-        </CornerContainer>
+        </CornerDecorationsContainer>
       </main>
     </div>
   )

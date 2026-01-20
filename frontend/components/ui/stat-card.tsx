@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { CornerContainer } from './corner-container'
+import { CornerDecorationsContainer } from './corner-decorations-container'
 
 interface StatCardProps {
   label: string
@@ -22,7 +22,7 @@ export function StatCard({
   icon: Icon,
 }: StatCardProps) {
   return (
-    <CornerContainer className="bg-bg-primary border border-border-primary p-6 w-full flex flex-col gap-4 items-start">
+    <CornerDecorationsContainer className="bg-bg-primary border border-border-primary p-6 w-full flex flex-col gap-4 items-start">
       <div className="flex flex-row justify-between w-full">
         <div className="flex flex-col items-start gap-2 md:gap-4 w-full">
           <div className="flex flex-row items-center justify-between w-full">
@@ -46,6 +46,6 @@ export function StatCard({
           {description}
         </p>
       )}
-    </CornerContainer>
+    </CornerDecorationsContainer>
   )
 }
