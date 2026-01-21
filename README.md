@@ -1,5 +1,12 @@
-# execution-events-example
-Example project using the Monad Execution Events SDK
+# Monode
+Example application using the Monad Execution Events SDK
+
+![App](public/app.gif)
+## Resources
+
+- [Live App](https://node.monad.xyz)
+- [Blog Post](https://blog.monad.xyz/blog/execution-events-sdk)
+- [Documentation](https://docs.monad.xyz/execution-events)
 
 ## How to Run
 
