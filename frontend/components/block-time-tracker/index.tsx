@@ -41,10 +41,10 @@ export function BlockTimeExecutionTracker() {
 
   return (
     <div className="w-full flex flex-col gap-8 md:gap-12">
-      {/* Execution Block Time */}
+      {/* Block Execution Times */}
       <div className="w-full flex flex-col gap-2 sm:gap-4">
         <SectionHeader
-          title="Execution Block Time"
+          title="Block Execution Times"
           description="Time taken to execute each block, observed in real time."
         />
         <div className="flex flex-col md:flex-row gap-6 px-6 md:px-10 py-6">
