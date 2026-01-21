@@ -16,14 +16,14 @@ export function BlogBanner() {
     <div className="w-full bg-brand-purple-primary">
       <div className="flex items-center justify-center px-4 py-2 text-sm font-medium text-white relative">
         <span>
-          To learn how this app uses Monad Execution Events SDK, check out the
-          blog post{' '}
+          Built with the Monad Execution Events SDK. Read the blog post{' '}
           <ExternalLink
             href={BLOG_POST_URL}
             className="underline hover:text-white/80 transition-colors"
           >
             here
           </ExternalLink>
+          .
         </span>
         <Button
           variant="ghost"
