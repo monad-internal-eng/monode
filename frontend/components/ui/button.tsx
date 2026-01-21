@@ -9,6 +9,7 @@ const buttonVariants = cva(
       variant: {
         primary: 'rounded-md text-white btn-primary',
         secondary: 'rounded-md text-white btn-secondary',
+        ghost: 'bg-transparent hover:opacity-70 rounded',
       },
       size: {
         default: 'h-9 px-4 py-2',
