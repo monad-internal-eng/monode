@@ -1,6 +1,9 @@
 # Monode
 Example application using the Monad Execution Events SDK
 
+> [!WARNING]
+> This repository contains example code to demonstrate Monad features and concepts. These implementations are educational examples and have not been tested or audited. They are likely to have significant errors and security vulnerabilities. They should not be relied on for any purpose. Do not use this code in a production environment without completing your own audits and application of best practices.
+
 ![App](public/app.gif)
 ## Resources
 
