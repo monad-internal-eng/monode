@@ -15,7 +15,8 @@ export function DisclaimerBanner() {
         <AlertTriangle className="h-4 w-4 shrink-0 text-amber-400" />
         <span>
           <strong>Warning:</strong> This app is for demo purposes only and has
-          not been audited or tested. Do not use in production without your own audits.
+          not been audited or tested. Do not use in production without your own
+          audits.
         </span>
         <Button
           variant="ghost"
