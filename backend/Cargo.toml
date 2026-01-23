@@ -16,6 +16,9 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 alloy-primitives = { version = "0.8", features = ["serde"] }
 anyhow = "1.0.100"
+hyper = { version = "1.5", features = ["server", "http1"] }
+hyper-util = { version = "0.1", features = ["tokio"] }
+http-body-util = "0.1"
 
 [dependencies.monad-exec-events]
 git = "https://github.com/category-labs/monad-bft"
