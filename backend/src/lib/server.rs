@@ -371,8 +371,10 @@ async fn health_handler(
     let is_healthy = now_secs.saturating_sub(last_event) <= 10;
 
     let body = if is_healthy {
+        info!("Health check passed");
         r#"{"success": true}"#
     } else {
+        warn!("Health check failed - last event time: {} seconds ago", now_secs.saturating_sub(last_event));
         r#"{"success": false}"#
     };
 
