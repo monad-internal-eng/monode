@@ -210,7 +210,6 @@ async fn run_event_forwarder_task(
 
     let mut tps_tracker = TPSTracker::new();
 
-    let kill_time = std::time::Instant::now() + std::time::Duration::from_secs(10);
     loop {
         tokio::select! {
             event_data = event_receiver.recv() => {
@@ -225,10 +224,6 @@ async fn run_event_forwarder_task(
                     .duration_since(UNIX_EPOCH)
                     .unwrap_or_default()
                     .as_secs();
-                if std::time::Instant::now() > kill_time {
-                    error!("Killing event forwarder time update");
-                    continue;
-                }
                 last_event_time.store(now_secs, Ordering::Relaxed);
 
                 // Track txn_hash from TxnHeaderStart events
