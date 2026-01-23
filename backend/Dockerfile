@@ -25,8 +25,8 @@ RUN cargo build --release --bin backend
 
 # Expose WebSocket port
 EXPOSE 8443
-EXPOSE 443
+EXPOSE 7000
 
 # Set entrypoint with default server address for container
 ENTRYPOINT ["cargo", "run", "--release", "--bin", "backend", "--"]
-CMD ["--server-addr", "0.0.0.0:8443", "--health-server-addr", "0.0.0.0:443"]
+CMD ["--server-addr", "0.0.0.0:8443", "--health-server-addr", "127.0.0.1:7000"]

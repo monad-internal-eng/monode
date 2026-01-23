@@ -16,9 +16,9 @@ services:
       # Optional: Persistent logs volume
       - logs:/var/log/eventwatch
     restart: unless-stopped
-    command: ["--server-addr", "0.0.0.0:8443", "--health-server-addr", "0.0.0.0:443"]
+    command: ["--server-addr", "0.0.0.0:8443", "--health-server-addr", "127.0.0.1:7000"]
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://0.0.0.0:443/health | grep -q '\"success\": true'"]
+      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:7000/health | grep -q '\"success\": true'"]
       interval: 10s
       timeout: 5s
       retries: 3
