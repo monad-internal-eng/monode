@@ -18,6 +18,9 @@ pub struct Cli {
 
     #[arg(short, long, default_value = "127.0.0.1:3000")]
     server_addr: String,
+
+    #[arg(long, default_value = "127.0.0.1:4000")]
+    health_server_addr: String,
 }
 
 #[tokio::main]
@@ -33,6 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let Cli {
         event_ring_path,
         server_addr,
+        health_server_addr,
     } = Cli::parse();
 
     // Resolve the event ring path
@@ -47,12 +51,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Spawn the event listener thread
     let listener_handle = event_listener::run_event_listener(event_ring_path, event_sender);
 
-    // Parse server address
+    // Parse server addresses
     let addr: SocketAddr = server_addr.parse()?;
+    let health_addr: SocketAddr = health_server_addr.parse()?;
 
     // Run both tasks and exit when either completes
     tokio::select! {
-        result = server::run_websocket_server(addr, event_receiver) => {
+        result = server::run_servers(addr, health_addr, event_receiver) => {
             warn!("WebSocket server stopped: {:?}", result);
         }
         _ = tokio::task::spawn_blocking(move || listener_handle.join()) => {

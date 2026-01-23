@@ -16,7 +16,13 @@ services:
       # Optional: Persistent logs volume
       - logs:/var/log/eventwatch
     restart: unless-stopped
-    command: ["--server-addr", "0.0.0.0:8443"]
+    command: ["--server-addr", "0.0.0.0:8443", "--health-server-addr", "0.0.0.0:443"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://0.0.0.0:443/health | grep -q '\"success\": true'"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     logging:
       driver: json-file
       options:

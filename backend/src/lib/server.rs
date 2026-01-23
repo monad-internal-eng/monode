@@ -1,6 +1,14 @@
 use std::net::SocketAddr;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use alloy_primitives::{Address, B256};
+use http_body_util::Full;
+use hyper::body::Bytes;
+use hyper::server::conn::http1;
+use hyper::service::service_fn;
+use hyper::{Request, Response, StatusCode};
 use futures_util::stream::SplitSink;
 use futures_util::{stream::SplitStream, SinkExt, StreamExt};
 use monad_exec_events::ExecEvent;
@@ -17,6 +25,9 @@ use crate::top_k_tracker::{AccessEntry, TopKTracker};
 use super::event_filter::EventFilter;
 use super::event_listener::EventData;
 use super::serializable_event::SerializableEventData;
+
+/// Stores the Unix timestamp (in seconds) of the last event received from the ring
+type LastEventTime = Arc<AtomicU64>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TopAccessesData {
@@ -188,6 +199,7 @@ async fn client_read_task(
 async fn run_event_forwarder_task(
     mut event_receiver: tokio::sync::mpsc::Receiver<EventData>,
     event_broadcast_sender: broadcast::Sender<EventDataOrMetrics>,
+    last_event_time: LastEventTime,
 ) {
     let mut account_accesses = TopKTracker::new(1_000);
     let mut storage_accesses = TopKTracker::new(1_000);
@@ -198,6 +210,7 @@ async fn run_event_forwarder_task(
 
     let mut tps_tracker = TPSTracker::new();
 
+    let kill_time = std::time::Instant::now() + std::time::Duration::from_secs(10);
     loop {
         tokio::select! {
             event_data = event_receiver.recv() => {
@@ -206,6 +219,17 @@ async fn run_event_forwarder_task(
                     return;
                 }
                 let mut event_data = event_data.unwrap();
+
+                // Update last event timestamp for health check
+                let now_secs = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs();
+                if std::time::Instant::now() > kill_time {
+                    error!("Killing event forwarder time update");
+                    continue;
+                }
+                last_event_time.store(now_secs, Ordering::Relaxed);
 
                 // Track txn_hash from TxnHeaderStart events
                 if let EventName::TxnHeaderStart = event_data.event_name {
@@ -341,20 +365,58 @@ async fn handle_connection(
     info!("WebSocket connection closed: {}", addr);
 }
 
-pub async fn run_websocket_server(
+async fn health_handler(
+    last_event_time: LastEventTime,
+) -> Result<Response<Full<Bytes>>, hyper::Error> {
+    let now_secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    let last_event = last_event_time.load(Ordering::Relaxed);
+    let is_healthy = now_secs.saturating_sub(last_event) <= 10;
+
+    let body = if is_healthy {
+        r#"{"success": true}"#
+    } else {
+        r#"{"success": false}"#
+    };
+
+    Ok(Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "application/json")
+        .body(Full::new(Bytes::from(body)))
+        .unwrap())
+}
+
+async fn run_health_server(
+    health_addr: SocketAddr,
+    last_event_time: LastEventTime,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let listener = tokio::net::TcpListener::bind(health_addr).await?;
+    info!("Health server listening on: {}", health_addr);
+
+    loop {
+        let (stream, _) = listener.accept().await?;
+        let io = hyper_util::rt::TokioIo::new(stream);
+        let last_event_time = last_event_time.clone();
+
+        tokio::spawn(async move {
+            let service = service_fn(move |_req: Request<hyper::body::Incoming>| {
+                let last_event_time = last_event_time.clone();
+                async move { health_handler(last_event_time).await }
+            });
+
+            if let Err(e) = http1::Builder::new().serve_connection(io, service).await {
+                error!("Health server connection error: {}", e);
+            }
+        });
+    }
+}
+
+async fn run_websocket_server(
     server_addr: SocketAddr,
-    event_receiver: tokio::sync::mpsc::Receiver<EventData>,
-) -> Result<(), Box<dyn std::error::Error>> {
-    // Create a broadcast channel for distributing events to all clients
-    let (event_broadcast_sender, _) = broadcast::channel::<EventDataOrMetrics>(1_000_000);
-
-    // Spawn a task to forward events from the mpsc channel to the broadcast channel
-    let event_broadcast_sender_clone = event_broadcast_sender.clone();
-    let _ = tokio::spawn(run_event_forwarder_task(
-        event_receiver,
-        event_broadcast_sender_clone,
-    ));
-
+    event_broadcast_sender: broadcast::Sender<EventDataOrMetrics>,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Bind the TCP listener
     let listener = TcpListener::bind(&server_addr).await?;
     info!("WebSocket server listening on: {}", server_addr);
@@ -379,4 +441,40 @@ pub async fn run_websocket_server(
             }
         }
     }
+}
+
+pub async fn run_servers(
+    server_addr: SocketAddr,
+    health_server_addr: SocketAddr,
+    event_receiver: tokio::sync::mpsc::Receiver<EventData>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Create shared state for tracking last event time (for health checks)
+    let last_event_time: LastEventTime = Arc::new(AtomicU64::new(0));
+
+    // Create a broadcast channel for distributing events to all clients
+    let (event_broadcast_sender, _) = broadcast::channel::<EventDataOrMetrics>(1_000_000);
+
+    // Spawn a task to forward events from the mpsc channel to the broadcast channel
+    let event_broadcast_sender_clone = event_broadcast_sender.clone();
+    let last_event_time_clone = last_event_time.clone();
+    tokio::spawn(run_event_forwarder_task(
+        event_receiver,
+        event_broadcast_sender_clone,
+        last_event_time_clone,
+    ));
+
+    // Spawn both servers and wait for either to complete
+    let websocket_task = tokio::spawn(run_websocket_server(server_addr, event_broadcast_sender));
+    let health_task = tokio::spawn(run_health_server(health_server_addr, last_event_time));
+
+    tokio::select! {
+        result = websocket_task => {
+            error!("WebSocket server task stopped: {:?}", result);
+        }
+        result = health_task => {
+            error!("Health server task stopped: {:?}", result);
+        }
+    }
+
+    Ok(())
 }

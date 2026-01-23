@@ -46,7 +46,8 @@ COPY --from=builder /usr/src/app/restricted_filters.json /app/restricted_filters
 
 # Expose WebSocket port
 EXPOSE 8443
+EXPOSE 443
 
 # Set entrypoint using absolute path or relative to WORKDIR
 ENTRYPOINT ["./backend"]
-CMD ["--server-addr", "0.0.0.0:8443"]
+CMD ["--server-addr", "0.0.0.0:8443", "--health-server-addr", "0.0.0.0:443"]
