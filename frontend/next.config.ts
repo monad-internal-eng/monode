@@ -23,8 +23,8 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-              "style-src 'self' 'unsafe-inline'",
+              "script-src 'self'",
+              "style-src 'self'",
               "img-src 'self' data: https://raw.githubusercontent.com",
               "font-src 'self'",
               "connect-src 'self' wss://monode-mainnet.monadinfra.com https://*.vercel-insights.com https://*.vercel-analytics.com",
