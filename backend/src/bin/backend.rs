@@ -19,7 +19,7 @@ pub struct Cli {
     #[arg(short, long, default_value = "127.0.0.1:3000")]
     server_addr: String,
 
-    #[arg(long, default_value = "127.0.0.1:4000")]
+    #[arg(long, default_value = "127.0.0.1:7000")]
     health_server_addr: String,
 }
 
