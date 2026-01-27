@@ -33,6 +33,7 @@ RUN apt-get update && apt-get install -y \
     libzstd1 \
     libhugetlbfs0 \
     ca-certificates \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
