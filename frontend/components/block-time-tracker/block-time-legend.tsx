@@ -8,7 +8,7 @@ export const BlockTimeLegend = () => {
       <div className="flex items-center gap-2">
         <div className="w-3 h-3 rounded-full bg-[#6E54FF]" />
         <span className="text-base text-white">
-          Total transaction execution
+          Total transaction execution time
         </span>
       </div>
     </div>
