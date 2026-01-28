@@ -29,11 +29,11 @@ use super::serializable_event::SerializableEventData;
 /// Stores the Unix timestamp (in seconds) of the last event received from the ring
 type LastEventTime = Arc<AtomicU64>;
 
-/// Tracks consecutive unhealthy health checks
-type ConsecutiveUnhealthyCount = Arc<AtomicU64>;
+/// Seconds without events before health check reports unhealthy
+const UNHEALTHY_THRESHOLD_SECS: u64 = 10;
 
-/// Number of consecutive unhealthy checks before triggering process exit
-const UNHEALTHY_THRESHOLD: u64 = 3;
+/// Seconds without events before triggering process exit
+const EXIT_THRESHOLD_SECS: u64 = 30;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TopAccessesData {
@@ -368,35 +368,34 @@ async fn handle_connection(
 
 async fn health_handler(
     last_event_time: LastEventTime,
-    consecutive_unhealthy: ConsecutiveUnhealthyCount,
 ) -> Result<Response<Full<Bytes>>, hyper::Error> {
     let now_secs = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs();
     let last_event = last_event_time.load(Ordering::Relaxed);
-    let is_healthy = now_secs.saturating_sub(last_event) <= 10;
+    let time_since_last_event = now_secs.saturating_sub(last_event);
+
+    // Exit process if no events received for EXIT_THRESHOLD_SECS
+    if time_since_last_event >= EXIT_THRESHOLD_SECS {
+        error!(
+            "No events received for {} seconds (threshold: {}), exiting to trigger restart",
+            time_since_last_event,
+            EXIT_THRESHOLD_SECS
+        );
+        std::process::exit(1);
+    }
+
+    let is_healthy = time_since_last_event <= UNHEALTHY_THRESHOLD_SECS;
 
     let body = if is_healthy {
-        consecutive_unhealthy.store(0, Ordering::Relaxed);
         info!("Health check passed");
         r#"{"success": true}"#
     } else {
-        let count = consecutive_unhealthy.fetch_add(1, Ordering::Relaxed) + 1;
         warn!(
-            "Health check failed - last event time: {} seconds ago (consecutive failures: {})",
-            now_secs.saturating_sub(last_event),
-            count
+            "Health check failed - last event time: {} seconds ago",
+            time_since_last_event
         );
-
-        if count >= UNHEALTHY_THRESHOLD {
-            error!(
-                "Health check failed {} consecutive times, exiting to trigger restart",
-                count
-            );
-            std::process::exit(1);
-        }
-
         r#"{"success": false}"#
     };
 
@@ -414,19 +413,15 @@ async fn run_health_server(
     let listener = tokio::net::TcpListener::bind(health_addr).await?;
     info!("Health server listening on: {}", health_addr);
 
-    let consecutive_unhealthy: ConsecutiveUnhealthyCount = Arc::new(AtomicU64::new(0));
-
     loop {
         let (stream, _) = listener.accept().await?;
         let io = hyper_util::rt::TokioIo::new(stream);
         let last_event_time = last_event_time.clone();
-        let consecutive_unhealthy = consecutive_unhealthy.clone();
 
         tokio::spawn(async move {
             let service = service_fn(move |_req: Request<hyper::body::Incoming>| {
                 let last_event_time = last_event_time.clone();
-                let consecutive_unhealthy = consecutive_unhealthy.clone();
-                async move { health_handler(last_event_time, consecutive_unhealthy).await }
+                async move { health_handler(last_event_time).await }
             });
 
             if let Err(e) = http1::Builder::new().serve_connection(io, service).await {
