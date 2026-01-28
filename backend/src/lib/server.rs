@@ -230,7 +230,7 @@ async fn run_event_forwarder_task(
                     .duration_since(UNIX_EPOCH)
                     .unwrap_or_default()
                     .as_secs();
-                // last_event_time.store(now_secs, Ordering::Relaxed);
+                last_event_time.store(now_secs, Ordering::Relaxed);
 
                 // Track txn_hash from TxnHeaderStart events
                 if let EventName::TxnHeaderStart = event_data.event_name {
