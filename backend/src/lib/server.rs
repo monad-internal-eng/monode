@@ -29,6 +29,12 @@ use super::serializable_event::SerializableEventData;
 /// Stores the Unix timestamp (in seconds) of the last event received from the ring
 type LastEventTime = Arc<AtomicU64>;
 
+/// Seconds without events before health check reports unhealthy
+const UNHEALTHY_THRESHOLD_SECS: u64 = 10;
+
+/// Seconds without events before triggering process exit
+const EXIT_THRESHOLD_SECS: u64 = 30;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TopAccessesData {
     pub account: Vec<AccessEntry<Address>>,
@@ -368,13 +374,28 @@ async fn health_handler(
         .unwrap_or_default()
         .as_secs();
     let last_event = last_event_time.load(Ordering::Relaxed);
-    let is_healthy = now_secs.saturating_sub(last_event) <= 10;
+    let time_since_last_event = now_secs.saturating_sub(last_event);
+
+    // Exit process if no events received for EXIT_THRESHOLD_SECS
+    if time_since_last_event >= EXIT_THRESHOLD_SECS {
+        error!(
+            "No events received for {} seconds (threshold: {}), exiting to trigger restart",
+            time_since_last_event,
+            EXIT_THRESHOLD_SECS
+        );
+        std::process::exit(1);
+    }
+
+    let is_healthy = time_since_last_event <= UNHEALTHY_THRESHOLD_SECS;
 
     let body = if is_healthy {
         info!("Health check passed");
         r#"{"success": true}"#
     } else {
-        warn!("Health check failed - last event time: {} seconds ago", now_secs.saturating_sub(last_event));
+        warn!(
+            "Health check failed - last event time: {} seconds ago",
+            time_since_last_event
+        );
         r#"{"success": false}"#
     };
 
