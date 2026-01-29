@@ -1,5 +1,7 @@
 import type { NextConfig } from 'next'
 
+const isDev = process.env.NODE_ENV === 'development'
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -26,14 +28,16 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              `script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com${isDev ? " 'unsafe-eval'" : ''}`,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https://raw.githubusercontent.com",
               "font-src 'self'",
-              "connect-src 'self' wss://monode-mainnet.monadinfra.com wss://execution-events-backend-example.molandak.org https://*.vercel-insights.com https://*.vercel-analytics.com",
+              "connect-src 'self' wss://monode-mainnet.monadinfra.com wss://execution-events-backend-example.molandak.org",
               "frame-ancestors 'none'",
+              "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
+              "upgrade-insecure-requests",
             ].join('; '),
           },
         ],
