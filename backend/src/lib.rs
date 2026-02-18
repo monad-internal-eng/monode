@@ -1,3 +1,6 @@
+pub mod contention_tracker {
+    include!("lib/contention_tracker.rs");
+}
 pub mod event_filter {
     include!("lib/event_filter.rs");
 }

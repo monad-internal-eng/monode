@@ -18,6 +18,7 @@ use tokio_tungstenite::{accept_async, tungstenite::Message, WebSocketStream};
 use tracing::{error, info, warn};
 use serde::{Deserialize, Serialize};
 
+use crate::contention_tracker::{ContentionData, ContentionTracker};
 use crate::event_filter::{is_restricted_mode, load_restricted_filters};
 use crate::event_listener::EventName;
 use crate::top_k_tracker::{AccessEntry, TopKTracker};
@@ -45,7 +46,8 @@ pub struct TopAccessesData {
 pub enum EventDataOrMetrics {
     Event(EventData),
     TopAccesses(TopAccessesData),
-    TPS(usize)
+    TPS(usize),
+    Contention(ContentionData),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -53,6 +55,7 @@ pub enum ServerMessage {
     Events(Vec<SerializableEventData>),
     TopAccesses(TopAccessesData),
     TPS(usize),
+    ContentionData(ContentionData),
 }
 
 #[derive(Default)]
@@ -92,6 +95,7 @@ fn process_event(
     events_buf: &mut Vec<SerializableEventData>,
     accesses_buf: &mut Vec<TopAccessesData>,
     tps_buf: &mut Vec<usize>,
+    contention_buf: &mut Vec<ContentionData>,
 ) {
     match event {
         EventDataOrMetrics::Event(event_data) => {
@@ -105,6 +109,9 @@ fn process_event(
         }
         EventDataOrMetrics::TPS(tps) => {
             tps_buf.push(tps);
+        }
+        EventDataOrMetrics::Contention(data) => {
+            contention_buf.push(data);
         }
     }
 }
@@ -128,11 +135,12 @@ async fn client_write_task(
     let mut events_buf: Vec<SerializableEventData> = Vec::new();
     let mut accesses_buf: Vec<TopAccessesData> = Vec::new();
     let mut tps_buf: Vec<usize> = Vec::new();
+    let mut contention_buf: Vec<ContentionData> = Vec::new();
 
     loop {
         // Wait for first event
         match event_broadcast_receiver.recv().await {
-            Ok(event) => process_event(event, &filter, &mut events_buf, &mut accesses_buf, &mut tps_buf),
+            Ok(event) => process_event(event, &filter, &mut events_buf, &mut accesses_buf, &mut tps_buf, &mut contention_buf),
             Err(e) => {
                 error!("Event broadcast receiver error for {}: {}", addr, e);
                 break;
@@ -141,7 +149,7 @@ async fn client_write_task(
 
         // Drain all available events without blocking
         while let Ok(event) = event_broadcast_receiver.try_recv() {
-            process_event(event, &filter, &mut events_buf, &mut accesses_buf, &mut tps_buf);
+            process_event(event, &filter, &mut events_buf, &mut accesses_buf, &mut tps_buf, &mut contention_buf);
         }
 
         // Send all accumulated buffers
@@ -168,6 +176,16 @@ async fn client_write_task(
                 let server_msg = ServerMessage::TPS(tps);
                 if let Err(e) = send_message(&mut ws_sender, server_msg).await {
                     error!("Failed to send TPS to {}: {}", addr, e);
+                    break;
+                }
+            }
+        }
+
+        if !contention_buf.is_empty() {
+            for contention in std::mem::take(&mut contention_buf) {
+                let server_msg = ServerMessage::ContentionData(contention);
+                if let Err(e) = send_message(&mut ws_sender, server_msg).await {
+                    error!("Failed to send contention data to {}: {}", addr, e);
                     break;
                 }
             }
@@ -215,6 +233,7 @@ async fn run_event_forwarder_task(
     let mut current_txn_hashes: Vec<Option<[u8; 32]>> = vec![None; 10_000];
 
     let mut tps_tracker = TPSTracker::new();
+    let mut contention_tracker = ContentionTracker::new();
 
     loop {
         tokio::select! {
@@ -249,17 +268,28 @@ async fn run_event_forwarder_task(
                 }
 
                 let mut tps_event = None;
-                
+                let mut contention_event = None;
+
                 match event_data.event_name {
                     EventName::BlockStart => {
                         tps_event = Some(EventDataOrMetrics::TPS(tps_tracker.get_tps()));
+                        if let ExecEvent::BlockStart(block) = &event_data.payload {
+                            contention_tracker.on_block_start(
+                                block.block_tag.block_number,
+                                event_data.timestamp_ns,
+                            );
+                        }
                     }
                     EventName::TxnHeaderStart => {
                         tps_tracker.record_tx();
+                        if let Some(txn_idx) = event_data.txn_idx {
+                            contention_tracker.on_txn_start(txn_idx, event_data.timestamp_ns);
+                        }
                     }
                     EventName::TxnEnd => {
                         if let Some(txn_idx) = event_data.txn_idx {
                             current_txn_hashes[txn_idx] = None;
+                            contention_tracker.on_txn_end(txn_idx, event_data.timestamp_ns);
                         }
                     }
                     EventName::AccountAccess => {
@@ -281,6 +311,11 @@ async fn run_event_forwarder_task(
                             let address = Address::from_slice(&storage_access.address.bytes);
                             let key = B256::from_slice(&storage_access.key.bytes);
                             storage_accesses.record((address, key));
+                            contention_tracker.on_storage_access(
+                                address,
+                                key,
+                                event_data.txn_idx,
+                            );
                         } else {
                             unreachable!();
                         }
@@ -290,6 +325,10 @@ async fn run_event_forwarder_task(
 
                 // Send accesses update on BlockEnd events (after all access events are processed)
                 let send_accesses_update = if let EventName::BlockEnd = event_data.event_name {
+                    // Compute contention snapshot for this block
+                    if let Some(contention_data) = contention_tracker.on_block_end(event_data.timestamp_ns) {
+                        contention_event = Some(EventDataOrMetrics::Contention(contention_data));
+                    }
                     true
                 } else {
                     false
@@ -307,6 +346,10 @@ async fn run_event_forwarder_task(
 
                 if let Some(tps_event) = tps_event {
                     let _ = event_broadcast_sender.send(tps_event);
+                }
+
+                if let Some(contention_event) = contention_event {
+                    let _ = event_broadcast_sender.send(contention_event);
                 }
 
             },

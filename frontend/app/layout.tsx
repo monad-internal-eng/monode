@@ -18,8 +18,9 @@ const robotoMono = Roboto_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Execution Events SDK App',
-  description: 'Execution Events SDK Showcase Application',
+  title: 'Monad State Contention Explorer',
+  description:
+    'Real-time parallel execution contention intelligence for Monad. Analyzes storage access patterns to surface state conflicts and execution dependencies.',
 }
 
 export default function RootLayout({

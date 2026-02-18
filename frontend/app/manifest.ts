@@ -2,9 +2,10 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Monad',
-    short_name: 'Monad',
-    description: 'Monad',
+    name: 'Monad State Contention Explorer',
+    short_name: 'Contention',
+    description:
+      'Real-time parallel execution contention intelligence for Monad.',
     start_url: '/',
     display: 'standalone',
     background_color: '#fff',

@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import type { ContentionData } from '@/types/contention'
 import type { SerializableEventData } from '@/types/events'
 
 interface AccessEntry<T> {
@@ -25,6 +26,7 @@ interface ServerMessage {
   Events?: SerializableEventData[]
   TopAccesses?: TopAccessesData
   TPS?: number
+  ContentionData?: ContentionData
 }
 
 interface EventsContextValue {
@@ -34,6 +36,9 @@ interface EventsContextValue {
   isConnected: boolean
   subscribe: (callback: (event: SerializableEventData) => void) => () => void
   subscribeToTps: (callback: (tps: number) => void) => () => void
+  subscribeToContention: (
+    callback: (data: ContentionData) => void,
+  ) => () => void
 }
 
 interface EventsProviderProps {
@@ -66,6 +71,9 @@ export function EventsProvider({ children }: EventsProviderProps) {
   const tpsSubscribersRef = useRef<Map<string, (tps: number) => void>>(
     new Map(),
   )
+  const contentionSubscribersRef = useRef<
+    Map<string, (data: ContentionData) => void>
+  >(new Map())
 
   useEffect(() => {
     let ws: WebSocket | null = null
@@ -99,6 +107,13 @@ export function EventsProvider({ children }: EventsProviderProps) {
               const tps = message.TPS
               tpsSubscribersRef.current.forEach((callback) => {
                 callback(tps)
+              })
+            }
+
+            if (message.ContentionData) {
+              const data = message.ContentionData
+              contentionSubscribersRef.current.forEach((callback) => {
+                callback(data)
               })
             }
 
@@ -174,6 +189,18 @@ export function EventsProvider({ children }: EventsProviderProps) {
     }
   }, [])
 
+  const subscribeToContention = useCallback(
+    (callback: (data: ContentionData) => void) => {
+      const subscriberId = Math.random().toString(36).slice(2)
+      contentionSubscribersRef.current.set(subscriberId, callback)
+
+      return () => {
+        contentionSubscribersRef.current.delete(subscriberId)
+      }
+    },
+    [],
+  )
+
   const value: EventsContextValue = {
     accountAccesses,
     storageAccesses,
@@ -181,6 +208,7 @@ export function EventsProvider({ children }: EventsProviderProps) {
     isConnected,
     subscribe,
     subscribeToTps,
+    subscribeToContention,
   }
 
   return (
