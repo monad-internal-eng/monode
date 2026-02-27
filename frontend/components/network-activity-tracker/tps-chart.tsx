@@ -30,7 +30,7 @@ export function TpsChart() {
     <div className="flex flex-col h-full">
       <div className="flex flex-col gap-3 pb-10 xs:flex-row xs:items-start xs:justify-between">
         <div className="flex flex-col gap-0.5">
-          <div className="flex flex-row justify-center gap-1">
+          <div className="flex flex-row gap-1">
             <span className="text-2xl font-medium text-white font-britti-sans leading-7">
               Transaction volume
             </span>
