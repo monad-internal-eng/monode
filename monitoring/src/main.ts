@@ -10,6 +10,7 @@ const COOLDOWN_MS = Number(process.env.COOLDOWN_MS) || 300_000 * 3 // 15 minutes
 const HEALTH_CHECK_INTERVAL_MS = 2_000 // 2 seconds
 const RECONNECT_BASE_DELAY_MS = 1_000 // 1 second
 const RECONNECT_MAX_DELAY_MS = 30_000 // 30 seconds
+const CONNECTION_MAX_LIFETIME_MS = 5 * 60 * 1_000 // 5 minutes
 
 interface Config {
   backendUrl: string
@@ -25,6 +26,7 @@ class WebSocketMonitor {
   private inFatalState: boolean = false
   private lastNotification: number = 0
   private healthCheckInterval: NodeJS.Timeout | null = null
+  private connectionLifetimeTimer: NodeJS.Timeout | null = null
   private reconnectAttempts: number = 0
   private isShuttingDown: boolean = false
   private messageCount: number = 0
@@ -41,6 +43,7 @@ class WebSocketMonitor {
     console.log(`Backend URL: ${this.config.backendUrl}`)
     console.log(`Silence threshold: ${SILENCE_THRESHOLD_MS}ms`)
     console.log(`Cooldown period: ${COOLDOWN_MS}ms`)
+    console.log(`Connection max lifetime: ${CONNECTION_MAX_LIFETIME_MS / 1000}s`)
 
     if (!this.slackClient) {
       console.warn(
@@ -89,6 +92,9 @@ class WebSocketMonitor {
 
         // Reset last message time on successful connection
         //this.lastMessageTime = Date.now()
+
+        // Schedule connection refresh to prevent stale connections
+        this.scheduleConnectionRefresh()
       })
 
       this.ws.on('message', () => {
@@ -113,6 +119,11 @@ class WebSocketMonitor {
         )
         this.ws = null
 
+        if (this.connectionLifetimeTimer) {
+          clearTimeout(this.connectionLifetimeTimer)
+          this.connectionLifetimeTimer = null
+        }
+
         if (!this.isShuttingDown) {
           this.scheduleReconnect()
         }
@@ -123,6 +134,24 @@ class WebSocketMonitor {
         this.scheduleReconnect()
       }
     }
+  }
+
+  private scheduleConnectionRefresh() {
+    if (this.connectionLifetimeTimer) {
+      clearTimeout(this.connectionLifetimeTimer)
+    }
+
+    this.connectionLifetimeTimer = setTimeout(() => {
+      console.log(
+        `Connection max lifetime reached (${CONNECTION_MAX_LIFETIME_MS / 1000}s), refreshing connection...`,
+      )
+      if (this.ws) {
+        // Reset attempts so reconnect happens immediately (not an error)
+        this.reconnectAttempts = 0
+        this.ws.close()
+        // The 'close' handler will trigger reconnection via scheduleReconnect
+      }
+    }, CONNECTION_MAX_LIFETIME_MS)
   }
 
   private scheduleReconnect() {
@@ -431,6 +460,12 @@ class WebSocketMonitor {
     if (this.healthCheckInterval) {
       clearInterval(this.healthCheckInterval)
       this.healthCheckInterval = null
+    }
+
+    // Clear connection lifetime timer
+    if (this.connectionLifetimeTimer) {
+      clearTimeout(this.connectionLifetimeTimer)
+      this.connectionLifetimeTimer = null
     }
 
     // Close WebSocket
