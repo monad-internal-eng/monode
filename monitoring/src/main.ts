@@ -10,7 +10,8 @@ const COOLDOWN_MS = Number(process.env.COOLDOWN_MS) || 300_000 * 3 // 15 minutes
 const HEALTH_CHECK_INTERVAL_MS = 2_000 // 2 seconds
 const RECONNECT_BASE_DELAY_MS = 1_000 // 1 second
 const RECONNECT_MAX_DELAY_MS = 30_000 // 30 seconds
-const CONNECTION_MAX_LIFETIME_MS = 5 * 60 * 1_000 // 5 minutes
+const CONNECTION_MAX_LIFETIME_MS =
+  (Number(process.env.CONNECTION_MAX_LIFETIME_MIN) || 5) * 60 * 1_000 // default 5 minutes
 
 interface Config {
   backendUrl: string
@@ -90,8 +91,8 @@ class WebSocketMonitor {
         //this.ws?.send(JSON.stringify(subscribeMessage))
         //console.log('Sent subscribe message')
 
-        // Reset last message time on successful connection
-        //this.lastMessageTime = Date.now()
+        // Reset last message time so reconnect gap doesn't trigger false alerts
+        this.lastMessageTime = Date.now()
 
         // Schedule connection refresh to prevent stale connections
         this.scheduleConnectionRefresh()
