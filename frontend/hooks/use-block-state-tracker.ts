@@ -7,7 +7,7 @@ import { formatTimestamp } from '@/lib/timestamp'
 import type { Block, BlockState } from '@/types/block'
 import type { SerializableEventData } from '@/types/events'
 
-const MAX_BLOCKS = 15000
+const MAX_BLOCKS = 5000
 
 interface UseBlockStateTrackerReturn {
   blocks: Block[]
@@ -45,7 +45,10 @@ function applyEventToBlocks(
         ...blocks,
         { number: payload.block_number, state: 'proposed', timestamp },
       ]
-      return newBlocks.slice(-MAX_BLOCKS)
+      if (newBlocks.length > MAX_BLOCKS) {
+        return newBlocks.slice(-Math.ceil(MAX_BLOCKS / 3))
+      }
+      return newBlocks
     }
 
     case 'BlockQC':

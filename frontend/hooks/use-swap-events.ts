@@ -340,7 +340,13 @@ export function useSwapEvents() {
     const swapData = parseSwapEvent(event, matchingConfig.provider)
     if (!swapData) return
 
-    setAllSwaps((prev) => [swapData, ...prev].slice(0, MAX_SWAPS))
+    setAllSwaps((prev) => {
+      const next = [swapData, ...prev]
+      if (next.length > MAX_SWAPS) {
+        return next.slice(0, Math.ceil(MAX_SWAPS / 3))
+      }
+      return next
+    })
   }, [])
 
   const { isConnected } = useEvents({
