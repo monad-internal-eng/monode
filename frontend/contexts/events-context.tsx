@@ -30,7 +30,6 @@ interface ServerMessage {
 interface EventsContextValue {
   accountAccesses: AccessEntry<string>[]
   storageAccesses: AccessEntry<[string, string]>[]
-  events: SerializableEventData[]
   isConnected: boolean
   subscribe: (callback: (event: SerializableEventData) => void) => () => void
   subscribeToTps: (callback: (tps: number) => void) => () => void
@@ -43,7 +42,6 @@ interface EventsProviderProps {
 const EventsContext = createContext<EventsContextValue | null>(null)
 
 const RECONNECT_DELAY = 3000
-const MAX_EVENTS_STORED = 25000
 
 /**
  * A context provider for the events context.
@@ -57,7 +55,6 @@ export function EventsProvider({ children }: EventsProviderProps) {
   const [storageAccesses, setStorageAccesses] = useState<
     AccessEntry<[string, string]>[]
   >([])
-  const [events, setEvents] = useState<SerializableEventData[]>([])
   const [isConnected, setIsConnected] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
   const subscribersRef = useRef<
@@ -104,9 +101,6 @@ export function EventsProvider({ children }: EventsProviderProps) {
 
             if (message.Events && message.Events.length > 0) {
               const newEvents = message.Events
-              setEvents((prevEvents) =>
-                [...prevEvents, ...newEvents].slice(-MAX_EVENTS_STORED),
-              )
 
               // Notify all subscribers
               newEvents.forEach((evt) => {
@@ -177,7 +171,6 @@ export function EventsProvider({ children }: EventsProviderProps) {
   const value: EventsContextValue = {
     accountAccesses,
     storageAccesses,
-    events,
     isConnected,
     subscribe,
     subscribeToTps,
