@@ -7,7 +7,7 @@ import { formatTimestamp } from '@/lib/timestamp'
 import type { Block, BlockState } from '@/types/block'
 import type { SerializableEventData } from '@/types/events'
 
-const MAX_BLOCKS = 15000
+const MAX_BLOCKS = 5000
 
 interface UseBlockStateTrackerReturn {
   blocks: Block[]
