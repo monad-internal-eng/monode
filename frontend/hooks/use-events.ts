@@ -13,19 +13,19 @@ interface UseEventsOptions {
  *
  * @example Basic usage
  * ```tsx
- * const { events, isConnected } = useEvents()
+ * const { isConnected } = useEvents()
  * ```
  *
  * @example With event callback
  * ```tsx
- * const { events, isConnected } = useEvents({
+ * const { isConnected } = useEvents({
  *   onEvent: (event) => console.log('New event:', event)
  * })
  * ```
  */
 export function useEvents(options: UseEventsOptions = {}) {
   const { onEvent } = options
-  const { accountAccesses, storageAccesses, events, isConnected, subscribe } =
+  const { accountAccesses, storageAccesses, isConnected, subscribe } =
     useEventsContext()
   const onEventRef = useRef(onEvent)
 
@@ -45,5 +45,5 @@ export function useEvents(options: UseEventsOptions = {}) {
     return unsubscribe
   }, [onEvent, subscribe])
 
-  return { accountAccesses, storageAccesses, events, isConnected }
+  return { accountAccesses, storageAccesses, isConnected }
 }
