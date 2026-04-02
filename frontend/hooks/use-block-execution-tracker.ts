@@ -64,8 +64,10 @@ export function useBlockExecutionTracker() {
             ]
           }
 
-          // Keep only the latest MAX_BLOCKS blocks
-          return newBlocks.slice(-MAX_BLOCKS)
+          if (newBlocks.length > MAX_BLOCKS) {
+            return newBlocks.slice(-Math.ceil(MAX_BLOCKS / 3))
+          }
+          return newBlocks
         })
         break
       }

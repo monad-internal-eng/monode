@@ -114,7 +114,13 @@ export function useTransferEvents() {
 
     if (!transferData) return
 
-    setAllTransfers((prev) => [transferData, ...prev].slice(0, MAX_TRANSFERS))
+    setAllTransfers((prev) => {
+      const next = [transferData, ...prev]
+      if (next.length > MAX_TRANSFERS) {
+        return next.slice(0, Math.ceil(MAX_TRANSFERS / 3))
+      }
+      return next
+    })
 
     // Update cumulative total
     setCumulativeTransferred((prev) => prev + BigInt(transferData.value))

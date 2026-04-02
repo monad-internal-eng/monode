@@ -45,7 +45,10 @@ function applyEventToBlocks(
         ...blocks,
         { number: payload.block_number, state: 'proposed', timestamp },
       ]
-      return newBlocks.slice(-MAX_BLOCKS)
+      if (newBlocks.length > MAX_BLOCKS) {
+        return newBlocks.slice(-Math.ceil(MAX_BLOCKS / 3))
+      }
+      return newBlocks
     }
 
     case 'BlockQC':
