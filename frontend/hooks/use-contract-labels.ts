@@ -4,6 +4,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { getTokenFromList } from '@/lib/token-list'
 import type { ContractLabelsResponse } from '@/types/contract'
 
+/** Evict old entries when the cache exceeds this size. */
+const MAX_CACHED_LABELS = 500
+
 interface ContractLabelInfo {
   address: string
   name: string | null
@@ -57,6 +60,13 @@ export function useContractLabels(
     if (addresses.length === 0) return
 
     const normalizedAddresses = addresses.map((a) => a.toLowerCase())
+
+    // Evict stale entries when the cache grows too large.
+    // Clearing both lets currently-active addresses re-resolve on the next cycle.
+    if (resolvedAddressesRef.current.size > MAX_CACHED_LABELS) {
+      resolvedAddressesRef.current.clear()
+      setLabels(new Map())
+    }
 
     // Identify addresses that need resolution
     const tokenListResults: ContractLabelInfo[] = []

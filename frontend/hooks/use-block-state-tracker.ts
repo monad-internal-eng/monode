@@ -7,7 +7,7 @@ import { formatTimestamp } from '@/lib/timestamp'
 import type { Block, BlockState } from '@/types/block'
 import type { SerializableEventData } from '@/types/events'
 
-const MAX_BLOCKS = 5000
+const MAX_BLOCKS = 200
 
 interface UseBlockStateTrackerReturn {
   blocks: Block[]
@@ -55,11 +55,11 @@ function applyEventToBlocks(
     case 'BlockFinalized':
     case 'BlockVerified': {
       const newState = EVENT_TO_STATE[payload.type]
-      return blocks.map((block) =>
-        block.number === payload.block_number
-          ? { ...block, state: newState, timestamp }
-          : block,
-      )
+      const index = blocks.findIndex((b) => b.number === payload.block_number)
+      if (index === -1) return blocks
+      const next = blocks.slice()
+      next[index] = { ...blocks[index], state: newState, timestamp }
+      return next
     }
 
     case 'BlockReject': {
