@@ -55,9 +55,7 @@ function applyEventToBlocks(
     case 'BlockFinalized':
     case 'BlockVerified': {
       const newState = EVENT_TO_STATE[payload.type]
-      const index = blocks.findIndex(
-        (b) => b.number === payload.block_number,
-      )
+      const index = blocks.findIndex((b) => b.number === payload.block_number)
       if (index === -1) return blocks
       const next = blocks.slice()
       next[index] = { ...blocks[index], state: newState, timestamp }
