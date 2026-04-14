@@ -32,6 +32,11 @@ export function useBlockchainScroll({
   const oldestBlockNumber =
     sortedBlocks.length > 0 ? sortedBlocks[0].number : null
 
+  // Keep a ref to the latest length so rAF callbacks always read the current value
+  // instead of closing over a stale sortedBlocks.length that may have been trimmed.
+  const sortedBlocksLengthRef = useRef(sortedBlocks.length)
+  sortedBlocksLengthRef.current = sortedBlocks.length
+
   // Auto-scroll to the end when new blocks are added (only if following chain)
   useLayoutEffect(() => {
     if (!gridRef.current || newestBlockNumber === null || !isFollowingChain)
@@ -58,11 +63,14 @@ export function useBlockchainScroll({
 
     if (shouldScroll) {
       requestAnimationFrame(() => {
-        gridRef.current?.scrollToColumn({
-          index: sortedBlocks.length - 1,
-          align: 'end',
-          behavior: 'smooth',
-        })
+        const currentLength = sortedBlocksLengthRef.current
+        if (currentLength > 0) {
+          gridRef.current?.scrollToColumn({
+            index: currentLength - 1,
+            align: 'end',
+            behavior: 'smooth',
+          })
+        }
       })
     }
 
@@ -86,12 +94,12 @@ export function useBlockchainScroll({
         document.visibilityState === 'visible' &&
         wasHiddenRef.current &&
         isFollowingChain &&
-        sortedBlocks.length > 0
+        sortedBlocksLengthRef.current > 0
       ) {
         // Tab became visible after being hidden - scroll to end immediately
         // Use 'auto' (instant) to avoid jarring smooth animation of large distance
         gridRef.current?.scrollToColumn({
-          index: sortedBlocks.length - 1,
+          index: sortedBlocksLengthRef.current - 1,
           align: 'end',
           behavior: 'auto',
         })
