@@ -8,6 +8,9 @@ import {
 } from '@/constants/block-state'
 import type { SerializableEventData } from '@/types/events'
 
+/** Prevent unbounded queue growth during slow motion. */
+const MAX_QUEUE_SIZE = 10_000
+
 interface UseSlowMotionOptions {
   onProcessEvent: (event: SerializableEventData) => void
   onFlushEvents: (events: SerializableEventData[]) => void
@@ -126,7 +129,9 @@ export function useBlockchainSlowMotion({
   // Queue an event (called from the event handler)
   const queueEvent = useCallback((event: SerializableEventData) => {
     if (isSlowMotionRef.current) {
-      eventQueueRef.current.push(event)
+      if (eventQueueRef.current.length < MAX_QUEUE_SIZE) {
+        eventQueueRef.current.push(event)
+      }
     } else {
       // Normal mode - process immediately
       onProcessEventRef.current(event)
