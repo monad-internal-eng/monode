@@ -8,7 +8,7 @@ import type { Block } from '@/types/block'
 import type { SerializableEventData } from '@/types/events'
 import { useEvents } from './use-events'
 
-const MAX_BLOCKS = 5000
+const MAX_BLOCKS = 200
 
 // Highlight when total tx execution time exceeds block execution time.
 // Keep this as a single constant so UI/copy can stay consistent.
@@ -19,6 +19,31 @@ export const PARALLEL_EXECUTION_RATIO_THRESHOLD = 1
  */
 export function useBlockExecutionTracker() {
   const [blocks, setBlocks] = useState<Block[]>([])
+
+  /**
+   * Replace the last element of an array with a new value.
+   * Returns a new array (shallow copy) so React detects the change,
+   * but reuses all object references except the replaced element.
+   */
+  const replaceLastBlock = (prev: Block[], updated: Block): Block[] => {
+    const next = prev.slice()
+    next[next.length - 1] = updated
+    return next
+  }
+
+  /**
+   * Replace a single block by index.
+   * Returns a new array (shallow copy) with only that one element changed.
+   */
+  const replaceBlockAt = (
+    prev: Block[],
+    index: number,
+    updated: Block,
+  ): Block[] => {
+    const next = prev.slice()
+    next[index] = updated
+    return next
+  }
 
   // Handle real-time events from the backend
   const handleEvent = useCallback((event: SerializableEventData) => {
@@ -32,7 +57,6 @@ export function useBlockExecutionTracker() {
         }
         setBlocks((prev) => {
           const existingBlock = prev.find((b) => b.id === payload.block_id)
-          let newBlocks: Block[]
 
           // Should never happen
           if (existingBlock) {
@@ -40,29 +64,25 @@ export function useBlockExecutionTracker() {
               '2 BlockStart events received on block:',
               payload.block_number,
             )
-            // Update existing block with new BlockStart data
             const lastBlock = prev[prev.length - 1]
-            newBlocks = [
-              ...prev.slice(0, -1),
-              {
-                ...lastBlock,
-                state: 'proposed',
-                startTimestamp: BigInt(event.timestamp_ns),
-              },
-            ]
-          } else {
-            // Create new block
-            newBlocks = [
-              ...prev,
-              {
-                id: payload.block_id,
-                number: blockNumber,
-                state: 'proposed',
-                startTimestamp: BigInt(event.timestamp_ns),
-                transactions: [],
-              },
-            ]
+            return replaceLastBlock(prev, {
+              ...lastBlock,
+              state: 'proposed',
+              startTimestamp: BigInt(event.timestamp_ns),
+            })
           }
+
+          // Create new block — this is the only case that grows the array
+          const newBlocks = [
+            ...prev,
+            {
+              id: payload.block_id,
+              number: blockNumber,
+              state: 'proposed' as const,
+              startTimestamp: BigInt(event.timestamp_ns),
+              transactions: [],
+            },
+          ]
 
           if (newBlocks.length > MAX_BLOCKS) {
             return newBlocks.slice(-Math.ceil(MAX_BLOCKS / 3))
@@ -75,7 +95,6 @@ export function useBlockExecutionTracker() {
       case 'TxnHeaderStart': {
         const payload = event.payload
         setBlocks((prev) => {
-          // check if blocks is empty
           if (prev.length === 0) {
             console.warn(
               'TxnHeaderStart event received but no blocks exist yet:',
@@ -83,27 +102,23 @@ export function useBlockExecutionTracker() {
             )
             return prev
           }
-          // add a transaction to the last block
           const lastBlock = prev[prev.length - 1]
-          return [
-            ...prev.slice(0, -1),
-            {
-              ...lastBlock,
-              transactions: [
-                ...(lastBlock.transactions ?? []),
-                {
-                  id: payload.txn_index,
-                  txnIndex: payload.txn_index,
-                  txnHash: payload.txn_hash,
-                  startTimestamp: BigInt(event.timestamp_ns),
-                  transactionTime: undefined, // Will be calculated when TxnEnd is received
-                  gasLimit: payload.gas_limit,
-                  sender: payload.sender,
-                  to: payload.to,
-                },
-              ],
-            },
-          ]
+          return replaceLastBlock(prev, {
+            ...lastBlock,
+            transactions: [
+              ...(lastBlock.transactions ?? []),
+              {
+                id: payload.txn_index,
+                txnIndex: payload.txn_index,
+                txnHash: payload.txn_hash,
+                startTimestamp: BigInt(event.timestamp_ns),
+                transactionTime: undefined,
+                gasLimit: payload.gas_limit,
+                sender: payload.sender,
+                to: payload.to,
+              },
+            ],
+          })
         })
         break
       }
@@ -113,43 +128,35 @@ export function useBlockExecutionTracker() {
           console.warn('TxnEnd event missing txn_idx:', event)
           break
         }
-        if (event.txn_idx !== undefined) {
-          setBlocks((prev) => {
-            // check if blocks is empty
-            if (prev.length === 0) {
-              console.warn(
-                'TxnEnd event received but no blocks exist yet:',
-                event,
-              )
-              return prev
-            }
-            // update the last block
-            const lastBlock = prev[prev.length - 1]
-            return [
-              ...prev.slice(0, -1),
-              {
-                ...lastBlock,
-                transactions: (lastBlock.transactions ?? []).map((tx) =>
-                  tx.txnIndex === event.txn_idx && tx.startTimestamp
-                    ? {
-                        ...tx,
-                        endTimestamp: BigInt(event.timestamp_ns),
-                        transactionTime:
-                          BigInt(event.timestamp_ns) - tx.startTimestamp,
-                      }
-                    : tx,
-                ),
-              },
-            ]
+        setBlocks((prev) => {
+          if (prev.length === 0) {
+            console.warn(
+              'TxnEnd event received but no blocks exist yet:',
+              event,
+            )
+            return prev
+          }
+          const lastBlock = prev[prev.length - 1]
+          return replaceLastBlock(prev, {
+            ...lastBlock,
+            transactions: (lastBlock.transactions ?? []).map((tx) =>
+              tx.txnIndex === event.txn_idx && tx.startTimestamp
+                ? {
+                    ...tx,
+                    endTimestamp: BigInt(event.timestamp_ns),
+                    transactionTime:
+                      BigInt(event.timestamp_ns) - tx.startTimestamp,
+                  }
+                : tx,
+            ),
           })
-        }
+        })
         break
       }
 
       case 'TxnEvmOutput': {
         const payload = event.payload
         setBlocks((prev) => {
-          // check if blocks is empty
           if (prev.length === 0) {
             console.warn(
               'TxnEvmOutput event received but no blocks exist yet:',
@@ -157,23 +164,19 @@ export function useBlockExecutionTracker() {
             )
             return prev
           }
-          // update the last block
-          return prev.map((block, index) =>
-            index === prev.length - 1
-              ? {
-                  ...block,
-                  transactions: (block.transactions ?? []).map((tx) =>
-                    tx.txnIndex === payload.txn_index
-                      ? {
-                          ...tx,
-                          status: payload.status,
-                          gasUsed: payload.gas_used,
-                        }
-                      : tx,
-                  ),
-                }
-              : block,
-          )
+          const lastBlock = prev[prev.length - 1]
+          return replaceLastBlock(prev, {
+            ...lastBlock,
+            transactions: (lastBlock.transactions ?? []).map((tx) =>
+              tx.txnIndex === payload.txn_index
+                ? {
+                    ...tx,
+                    status: payload.status,
+                    gasUsed: payload.gas_used,
+                  }
+                : tx,
+            ),
+          })
         })
         break
       }
@@ -185,9 +188,12 @@ export function useBlockExecutionTracker() {
           break
         }
         setBlocks((prev) => {
-          return prev.map((block) =>
-            block.number === blockNumber ? { ...block, state: 'voted' } : block,
-          )
+          const index = prev.findIndex((b) => b.number === blockNumber)
+          if (index === -1) return prev
+          return replaceBlockAt(prev, index, {
+            ...prev[index],
+            state: 'voted',
+          })
         })
         break
       }
@@ -199,11 +205,12 @@ export function useBlockExecutionTracker() {
           break
         }
         setBlocks((prev) => {
-          return prev.map((block) =>
-            block.number === blockNumber
-              ? { ...block, state: 'finalized' }
-              : block,
-          )
+          const index = prev.findIndex((b) => b.number === blockNumber)
+          if (index === -1) return prev
+          return replaceBlockAt(prev, index, {
+            ...prev[index],
+            state: 'finalized',
+          })
         })
         break
       }
@@ -215,27 +222,28 @@ export function useBlockExecutionTracker() {
           break
         }
         setBlocks((prev) => {
-          return prev.map((block) =>
-            block.number === blockNumber
-              ? { ...block, state: 'verified' }
-              : block,
-          )
+          const index = prev.findIndex((b) => b.number === blockNumber)
+          if (index === -1) return prev
+          return replaceBlockAt(prev, index, {
+            ...prev[index],
+            state: 'verified',
+          })
         })
         break
       }
 
       case 'BlockEnd':
         setBlocks((prev) => {
-          return prev.map((block) =>
-            block.number === event?.block_number && block.startTimestamp
-              ? {
-                  ...block,
-                  endTimestamp: BigInt(event.timestamp_ns),
-                  executionTime:
-                    BigInt(event.timestamp_ns) - block.startTimestamp,
-                }
-              : block,
+          const index = prev.findIndex(
+            (b) => b.number === event?.block_number && b.startTimestamp,
           )
+          if (index === -1) return prev
+          const block = prev[index]
+          return replaceBlockAt(prev, index, {
+            ...block,
+            endTimestamp: BigInt(event.timestamp_ns),
+            executionTime: BigInt(event.timestamp_ns) - block.startTimestamp!,
+          })
         })
         break
 
