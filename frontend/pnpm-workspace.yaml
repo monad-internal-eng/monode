@@ -1,5 +1,9 @@
 minimumReleaseAge: 10080
 
+minimumReleaseAgeExclude:
+  - next
+  - "@next/*"
+
 onlyBuiltDependencies:
   - sharp
   - unrs-resolver
