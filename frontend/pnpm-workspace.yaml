@@ -1,8 +1,7 @@
 minimumReleaseAge: 10080
 
 minimumReleaseAgeExclude:
-  - next
-  - "@next/*"
+  - next@16.2.6
 
 onlyBuiltDependencies:
   - sharp
